@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents (e.g. Claude Code) when working 
 
 ## 项目概览
 
-学习助手(studybuddy)Web 应用,基于 Next.js 16.4.6(App Router)+ React 19 + TypeScript(strict)技术栈构建,样式使用 Tailwind CSS 4。代码目前全部位于 `app/` 目录。
+学习陪伴伙伴(studybuddy)Web 应用,基于 Next.js 16.4.6(App Router)+ React 19 + TypeScript(strict)技术栈构建,样式使用 Tailwind CSS 4。仓库为 npm workspaces 结构:主应用代码位于 `app/` 目录,文档站点位于 `website/`(Docusaurus)。
 
 ## 常用命令
 
