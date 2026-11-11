@@ -2,11 +2,18 @@
   "name": "studybuddy",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "website"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "docs:dev": "npm run start --workspace website",
+    "docs:build": "npm run build --workspace website",
+    "docs:serve": "npm run serve --workspace website"
   },
   "dependencies": {
     "next": "16.4.6",
