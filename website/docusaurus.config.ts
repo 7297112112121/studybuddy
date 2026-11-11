@@ -5,8 +5,8 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
+  title: '学习陪伴伙伴',
+  tagline: '面向 IT 垂直赛道的个性化、有情感的 AI 学习成长伙伴',
   favicon: 'img/favicon.ico',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -31,8 +31,8 @@ const config: Config = {
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: 'zh-Hans',
+    locales: ['zh-Hans'],
   },
 
   presets: [
@@ -40,11 +40,12 @@ const config: Config = {
       'classic',
       {
         docs: {
+          // 文档源文件使用仓库根目录的 docs/,而非 website/docs
+          path: '../docs',
           sidebarPath: './sidebars.ts',
-          // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/7297112112121/studybuddy/tree/master/website/',
+            'https://github.com/7297112112121/studybuddy/tree/master/docs/',
         },
         blog: {
           showReadingTime: true,
@@ -85,9 +86,9 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Tutorial',
+          label: '文档',
         },
-        {to: '/blog', label: 'Blog', position: 'left'},
+        {to: '/blog', label: '博客', position: 'left'},
         {
           href: 'https://github.com/7297112112121/studybuddy',
           label: 'GitHub',
@@ -99,36 +100,19 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: '文档',
           items: [
             {
-              label: 'Tutorial',
+              label: '产品简介',
               to: '/docs/intro',
             },
           ],
         },
         {
-          title: 'Community',
+          title: '更多',
           items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-            },
-            {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
-            },
-            {
-              label: 'X',
-              href: 'https://x.com/docusaurus',
-            },
-          ],
-        },
-        {
-          title: 'More',
-          items: [
-            {
-              label: 'Blog',
+              label: '博客',
               to: '/blog',
             },
             {
@@ -138,7 +122,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} 学习陪伴伙伴. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
