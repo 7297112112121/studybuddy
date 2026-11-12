@@ -1,0 +1,217 @@
+---
+title: 代码目录
+description: src/ 单体目录约定——业务模块三段式、agent 能力子系统（零业务知识）、单向依赖规则、三条数据流向与五轴演进规则
+sidebar_position: 2
+---
+
+# 代码目录
+
+本文约定 `src/` 目录结构与依赖规则，是新增代码时「放哪里、能 import 什么」的裁判文档；选型依据见 [ADR](./adr/)。
+
+## 原则
+
+1. **纵向按业务切**：`modules/` 按业务域聚合，UI、状态、服务端逻辑同处一模块目录；
+2. **agent 是能力，不是业务域**：AI 子系统零业务知识，业务知识只经注入口流入；
+3. **依赖单向**：三条主链路无环路；边界规则目标 ESLint 固化，落地前靠评审。
+
+## 总览
+
+```
+studybuddy/
+├─ src/
+│  ├─ app/                     # 路由层：薄壳，只做鉴权/组装/返回
+│  │  ├─ (auth)/login/         # 按布局分组，不影响 URL
+│  │  ├─ (app)/                # 主应用布局组
+│  │  │  ├─ workbench/  calendar/  courses/  career/  chat/ ...
+│  │  │  └─ layout.tsx
+│  │  └─ api/
+│  │     └─ chat/route.ts      # 全站唯一流式入口
+│  ├─ modules/                 # ★ 业务域（垂直切片）
+│  │  ├─ auth/  profile/  workbench/  calendar/
+│  │  ├─ course-pool/  course-planning/  career-planning/
+│  │  ├─ chat/                 # 会话与消息（UIMessage 落库）
+│  │  └─ documents/            # 学习资料（含 RAG 数据）
+│  ├─ agent/                   # ★ AI 能力子系统（零业务知识）
+│  │  ├─ runtime/              # ToolLoopAgent 封装、模型注册、错误协议
+│  │  ├─ prompts/              # 提示词：chains/ 任务三件套 + persona/
+│  │  ├─ tools/                # 通用工具 + registry.ts 中央注册表
+│  │  ├─ rag/                  # 分块、嵌入任务、检索（pgvector）
+│  │  ├─ memory/               # 历史组装、摘要压缩
+│  │  └─ agents/               # 预留：多 agent 定义与编排
+│  ├─ db/                      # Drizzle client + schema/<模块>.ts
+│  ├─ lib/                     # auth、redis、storage、utils（无业务）
+│  ├─ components/ui/           # shadcn/ui + 跨模块共享组件
+│  ├─ stores/                  # zustand——仅纯 UI 状态
+│  └─ locales/                 # i18n 文案
+├─ docs/  website/             # 文档站
+└─ packages/                   # 暂空，留给抽包（轴 3）
+```
+
+## 路由层（src/app/）
+
+路由文件只做三件事：鉴权、组装、返回；业务逻辑进路由视为违规。
+
+- `page.tsx`（RSC）：调 `modules/<m>/queries` 读数据，经 props 下行；
+- `actions.ts`（`'use server'`）：承 [ADR-0025](./adr/client-data-layer) 分工；
+- `api/chat/route.ts`：唯一流式入口，薄壳 pipeline 见[数据流向](#数据流向)，承 [ADR-0014](./adr/vercel-ai-sdk)；
+- 并行分发或 GET 语义端点走 ADR-0025 逃生舱（Route Handler），不挤进 chat 入口。
+
+## 业务模块（src/modules/）
+
+### 模块内部：三段式
+
+每个模块统一形状，文件即分层：
+
+```
+src/modules/<m>/
+├─ index.ts      # 公共出口（跨模块 import 的唯一合法入口）
+├─ schema.ts     # drizzle 表 + 推导 zod——数据不变量
+├─ queries.ts    # 读路径，RSC page 直接调用
+├─ service.ts    # 写路径、事务、业务规则
+├─ actions.ts    # 'use server' Server Functions（判别联合返回）
+├─ tools.ts      # 可选：暴露给 agent 的业务工具
+├─ components/   # 模块私有 UI
+└─ domain/       # 可选：复杂度兑现时局部升格（纯规则、零 IO）
+```
+
+### 模块间规则
+
+- 跨模块 import 只能经 `@/modules/<m>` 顶入口（`index.ts`），禁止深路径；
+- 跨模块读：允许，用 `index.ts` 导出的 queries；
+- 跨模块写：上浮到 app 层编排（action 内顺序调各模块 service），禁止模块互调对方 `service`。
+
+## AI 能力子系统（src/agent/）
+
+agent 是被业务域消费的能力集合，按 AI 资产类型分目录：
+
+| 目录 | 职责 |
+|---|---|
+| `runtime/` | `ToolLoopAgent` 封装（AI SDK v7）、模型注册、流式错误协议 |
+| `prompts/` | 提示词即版本化纯函数（见下） |
+| `tools/` | 无业务依赖的通用工具 + `registry.ts` 中央注册表 |
+| `rag/` | 文档分块、嵌入任务调度、pgvector 检索（drizzle sql 层） |
+| `memory/` | 会话历史组装、变长会话的摘要压缩 |
+| `agents/` | 预留：agent 工厂与多 agent 编排 |
+
+**prompts 三件套**：每个 LLM 任务一个文件，导出版本号常量 + 输出 JSON_SCHEMA + messages 构造纯函数：
+
+```ts
+export const WEEKLY_SUMMARY_PROMPT_VERSION = 'v1';
+export const WEEKLY_SUMMARY_JSON_SCHEMA = z.object({ ... });
+export function chainWeeklySummary(input: ...): { messages: ModelMessage[] } { ... }
+```
+
+人设（persona）是数据，存 DB（chat 模块 schema），不硬编码进 chains。
+
+### 业务知识的两个注入口
+
+`agent/` 禁止 import `modules/` 与 `app/`。业务知识只经两条路流入：
+
+1. **模块 `tools.ts`**：用 `ai` 包的 `tool()` 定义，executor 调本模块的 `queries`/`service`，由 `api/chat/route.ts` 组装时注册；
+2. **persona / prompt 内容**：作为数据传入 `prompts/` 构造函数。
+
+反向允许：模块 service 可调 `agent/` 公共 API（如 `generateObject` 出规划建议）。
+
+## 公共层
+
+| 目录 | 约定 |
+|---|---|
+| `src/db/` | `client.ts` 单例 + `schema/<模块>.ts` 按模块一文件；migration 以 `db/` 为根 |
+| `src/lib/` | better-auth（[ADR-0013](./adr/better-auth)）、redis（[ADR-0007](./adr/redis)）、SeaweedFS 存储、无业务 utils |
+| `src/components/ui/` | shadcn/ui（[ADR-0004](./adr/shadcn-ui)）与跨模块组件 |
+| `src/stores/` | zustand（[ADR-0009](./adr/zustand)）——仅纯 UI 状态 |
+| `src/locales/` | i18n 文案（[ADR-0010](./adr/i18n)） |
+
+## 依赖规则
+
+依赖方向：`app → modules → agent → db(仅 schema) / lib`；`app` 亦可直接组装（`api/chat` 是唯一组装点）；`modules` 之间仅经 `index.ts` 读，写上浮 app 层。
+
+1. `app/` 可 import 一切（组装层）；
+2. `modules/*` 可 import `db`、`lib`、`agent` 公共 API、其他模块 `index.ts` 导出的**读**接口；
+3. `agent/` 只可 import `db/schema` 与 `lib`；
+4. `components/`、`stores/`、`locales/` 不 import `modules` 内部，可经 `index.ts` 取类型与数据；
+5. `db/schema` 是全项目公共契约层：人人可读，写入仅属主模块。
+
+## 数据流向
+
+```
+读：  RSC page ──→ modules/<m>/queries ──→ db ──→ props 下行
+写：  UI ──→ actions('use server') ──→ service ──→ db ──→ revalidatePath
+      （客户端乐观更新由 TanStack Query 对账，承 ADR-0025）
+
+对话：useChat ──→ POST /api/chat ──→ 鉴权 → 组装（prompts + 模块 tools
+      + memory + rag 检索）──→ agent runtime ──→ LLM ──→ SSE 流回
+      ──→ onFinish 经 chat service 落库（UIMessage，承 ADR-0014）
+
+RAG 离线腿：documents service ──→ agent/rag（分块 + embedMany）──→ pgvector
+```
+
+## 演进规则
+
+五条演进轴，统一按「阶段 → 触发信号 → 动作」陈述；共同特征：**加目录不加层**，触发信号到了再动，不提前铺。
+
+### 轴 1：模块复杂度
+
+| 阶段 | 触发信号 | 动作说明 |
+|---|---|---|
+| 0 | CRUD + 简单校验 | 三段式即可（schema/queries/service + actions），不预建 `domain/` |
+| 1 | 纯业务规则成型（选课冲突、学分上限） | 模块内新增 `domain/`：纯函数、零 IO，可无数据库跑单测；service 退化为编排 domain 规则与持久化 |
+| 2 | 一次写操作动 ≥2 个模块聚合 | 写上浮 app 层：action 内顺序调各模块 service，失败逆序补偿；模块目录不动 |
+| 3 | 补偿逻辑失控（嵌套回滚、分支爆炸） | 引入进程内事件总线或 outbox 表转最终一致；方案单独立 ADR |
+
+### 轴 2：agent 子系统
+
+| 阶段 | 触发信号 | 动作说明 |
+|---|---|---|
+| 0 | 单陪伴人设、2~3 个工具 | `/api/chat` 单入口；`agent/` 五目录就位，工具在 route.ts 组装时注册 |
+| 1 | 工具 >10；结构化任务 >3 类 | chains 按任务分文件成规模；`registry.ts` 聚合注册；模块 service 调 `agent` 公共 API（`generateObject`）产结构化建议 |
+| 2 | 嵌入积压、任务跑分钟级 | 新增 `agent/jobs/`：jobs 表状态机（pending/running/done/failed + retry），worker 消费，前端轮询进度 |
+| 3 | 多种人设且互相交接 | `agent/agents/<name>.ts` 工厂（ToolLoopAgent）；编排先手写 supervisor，复杂再叠 Mastra（[ADR-0014](./adr/vercel-ai-sdk) 逃生舱）；tools/prompts/rag 全复用 |
+
+### 轴 3：物理形态（src 单体 → packages）
+
+| 阶段 | 触发信号 | 动作说明 |
+|---|---|---|
+| 0 | 单一 Next.js 运行时 | `src/` 单体；`workspaces: ["packages/*"]` 缝已留，不预建空包 |
+| 1 | 出现第二个运行时消费者（独立 worker 或 CLI） | `db/schema` 最先抽包：契约稳定、双侧引用，收益立现；次抽 `agent/runtime`（worker 复用 ToolLoopAgent 与模型注册） |
+| 2 | 某业务域被多端复用且已稳定 | 对应 `modules/*` 抽包，永远最后：业务最易变，抽早了每次改动要发两个包 |
+
+### 轴 4：数据层
+
+横切约定：混合检索排序在 drizzle `sql` 层（[ADR-0014](./adr/vercel-ai-sdk)）；嵌入维度从 env 读，不硬编码。
+
+| 阶段 | 触发信号 | 动作说明 |
+|---|---|---|
+| 0 | 文档量小 | 上传时同步 `embedMany`：分块 → 嵌入 → 入 pgvector，不建任务表 |
+| 1 | 嵌入跑秒级、上传积压 | 异步化，接轴 2 阶段 2 的 jobs 状态机 |
+| 2 | 会话历史 token 超限 | `agent/memory/` 上摘要压缩 chain：近 N 轮原文 + 更早摘要拼装上下文 |
+| 3 | 多实例并发写 | Redis 由仅会话缓存扩为分布式锁与限流 |
+
+### 轴 5：客户端状态
+
+| 阶段 | 触发信号 | 动作说明 |
+|---|---|---|
+| 0 | — | 服务端数据归 TanStack Query、流式消息归 `useChat`，永不入 zustand |
+| 1 | 某状态想跨页面共享 | 先判归属：服务端可查 → TanStack Query 缓存；纯 UI（选中 tab、弹窗开关）→ `stores/` |
+| 2 | `stores/` 膨胀 | 状态错位信号：逐个回查归属，多数应回到服务端缓存或组件局部 state；`stores/` 天然封顶 |
+
+## 禁止清单
+
+评审一票否决；前两条难逆，第一天起守：
+
+1. `agent/` import `modules/` 或 `app/`（零业务知识）；
+2. 客户端运行 agent 逻辑（server-only 单执行位）；
+3. 业务逻辑出现在 `app/` 路由文件或 `agent/` 内部；
+4. 流式消息进 zustand / 服务端数据镜像进 zustand；
+5. 跨模块深路径 import 或直调对方 `service`；
+6. `db/schema` 被非属主模块修改。
+
+## 落地步骤
+
+项目当前为脚手架，初始迁移零成本：
+
+1. `app/` 移入 `src/app/`，建 `src/{modules,agent,db,lib,components,stores,locales}` 骨架目录；
+2. `tsconfig.json` 路径别名 `@/*` 改指 `./src/*`；
+3. auth 模块按三段式先行落地，作后续模块样板（[ADR-0013](./adr/better-auth)）；
+4. `api/chat/route.ts` 随首个对话用户故事落地，固化组装顺序；
+5. 依赖规则固化进 ESLint（`no-restricted-imports` 或 boundaries 插件），作为技术债项跟踪。
