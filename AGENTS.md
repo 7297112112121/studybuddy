@@ -27,12 +27,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-已观察到的差异实例(不要凭旧版知识假设 API):
-
-- 布局组件使用全局类型 `LayoutProps<"/">`(见 `app/layout.tsx`),而非手写 `children: React.ReactNode`。
-- `next.config.ts` 中启用了 `cacheComponents: true` 与 `partialPrefetching: true`,缓存/数据获取语义与旧版不同。
-- Tailwind CSS 4 通过 `next.config.ts` 的 `turbopack.rules` 接入(`@tailwindcss/turbopack`),**没有** `tailwind.config` 或 `postcss.config`;主题变量在 `app/globals.css` 的 `@theme inline` 中定义,暗色模式基于 `prefers-color-scheme`。
-
 ## 架构与约定
 
 - **App Router**:路由与布局都在 `app/` 下,根布局为 `app/layout.tsx`(加载 Geist 字体并注入 CSS 变量)。
