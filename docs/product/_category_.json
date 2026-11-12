@@ -1,0 +1,8 @@
+{
+  "label": "产品文档",
+  "position": 2,
+  "link": {
+    "type": "doc",
+    "id": "product/index"
+  }
+}
