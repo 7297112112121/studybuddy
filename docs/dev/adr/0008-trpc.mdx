@@ -1,0 +1,68 @@
+---
+title: ADR-0008：API 层采用 tRPC
+description: tRPC v11 服务客户端类型安全 RPC；服务端组件直连数据层；突变优先 Server Actions
+---
+
+# ADR-0008：API 层采用 tRPC
+
+## 状态
+
+已接受（Accepted，含分工边界）
+
+## 日期
+
+2026-11-12
+
+## 背景
+
+- 客户端存在服务端组件覆盖不了的数据场景：AI 对话流式输出、看板轮询、打卡/计时的乐观更新。
+- 全栈 TypeScript strict，需要输入输出类型端到端贯通，且入参必须校验。
+- 产品边界决定 API 只服务自有 Web 客户端，无第三方消费方。
+- Next.js 官方指引的两条约束：服务端组件应直接从数据源取数（不走 HTTP 自调用）；Server Actions 定位是变更（mutation）且按队列串行执行。
+
+## 决策
+
+采用 tRPC v11：服务端经 Route Handler 的 `fetchRequestHandler` 挂载在 `/api/trpc`；客户端 `createTRPCReact` 叠加 TanStack Query 提供缓存与失效语义。**分工边界**：
+
+1. 服务端组件读数据 → 直接调用 Drizzle 服务层，不经过 tRPC；
+2. 表单类突变 → 优先 Server Actions；
+3. 客户端数据获取、轮询、乐观更新 → tRPC；（流式对话原列于此，后经 ADR-0014 改划至 Route Handler，不走 tRPC）
+4. 所有 procedure 入参用 zod 校验，schema 从 Drizzle 表结构推导，保证校验与表定义不漂移。
+
+## 备选方案
+
+### 仅用 Server Actions（不建 API 层）
+- 优点：零新增依赖，与服务端组件同体。
+- 缺点：查询场景无缓存与失效语义（Next.js 官方也明确其队列化串行、定位为变更）；复用与单测体验弱；错误协议粗糙。
+- 否决原因：覆盖不了「客户端查询」场景。保留为突变场景的首选，与本决策互补而非互斥。
+
+### REST（Route Handlers + OpenAPI + 类型生成）
+- 优点：契约通用，可对外，调试工具成熟。
+- 缺点：内部消费场景下，OpenAPI 维护与 codegen 是纯开销。
+- 否决原因：无外部消费方（产品边界），通用性收益为零。若未来对外开放，以新 ADR 增加对外 API 门面，而非推翻本决策。
+
+### GraphQL
+- 优点：查询自由度高，多端聚合强。
+- 缺点：单一客户端消费下，schema 服务器与工具链成本过高。
+- 否决原因：明显过度设计。
+
+## 后果
+
+### 正面
+- 类型链贯通：PG 表（Drizzle）→ procedure（zod）→ 客户端 hooks 全程推断，改表时客户端报错即时暴露。
+- 输入校验统一收口，无「先写接口再补校验」的空窗。
+
+### 负面
+- API 不产生 OpenAPI 文档，跨端不可复用（产品边界内可接受）。
+- 客户端缓存失效逻辑由我们自己在 queryClient 上维护，需要与 Next 的路由缓存边界划清分工。
+
+### 风险
+- tRPC 与 Next.js 大版本的兼容偶有滞后：升级 Next 前先查 tRPC 官方兼容矩阵。
+- 团队熟悉度低于 REST：onboarding 文档需包含 tRPC 心智说明。
+
+## 相关决策
+
+- [ADR-0001：Next.js 16 全栈框架](./nextjs-fullstack-framework)
+- [ADR-0006：Drizzle ORM](./drizzle-orm)
+- [ADR-0009：zustand](./zustand)
+- [ADR-0014：LLM 接入层 Vercel AI SDK](./vercel-ai-sdk)（修正本决策分工边界第 3 项：流式对话改走 Route Handler）

@@ -1,0 +1,90 @@
+---
+title: ADR-0017：E2E 测试采用 Playwright
+description: Playwright（@playwright/test 1.65）承担关键用户旅程的端到端验证，闭合 ADR-0012 异步 RSC 盲区；Cypress 并行编排绑定商业云、WebdriverIO/Puppeteer/Nightwatch/Selenium 按数据否决
+---
+
+# ADR-0017：E2E 测试采用 Playwright
+
+## 状态
+
+已接受（Accepted）
+
+## 日期
+
+2026-11-12
+
+## 背景
+
+- ADR-0012 定了 Vitest 单测，但留了明确盲区：**异步服务端组件与端到端链路不在单测范围**。Next.js 16 官方测试指南对这一盲区有直接表态："Since `async` Server Components are new to the React ecosystem, some tools do not fully support them... we recommend using **End-to-End Testing** over Unit Testing for `async` components"（仓库内 node_modules/next/dist/docs/01-app/02-guides/testing/index.md）。本 ADR 就是那篇里"后续以 Playwright E2E 的新 ADR 补位"承诺的兑现。
+- 待验证的用户旅程横跨多个已定决策，都是多服务协作链路，单测天然够不到：Better Auth 登录与会话（ADR-0013）、资料上传预签名直传（ADR-0015）、AI 对话流式输出（ADR-0014）、tRPC 业务流程（ADR-0008）。
+- 本项目 `next.config.ts` 已启用 `cacheComponents: true` 与 `partialPrefetching: true`，导航与缓存语义和旧版 Next.js 不同；Next.js 16 为此提供了配套测试工具 `@next/playwright`（`instant()` helper，标注 "Requires: Cache Components"），官方示例 `with-playwright` 随 create-next-app 分发。
+- 团队规模小：E2E 框架必须一条命令启动、CI 无需任何编排服务、失败可回放定位。
+
+## 决策
+
+E2E 测试采用 Playwright：核心包 `@playwright/test`（v1.65，Apache-2.0，与 Playwright 官方测试框架同源）。
+
+- **运行形态**：利用 Playwright `webServer` 配置自动拉起应用并对端口探活（Next.js 官方指南推荐姿势）；对**生产构建**跑测试，更贴近真实行为。CI 中 headless 模式运行，系统依赖由 ADR-0018 的流水线负责安装。
+- **浏览器矩阵**：MVP 以 Chromium 为默认矩阵（本地开发与 CI 主线）；Firefox / WebKit 按需加入冒烟，不做全矩阵强制门禁。
+- **并行**：Playwright 默认按测试文件在独立 worker 进程并行，无需任何测试编排服务或外部数据库协调。
+- **Next.js 16 专项**：引入 `@next/playwright`（与 `next` 同版本发布，当前同为 16.4.6），用 `instant()` helper 断言 `cacheComponents` 下即时导航的首屏可见性——这是官方为 `partialPrefetching` 语义变化提供的专用断言面。
+- **覆盖范围**：E2E 只覆盖关键用户旅程（登录会话流转、资料上传链路、AI 对话流式渲染、核心 tRPC 业务流），不做全页面回归。**LLM 调用在 E2E 中一律 mock**（环境变量切换到本地假流），E2E 验证的是流式 UI 链路的正确性，不是模型质量；模型质量走 ADR-0014 层面的独立评估。
+- **测试数据**：E2E 跑独立测试数据库实例（每轮运行前重置），不触碰开发库；浏览器侧复用登录会话。
+- **分层不变**：ADR-0012 的分工继续有效——纯函数与客户端组件归 Vitest；异步服务端组件不在 jsdom 里硬测，由本 E2E 层补齐。
+- **不做**：MVP 不做视觉回归截图对比、不做性能基线、不做移动真机矩阵。
+
+## 备选方案
+
+### Cypress
+- 优点：MIT，51,028 stars，活跃（16.3.0 发布于 2026-11-10）；时间旅行调试的开发体验出色；老牌框架资料存量最大。
+- 缺点：测试编排能力（Parallelization / Load Balancing / Spec Prioritization）是 **Cypress Cloud 商业服务**的功能——官方文档将其定位为 "companion service to the open-source Cypress app"（docs.cypress.io/guides/cloud/introduction），开源 app 本身不带无服务并行；架构上 Cypress 自述与 Selenium 相反，"Cypress is executed in the same run loop as your application"（docs.cypress.io/app/get-started/why-cypress），与进程外驱动浏览器的模型互斥；npm 周下载 715 万，约为 @playwright/test 1.26 亿的 1/18。
+- 否决原因：本项目 E2E 的两大诉求——异步 RSC 链路的端到端验证、CI 上无外部服务并行——前者 Next.js 官方指南只给了 Playwright 专章（Cypress 在同一份 testing 文档里同样有指南，但 `@next/playwright` 这类框架深度配套只有 Playwright 有），后者在 Cypress 侧要绑定商业云。
+
+### WebdriverIO
+- 优点：MIT，9,880 stars，活跃；同时支持 W3C WebDriver 与 DevTools 双协议。
+- 缺点：@wdio/cli 周下载 128 万，与 Playwright 1.26 亿差两个量级；automation protocol / service 的配置矩阵复杂；社区存量少。
+- 否决原因：同为 Next.js 官方测试文档列名的工具，所有维度无一项占优。
+
+### Puppeteer
+- 优点：Apache-2.0，95,824 stars，15,087,271 周下载，体量极大；Google 维护，与 Chrome DevTools 协议同源。
+- 缺点：**类别不符**——它是浏览器自动化库而非测试框架：无断言、无测试 runner、无并行编排、无失败回放；浏览器支持以 Chromium 为主。
+- 否决原因：驱动浏览器只是 E2E 的底座，拿 Puppeteer 补齐测试框架等于自建——正是本决策想省掉的部分。
+
+### Nightwatch
+- 优点：MIT，11,953 stars，老牌，API 简洁。
+- 缺点：**最后推送 2026-05-25，近半年无提交**（2026-11-12 经 GitHub API 查证）；npm 周下载 12 万。
+- 否决原因：维护信号不足，不押注。
+
+### Selenium（WebDriver）
+- 优点：Apache-2.0，34,582 stars，行业最老、跨语言事实标准。
+- 缺点：协议驱动的速度与稳定性瓶颈；Node 生态下 API 风格陈旧；无新一代特性（auto-wait、web-first 断言、trace）。
+- 否决原因：历史地位不构成本项目的选型理由；同量级需求下新一代工具全面占优。
+
+## 后果
+
+### 正面
+- **官方背书是双向的**：Next.js 16 官方测试指南有 Playwright 专章（含 `with-playwright` 官方示例、`webServer` 探活、CI headless 流程），且明确建议异步 RSC 用 E2E 覆盖——本决策同时闭合 ADR-0012 的遗留盲区；`@next/playwright` 与 `next` 同版本发布（同为 16.4.6，2026-11-09），`cacheComponents` 时代的导航断言有一手支持。
+- 规模与安全双干净：microsoft/playwright Apache-2.0、99,966 stars、撰写当天有推送；@playwright/test 1.65.0 发布于 2026-11-05、周下载 1.26 亿；OSV 通告 **0 条**。
+- 开发体验成体系：auto-wait 与 web-first assertions 消解手写等待；worker 进程并行开箱即用，CI 零编排服务；trace viewer 让失败现场可回放，弥补"E2E 排错慢"的痼疾。
+- 与既有栈零冲突：@playwright/test 是纯 devDependency，不进应用 bundle；不与 Vitest 抢地盘（ADR-0012 分层不变）。
+
+### 负面
+- 浏览器二进制体积大：首次 `npx playwright install` 下载各引擎，CI 需配置依赖缓存，否则冷启动慢。
+- E2E 稳定性维护成本高于单测：选择器腐化、flaky 重试是长期税负——用 user-facing locator 角色选择器与"少量关键旅程"策略把税压到最低。
+- 多浏览器矩阵的运行时长随用例数线性增长，MVP 先 Chromium 单浏览器是必须的克制。
+
+### 风险
+- **LLM 流式链路的不稳定性**：真实模型调用在 CI 中既慢又贵又不可复现。对策已定：E2E 全量 mock（假流式响应注入），真实链路留给上线前手工冒烟；mock 层与 ADR-0014 的 transport 边界对齐。
+- **@next/playwright 标注 Experimental**（npm 自述 "This API is not yet stable"）：锁 `next` 同版本，随 Next.js 升级联动，不独立升级。
+- **cacheComponents 交互语义漂移**：partial prefetching 下的导航断言与旧习惯不同，测试编写须对照官方 instant-navigation 指南，避免误用普通断言测即时导航。
+- 测试环境保真度：E2E 对 `build && start` 产物跑，依赖 PG / Redis / SeaweedFS 的测试实例编排——本地用测试容器，CI 由 ADR-0018 以 runner 内临时 Compose 栈拉起（该挂账已由 ADR-0018 闭合），编排细节见其决策。
+
+## 相关决策
+
+- [ADR-0001：全栈框架 Next.js 16](./nextjs-fullstack-framework)
+- [ADR-0012：单元测试 Vitest](./vitest)
+- [ADR-0013：认证与会话 Better Auth](./better-auth)
+- [ADR-0014：LLM 接入层 Vercel AI SDK](./vercel-ai-sdk)
+- [ADR-0015：对象存储 SeaweedFS](./seaweedfs)
+- [ADR-0016：部署编排 Docker Compose](./docker-compose)
+- [ADR-0018：CI/CD GitHub Actions](./cicd-github-actions)

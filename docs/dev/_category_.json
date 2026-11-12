@@ -1,0 +1,8 @@
+{
+  "label": "技术文档",
+  "position": 2,
+  "link": {
+    "type": "doc",
+    "id": "dev/index"
+  }
+}

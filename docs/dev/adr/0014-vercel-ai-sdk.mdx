@@ -1,0 +1,79 @@
+---
+title: ADR-0014：LLM 接入层采用 Vercel AI SDK
+description: LLM 接入层采用 Vercel AI SDK（ai v7）：流式对话走 Route Handler（修正 ADR-0008 分工）、RAG 经 embed/embedMany 直连 pgvector、提供商经 provider 包解耦
+---
+
+# ADR-0014：LLM 接入层采用 Vercel AI SDK
+
+## 状态
+
+已接受（Accepted）
+
+## 日期
+
+2026-11-12
+
+## 背景
+
+- 产品核心链路是三条：AI 陪伴对话（流式输出到 UI）、学习资料问答（RAG，检索层已定 pgvector + Drizzle，ADR-0005/0006）、长期记忆（会话历史落库）。接入层要同时服务三者。
+- Next.js 16 App Router（ADR-0001/0002）：对话端点的自然形态是 Route Handler + SSE 流式响应；tRPC（ADR-0008）负责常规业务 RPC，与流式对话的关系需要在本决策中划清。
+- TypeScript strict：模型调用、工具入参、流式消息结构都要求类型贯通，不接受运行时才能发现的拼接错误。
+- 团队规模小：需要薄抽象、少自建，把工程精力留给产品而非基础设施。
+- 模型层面希望保持解耦：主力模型可随业务独立调整，接入层不应把项目锁死在单一提供商。
+
+## 决策
+
+LLM 接入层采用 Vercel AI SDK：核心包 `ai`（v7.x，Apache-2.0）+ 提供商包 `@ai-sdk/anthropic` + 客户端 hooks 包 `@ai-sdk/react`。
+
+- **流式对话**：`app/api/chat/route.ts` Route Handler 内 `streamText` → `createUIMessageStreamResponse` 输出 UI 消息流；客户端 `useChat` + `DefaultChatTransport` 消费，按 `message.parts`（text/reasoning 等）渲染。**本条修正 ADR-0008 分工边界第 3 项**：流式对话改走 Route Handler、不经过 tRPC（tRPC 的 HTTP 传输层对流式响应与消息分块结构支持不佳，且 `useChat` 已自带消费端状态管理）；非流式业务能力（结构化任务等）仍走 tRPC procedure，其余分工边界不变。
+- **消息持久化**：会话消息以 SDK 的 `UIMessage` 结构存 PostgreSQL（Drizzle schema 定义，ADR-0006），保证落库结构与前端渲染结构一致。
+- **RAG**：文档级分块（chunk 策略、大小）是应用侧职责，SDK 不承担；分块后的多段文本用 `embedMany` 批量生成向量、查询用 `embed` 单条生成，写入/检索 pgvector；混合检索排序在 Drizzle `sql` 层完成，不引重型 RAG 框架。
+- **结构化输出**：`generateObject`/`streamObject` + zod schema，与 tRPC 输入校验共用同一套 schema。
+- **逃生舱**：Anthropic 特有能力经 `providerOptions.anthropic` 透传（不经抽象阉割）；Claude 独有的服务端 beta 能力（如上下文压缩、消息线程）在抽象层未及时跟上时，允许局部直连 `@anthropic-ai/sdk` 兜底，不推翻接入层。
+- **提供商姿态**：接入层与模型解耦，经 `@ai-sdk/anthropic` 默认接入 Claude 系列（当前代：claude-opus-5-5 / claude-sonnet-5-5 / claude-haiku-5-5），模型选择随业务迭代独立调整；更换提供商只改 provider 包与 model 标识。
+- **不做**：MVP 不引入 AI Gateway / 自建网关，密钥仅存服务端环境变量、不进客户端 bundle。
+
+## 备选方案
+
+### LangChain.js / LangGraph
+- 优点：多步 Agent 编排（LangGraph）成熟度最高；生态组件最全（文档加载器、记忆、观测）；定位已升级为「agent engineering platform」，LangSmith 提供托管观测。
+- 缺点：链式抽象层厚、心智负担大；npm 包碎片化且长期 0.x，版本管理痛苦；TypeScript 侧是生态第二战场；OSV 有严重通告（GHSA-r399-636x-v7f6：序列化注入可致密钥提取）。
+- 否决原因：产品主链路是「流式对话 + RAG 问答」而非复杂多 Agent 编排，LangChain 的重量换不回对等价值。若未来编排需求成长，优先考虑构建于 AI SDK 之上的 Mastra（@mastra/core 周下载 319 万），属平滑升级而非推翻本决策。
+
+### LlamaIndex.TS
+- 优点：RAG 专精，Python 侧的数据连接器生态丰富。
+- 缺点：**TypeScript 版仓库已归档**（run-llama/LlamaIndexTS，archived，最后提交 2026-03-11）；npm 周下载仅 18.3 万，与 ai 的 4,480 万不在一个量级。
+- 否决原因：TS 侧项目已停止维护，不可选。
+
+### 直连各提供商官方 SDK
+- 优点：零抽象损耗，提供商新特性第一时间可用；`@anthropic-ai/sdk` 周下载 6,810 万，质量与维护有保障。
+- 缺点：对话流式要自建 SSE 协议、消息分块结构与客户端 hooks；换模型等于换 SDK 重写调用面；多提供商并存时调用面分裂。
+- 否决原因：作为兜底手段保留（见决策中逃生舱条款），不作为主接入层——自建流式协议正是本决策想省掉的那部分基础设施。
+
+## 后果
+
+### 正面
+- 与 Next.js 同源（Vercel 出品，"From the creators of Next.js"），App Router 的 Route Handler / RSC / 流式心智是一手适配，不隔着一层框架假设。
+- 社区规模已形成事实标准：npm 周下载 4,480 万，约为 @langchain/core（848 万）的 5.3 倍；GitHub 27,885 stars 且当天有提交；ctx7 索引官方文档代码片段 15,466 个，排错与示例获取成本低。
+- 抽象层薄：`ai` 核心包运行时依赖仅 3 个 `@ai-sdk/*` 子包，无传递性深依赖。
+- 检索-生成闭环最短：embed/embedMany → pgvector → streamText/generateText，不引入 RAG 框架的中间抽象。
+- 安全记录干净：OSV 累计仅 1 条通告（GHSA-rwvc-j5jr-mgvh，文件上传白名单绕过），对照组 @langchain/core 的序列化注入（密钥提取）严重得多。
+
+### 负面
+- 主版本节奏快：v4 → v7 四个大版本，useChat 等客户端 API 在 5.x 重写过一次（transport 概念引入）；升级有真实迁移成本，5/6 两条维护线（ai-v5 5.0.289、ai-v6 6.0.330）说明大版本共存是常态。
+- 提供商适配存在窗口期：`@ai-sdk/anthropic` 由 Vercel 维护而非 Anthropic 官方，新模型/新特性上线到适配之间有滞后，需依赖 providerOptions 或局部直连兜底。
+- 复杂 Agent 编排能力弱于 LangGraph，成长期需叠加 Mastra 等上层框架（好在后者构建于 AI SDK 之上）。
+- 抽象本身与部署平台解耦（可在任意环境运行）；但 roadmap 与 Vercel 自家产品（AI Gateway）存在协同偏向，选型时需辨认「平台绑定」性质的功能。
+
+### 风险
+- 大版本迁移成本：锁 minor，大版本升级按 ADR 季度回顾机制单独立项评估，不搭车升级。
+- 提供商包滞后：新模型发布后若 provider 适配未跟上，短期方案是 providerOptions 透传或局部直连，不改架构。
+- 流式长连接对单机自托管（ADR-0016）的并发模型有要求，上线前需做反向代理层的连接数与超时评估。
+
+## 相关决策
+
+- [ADR-0001：全栈框架 Next.js 16](./nextjs-fullstack-framework)
+- [ADR-0005：PostgreSQL 17 + pgvector](./postgresql-pgvector)
+- [ADR-0006：Drizzle ORM](./drizzle-orm)
+- [ADR-0008：tRPC API 层](./trpc)（本决策修正其分工边界第 3 项）
+- [ADR-0016：部署编排 Docker Compose](./docker-compose)

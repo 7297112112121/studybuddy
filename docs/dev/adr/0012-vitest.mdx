@@ -1,0 +1,64 @@
+---
+title: ADR-0012：单元测试采用 Vitest
+description: Vitest + Testing Library 承担单元与组件测试；异步服务端组件留给 E2E
+---
+
+# ADR-0012：单元测试采用 Vitest
+
+## 状态
+
+已接受（Accepted）
+
+## 日期
+
+2026-11-12
+
+## 背景
+
+- 产品核心逻辑（动态任务调度、计划调整算法、情绪记录统计）是纯函数密集型，单元测试收益高。
+- Next.js 官方测试指南将 Vitest + React Testing Library 作为单元测试推荐方案，并明确标注：**Vitest 目前不支持异步 Server Components 的单测**，此类场景建议用 E2E 覆盖。
+- Turbopack 时代，Jest 的 ESM/TS/JSX 转换配置摩擦明显大于 Vitest。
+- 仓库尚未安装任何测试框架。
+
+## 决策
+
+采用 Vitest + @testing-library/react + jsdom 承担单元与组件测试；配置 vite-tsconfig-paths 共享 `@/*` 别名。测试分层：
+
+1. 纯函数（调度、计划算法）：全覆盖；
+2. tRPC procedure：以测试容器 PostgreSQL（或事务回滚模式）驱动真实查询；
+3. 客户端组件：RTL 交互断言；
+4. 异步服务端组件与端到端链路：不在本 ADR 范围，后续以 Playwright E2E 的新 ADR 补位。
+
+## 备选方案
+
+### Jest
+- 优点：生态最老牌，资料最多。
+- 缺点：ESM/TS/JSX 转换配置繁琐，速度慢；对 React 19 与新语法的适配节奏偏慢。
+- 否决原因：同为官方推荐时，Vitest 在速度与配置成本上全面占优。
+
+### Node 内置 test runner
+- 优点：零依赖。
+- 缺点：无组件测试生态（RTL 集成、快照、mock 生态）。
+- 否决原因：覆盖不了组件测试需求。
+
+### Storybook interaction tests
+- 定位：组件视觉与交互的补充手段，不能替代逻辑单测，不进入本次选型对比。
+
+## 后果
+
+### 正面
+- Vite 生态的原生 ESM 与速度，watch 反馈快，与 TS strict 配置直通。
+- 测试分层策略与官方对 RSC 的已知限制对齐，不会在 jsdom 里硬测服务端组件。
+
+### 负面
+- 双构建体系（应用 Turbopack / 测试 Vite）存在解析行为漂移的窗口。
+- RSC 语义无法在 jsdom 中复现，覆盖盲区必须靠 E2E 补齐。
+
+### 风险
+- mock `next/*` 模块（navigation、cache 等）的样板会随 Next 升级需要维护：集中在 `tests/mocks` 管理，升级时只改一处。
+
+## 相关决策
+
+- [ADR-0011：ESLint + Prettier](./eslint-prettier)
+- [ADR-0008：tRPC API 层](./trpc)
+- [ADR-0017：E2E 测试 Playwright](./playwright-e2e)
