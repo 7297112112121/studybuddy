@@ -1,0 +1,166 @@
+---
+title: 技能管理标杆:lobehub 实践
+description: 研读 lobehub/lobehub 仓库的 55 个自定义技能,总结其技能目录组织、SKILL.md 写法与维护体系,作为本项目的学习标杆
+sidebar_position: 1
+---
+
+# 技能管理标杆:lobehub 实践
+
+[lobehub/lobehub](https://github.com/lobehub/lobehub)(LobeHub 主仓库,Next.js + Electron 单体)为多款 AI 编码工具维护了 **55 个项目自定义技能**,是目前开源社区里技能管理最成熟的实践之一。本文总结其组织方式、写法规范与维护体系,作为 studybuddy 项目技能建设的标杆。
+
+## 1. 核心机制:单一事实源 + symlink 接入
+
+技能本体全部存放在 **`.agents/skills/`** 目录,各家 agent 工具目录下只放一个指向它的 symlink:
+
+```
+.agents/skills/          ← 技能唯一存放处(单一事实源)
+.claude/skills   → ../.agents/skills   (symlink,Claude Code)
+.cursor/skills   → ../.agents/skills   (symlink,Cursor)
+.codex/skills    → ../.agents/skills   (symlink,Codex)
+.gemini/skills   → ../.agents/skills   (symlink,Gemini)
+```
+
+一份技能定义,四款工具同时生效——新增技能、修订规则都只改一处,不存在"Claude 的规范和 Cursor 的规范各维护一份然后漂移"的问题。
+
+:::note Windows 注意事项
+Git symlink 在 Windows 下需要系统开启"开发者模式",并执行 `git config core.symlinks true`;否则 checkout 出来的 symlink 会退化成一个包含目标路径的普通文本文件,技能加载会静默失效。
+:::
+
+## 2. 技能目录解剖
+
+一个技能一个目录,核心是 `SKILL.md`,其余子目录按需扩展:
+
+```
+.agents/skills/zustand/           ← 简单技能:一个 SKILL.md + references
+├── SKILL.md                     #   精炼的规则正文
+└── references/
+    ├── data-structures.md       #   详细文档,按需加载
+    └── legacy-slices.md
+
+.agents/skills/acceptance/       ← 复杂技能:全功能形态
+├── SKILL.md
+├── agents/openai.yaml           # 其他 harness 的界面元数据
+├── references/*.md              # 领域参考(共 20+ 份)
+├── scripts/*.sh                 # 可执行辅助脚本
+└── surfaces/*.md                # 多平台差异文档(web / electron / ios-simulator…)
+```
+
+各部分职责:
+
+| 组成 | 职责 |
+| --- | --- |
+| `SKILL.md` | 技能入口。frontmatter 声明路由信息,正文是**精炼**的规则 |
+| `references/` | 细节文档。正文放不下、只在特定分支场景需要的内容,由 SKILL.md 链接指路 |
+| `scripts/` | 技能自带的检查 / 采集脚本,供技能执行时直接调用 |
+| `agents/openai.yaml` | per-harness 元数据,如 `display_name`、`default_prompt`、调用策略 |
+| `surfaces/` | 同一技能在不同运行平台(桌面端 / Web / 移动模拟器)的差异说明 |
+
+## 3. SKILL.md 写法:frontmatter 决定路由
+
+```markdown
+---
+name: typescript
+description: 'Use for TypeScript style and type safety when editing TS/TSX/MTS, including imports, async code and error suppression.'
+user-invocable: false
+---
+
+# TypeScript Code Style Guide
+...
+```
+
+三个关键模式:
+
+### description 是路由器
+
+description 是模型决定"何时加载这个技能"的唯一线索,所以要**列举具体触发场景**而不是抽象概括。对比 zustand 的写法:
+
+```yaml
+description: 'Use for Zustand stores: state shapes and type sources, state-only
+  stores with xActions classes, replica-backed list/detail data (local-replica),
+  selectors, optimistic writes, and legacy slice/internal_* action composition.'
+```
+
+把每一个触发点都写进去,路由才会准。
+
+### 两类技能,两种开关
+
+- **规则型技能**(`typescript` / `react` / `zustand`):用户不会手动调它,而是模型在编辑相关文件时自动加载,相当于"可自动注入的编码规范"。标记 `user-invocable: false`。
+- **命令型技能**(`skills-audit` / `pr` 等):用户显式调用,可声明 `argument-hint: '[--verbose | --apply]'` 提示参数。
+
+### 渐进式披露
+
+SKILL.md 正文只保留精炼规则,细节下沉到 `references/`,并在正文里明确指路,例如:
+
+```text
+Before choosing list/detail shapes or type sources, read references/data-structures.md.
+```
+
+这样技能被选中时只加载正文,重量级细节按需读取,单技能的 token 成本可控。(上例中 `references/data-structures.md` 并非本文档的链接,而是 lobehub 技能内的指路写法。)
+
+## 4. 与 AGENTS.md 的分工
+
+lobehub 的 AGENTS.md 开篇即写明边界:
+
+> "`AGENTS.md` owns repository-wide architecture and workflow. Keep detailed implementation rules in skills so they have one source of truth."
+
+即:**AGENTS.md 管仓库级架构与工作流,技能管具体实现规则**。AGENTS.md 通篇是指针路由,而非规则堆砌:
+
+- "Before editing components, component state, render boundaries, or memoization, read the `react` skill."
+- "Before changing SPA routes, read the `spa-routes` skill."
+- "Before reviewing a PR / diff / branch change, read the **deep-review** skill."
+
+详细规则一律外包给技能,避免 AGENTS.md 无限膨胀,也保证规则只有一份。
+
+## 5. 维护体系:把技能当资产管理
+
+### 元技能 skills-audit
+
+lobehub 用一个技能来审计技能本身——`skills-audit`,建议节奏为每周一次、或技能大量增改之后。审计内容包括:
+
+- **重复 / 竞争**:同域技能两两对比,description 相同视为疑似重复;同一任务能命中多个技能时,要么澄清边界要么合并。
+- **description 与正文脱节**:路由描述是否还匹配实际内容。
+- **坏链**:技能间交叉引用、引用的代码面是否仍然存在;底层代码已删且 3 个月无人改的技能 → 标记归档。
+- **AGENTS.md 重复**:技能内容若与 AGENTS.md 重复 → 收进 AGENTS.md 或瘦身为差异部分。
+
+其中的判断原则很值得抄录:
+
+- ❌ 不要因为"看起来没被用"就删——**unused can mean stable, not dead**。
+- ❌ 不要为了精简把 200+ 行的大技能合并进同域技能——**大技能是按需加载的,合并反而导致全量载入**。
+- ❌ 不要建立 `INDEX.md` 或给技能名加 `domain-` 前缀做装饰性重组——成本大于收益。
+- ❌ 重命名技能目录前必须检查交叉引用。
+
+### 外部技能当依赖安装
+
+通用技能不必自己维护,当第三方依赖装:`lobe-design` 技能源自独立仓库 [lobehub/lobe-design-skill](https://github.com/lobehub/lobe-design-skill),带版本号(如 5.8.0)安装到 `.agents/skills/lobe-design`;AGENTS.md 中用托管注释块自动维护、不手编:
+
+```html
+<!-- lobe-design:begin · managed by scripts/bootstrap.mjs · 不要手动编辑本块 -->
+```
+
+`acceptance` 技能同理,由 [lobehub/acceptance](https://github.com/lobehub/acceptance) 仓库的默认分支生成,通过 CLI 命令更新本地副本。
+
+### 跨 harness 兼容
+
+同一份技能服务四款工具,harness 差异用**各自认识的字段**表达,而非假设全行业统一:
+
+- 显式调用策略:Claude 系用 frontmatter `disable-model-invocation`,OpenAI 系用 `agents/openai.yaml` 的 `policy.allow_implicit_invocation`。
+- 技能审计时必须"对照目标 harness 实际支持的元数据验证",不能凭 description 措辞推断运行时行为。
+
+## 6. 技能全景:55 个技能的领域分布
+
+| 领域 | 代表技能 |
+| --- | --- |
+| 语言与风格 | `typescript`、`react`、`source-layout` |
+| 状态与数据 | `zustand`、`drizzle`、`db-migrations`、`trpc-router` |
+| UI / UX | `ux`、`ux-audit`、`lobe-design`、`modal`、`hotkey` |
+| 架构 | `compose-atoms`、`spa-routes`、`chat-sdk`、`builtin-tool` |
+| 测试与验收 | `testing`、`acceptance`、`agent-testing-bot` |
+| 工作流 | `pr`、`deep-review`、`cli`、`i18n`、`skills-audit` |
+
+分布规律:**每个高频修改的领域恰好一个对应技能**,而不是按文件路径逐个建技能;一个技能的 description 边界要能与其他技能明确区分。
+
+
+## 参考来源
+
+- 仓库:[lobehub/lobehub](https://github.com/lobehub/lobehub) — `.agents/skills/`、`AGENTS.md`(本文所有引文均出自该仓库)
+- 外部技能源:[lobehub/lobe-design-skill](https://github.com/lobehub/lobe-design-skill)、[lobehub/acceptance](https://github.com/lobehub/acceptance)

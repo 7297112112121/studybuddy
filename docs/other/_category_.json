@@ -1,0 +1,8 @@
+{
+  "label": "其他",
+  "position": 2,
+  "link": {
+    "type": "doc",
+    "id": "other/index"
+  }
+}
