@@ -25,10 +25,10 @@ description: LLM 接入层采用 Vercel AI SDK（ai v7）：流式对话走 Rout
 
 LLM 接入层采用 Vercel AI SDK：核心包 `ai`（v7.x，Apache-2.0）+ 提供商包 `@ai-sdk/anthropic` + 客户端 hooks 包 `@ai-sdk/react`。
 
-- **流式对话**：`app/api/chat/route.ts` Route Handler 内 `streamText` → `createUIMessageStreamResponse` 输出 UI 消息流；客户端 `useChat` + `DefaultChatTransport` 消费，按 `message.parts`（text/reasoning 等）渲染。**本条修正 ADR-0008 分工边界第 3 项**：流式对话改走 Route Handler、不经过 tRPC（tRPC 的 HTTP 传输层对流式响应与消息分块结构支持不佳，且 `useChat` 已自带消费端状态管理）；非流式业务能力（结构化任务等）仍走 tRPC procedure，其余分工边界不变。
+- **流式对话**：`app/api/chat/route.ts` Route Handler 内 `streamText` → `createUIMessageStreamResponse` 输出 UI 消息流；客户端 `useChat` + `DefaultChatTransport` 消费，按 `message.parts`（text/reasoning 等）渲染。**本条修正 ADR-0008 分工边界第 3 项**：流式对话改走 Route Handler、不经过 tRPC（tRPC 的 HTTP 传输层对流式响应与消息分块结构支持不佳，且 `useChat` 已自带消费端状态管理）；非流式业务能力（结构化任务等）仍走服务端函数（原为 tRPC procedure，tRPC 被 ADR-0025 取代后改走 Server Action，2026-11-13 修订），其余分工边界不变。
 - **消息持久化**：会话消息以 SDK 的 `UIMessage` 结构存 PostgreSQL（Drizzle schema 定义，ADR-0006），保证落库结构与前端渲染结构一致。
 - **RAG**：文档级分块（chunk 策略、大小）是应用侧职责，SDK 不承担；分块后的多段文本用 `embedMany` 批量生成向量、查询用 `embed` 单条生成，写入/检索 pgvector；混合检索排序在 Drizzle `sql` 层完成，不引重型 RAG 框架。
-- **结构化输出**：`generateObject`/`streamObject` + zod schema，与 tRPC 输入校验共用同一套 schema。
+- **结构化输出**：`generateObject`/`streamObject` + zod schema，与服务端入参校验共用同一套 schema（原为 tRPC 输入校验，随 ADR-0025 修订）。
 - **逃生舱**：Anthropic 特有能力经 `providerOptions.anthropic` 透传（不经抽象阉割）；Claude 独有的服务端 beta 能力（如上下文压缩、消息线程）在抽象层未及时跟上时，允许局部直连 `@anthropic-ai/sdk` 兜底，不推翻接入层。
 - **提供商姿态**：接入层与模型解耦，经 `@ai-sdk/anthropic` 默认接入 Claude 系列（当前代：claude-opus-5-5 / claude-sonnet-5-5 / claude-haiku-5-5），模型选择随业务迭代独立调整；更换提供商只改 provider 包与 model 标识。
 - **不做**：MVP 不引入 AI Gateway / 自建网关，密钥仅存服务端环境变量、不进客户端 bundle。
@@ -76,4 +76,5 @@ LLM 接入层采用 Vercel AI SDK：核心包 `ai`（v7.x，Apache-2.0）+ 提�
 - [ADR-0005：PostgreSQL 17 + pgvector](./postgresql-pgvector)
 - [ADR-0006：Drizzle ORM](./drizzle-orm)
 - [ADR-0008：tRPC API 层](./trpc)（本决策修正其分工边界第 3 项）
+- [ADR-0025：客户端数据层 TanStack Query + Server Actions](./client-data-layer)（本决策「非流式业务能力走 tRPC」的表述已随其修订）
 - [ADR-0016：部署编排 Docker Compose](./docker-compose)

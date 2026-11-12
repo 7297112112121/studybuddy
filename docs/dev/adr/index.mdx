@@ -55,7 +55,7 @@ YYYY-MM-DD
 | [0005](postgresql-pgvector) | 2026-11-12 | 数据库：PostgreSQL 17 + pgvector | 已接受 |
 | [0006](drizzle-orm) | 2026-11-12 | ORM：Drizzle ORM | 已接受 |
 | [0007](redis) | 2026-11-12 | 缓存与临时态：Redis | 已接受 |
-| [0008](trpc) | 2026-11-12 | API 层：tRPC | 已接受 |
+| [0008](trpc) | 2026-11-12 | API 层：tRPC | 已取代（[0025](client-data-layer)） |
 | [0009](zustand) | 2026-11-12 | 客户端状态：zustand | 已接受 |
 | [0010](i18n) | 2026-11-12 | 国际化：next-intl（原提案 react-i18next） | 已接受 |
 | [0011](eslint-prettier) | 2026-11-12 | 代码规范：ESLint + Prettier | 已接受 |
@@ -72,7 +72,8 @@ YYYY-MM-DD
 | [0022](ci-secrets) | 2026-11-12 | CI 机密管理：分环境隔离与三层分界（应用机密零过 CI） | 已接受 |
 | [0023](error-reporting-glitchtip) | 2026-11-12 | 错误上报：GlitchTip（Sentry SDK 兼容自托管） | 已接受 |
 | [0024](telemetry-opentelemetry) | 2026-11-12 | 采集层：OpenTelemetry 标准（Next.js instrumentation + AI SDK 遥测） | 已接受 |
+| [0025](client-data-layer) | 2026-11-13 | 客户端数据层：TanStack Query + Server Actions（取代 ADR-0008 的 tRPC） | 已接受 |
 
 ## 待决策清单
 
-本轮选型清单已全部完成（0001–0024）。0020–0022 由 ADR-0018 拆分而来，0023–0024 由 ADR-0019 拆分而来（2026-11-13）。后续出现新决策时按同一模板新增 ADR 并登记于决策日志。
+本轮选型清单（0001–0024）已全部完成；0020–0022 由 ADR-0018 拆分而来，0023–0024 由 ADR-0019 拆分而来（2026-11-13）。0025 是首次选型复盘的产物：以 TanStack Query + Server Actions 取代 ADR-0008 的 tRPC（2026-11-13）。后续出现新决策时按同一模板新增 ADR 并登记于决策日志。

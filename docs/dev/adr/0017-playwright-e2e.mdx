@@ -16,7 +16,7 @@ description: Playwright（@playwright/test 1.65）承担关键用户旅程的端
 ## 背景
 
 - ADR-0012 定了 Vitest 单测，但留了明确盲区：**异步服务端组件与端到端链路不在单测范围**。Next.js 16 官方测试指南对这一盲区有直接表态："Since `async` Server Components are new to the React ecosystem, some tools do not fully support them... we recommend using **End-to-End Testing** over Unit Testing for `async` components"（仓库内 node_modules/next/dist/docs/01-app/02-guides/testing/index.md）。本 ADR 就是那篇里"后续以 Playwright E2E 的新 ADR 补位"承诺的兑现。
-- 待验证的用户旅程横跨多个已定决策，都是多服务协作链路，单测天然够不到：Better Auth 登录与会话（ADR-0013）、资料上传预签名直传（ADR-0015）、AI 对话流式输出（ADR-0014）、tRPC 业务流程（ADR-0008）。
+- 待验证的用户旅程横跨多个已定决策，都是多服务协作链路，单测天然够不到：Better Auth 登录与会话（ADR-0013）、资料上传预签名直传（ADR-0015）、AI 对话流式输出（ADR-0014）、tRPC 业务流程（ADR-0008，后被 ADR-0025 改为 Server Actions + TanStack Query）。
 - 本项目 `next.config.ts` 已启用 `cacheComponents: true` 与 `partialPrefetching: true`，导航与缓存语义和旧版 Next.js 不同；Next.js 16 为此提供了配套测试工具 `@next/playwright`（`instant()` helper，标注 "Requires: Cache Components"），官方示例 `with-playwright` 随 create-next-app 分发。
 - 团队规模小：E2E 框架必须一条命令启动、CI 无需任何编排服务、失败可回放定位。
 
@@ -28,7 +28,7 @@ E2E 测试采用 Playwright：核心包 `@playwright/test`（v1.65，Apache-2.0�
 - **浏览器矩阵**：MVP 以 Chromium 为默认矩阵（本地开发与 CI 主线）；Firefox / WebKit 按需加入冒烟，不做全矩阵强制门禁。
 - **并行**：Playwright 默认按测试文件在独立 worker 进程并行，无需任何测试编排服务或外部数据库协调。
 - **Next.js 16 专项**：引入 `@next/playwright`（与 `next` 同版本发布，当前同为 16.4.6），用 `instant()` helper 断言 `cacheComponents` 下即时导航的首屏可见性——这是官方为 `partialPrefetching` 语义变化提供的专用断言面。
-- **覆盖范围**：E2E 只覆盖关键用户旅程（登录会话流转、资料上传链路、AI 对话流式渲染、核心 tRPC 业务流），不做全页面回归。**LLM 调用在 E2E 中一律 mock**（环境变量切换到本地假流），E2E 验证的是流式 UI 链路的正确性，不是模型质量；模型质量走 ADR-0014 层面的独立评估。
+- **覆盖范围**：E2E 只覆盖关键用户旅程（登录会话流转、资料上传链路、AI 对话流式渲染、核心业务流），不做全页面回归。**LLM 调用在 E2E 中一律 mock**（环境变量切换到本地假流），E2E 验证的是流式 UI 链路的正确性，不是模型质量；模型质量走 ADR-0014 层面的独立评估。
 - **测试数据**：E2E 跑独立测试数据库实例（每轮运行前重置），不触碰开发库；浏览器侧复用登录会话。
 - **分层不变**：ADR-0012 的分工继续有效——纯函数与客户端组件归 Vitest；异步服务端组件不在 jsdom 里硬测，由本 E2E 层补齐。
 - **不做**：MVP 不做视觉回归截图对比、不做性能基线、不做移动真机矩阵。

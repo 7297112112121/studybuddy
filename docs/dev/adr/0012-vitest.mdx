@@ -25,7 +25,7 @@ description: Vitest + Testing Library 承担单元与组件测试；异步服务
 采用 Vitest + @testing-library/react + jsdom 承担单元与组件测试；配置 vite-tsconfig-paths 共享 `@/*` 别名。测试分层：
 
 1. 纯函数（调度、计划算法）：全覆盖；
-2. tRPC procedure：以测试容器 PostgreSQL（或事务回滚模式）驱动真实查询；
+2. Server Function 数据层（Server Action 内的查询与变更函数，ADR-0025）：以测试容器 PostgreSQL（或事务回滚模式）驱动真实查询；
 3. 客户端组件：RTL 交互断言；
 4. 异步服务端组件与端到端链路：不在本 ADR 范围，后续以 Playwright E2E 的新 ADR 补位。
 
@@ -60,5 +60,5 @@ description: Vitest + Testing Library 承担单元与组件测试；异步服务
 ## 相关决策
 
 - [ADR-0011：ESLint + Prettier](./eslint-prettier)
-- [ADR-0008：tRPC API 层](./trpc)
+- [ADR-0025：客户端数据层 TanStack Query + Server Actions](./client-data-layer)
 - [ADR-0017：E2E 测试 Playwright](./playwright-e2e)

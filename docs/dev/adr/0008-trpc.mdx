@@ -7,7 +7,7 @@ description: tRPC v11 服务客户端类型安全 RPC；服务端组件直连数
 
 ## 状态
 
-已接受（Accepted，含分工边界）
+已取代（Superseded by [ADR-0025](./client-data-layer)）
 
 ## 日期
 
@@ -28,6 +28,8 @@ description: tRPC v11 服务客户端类型安全 RPC；服务端组件直连数
 2. 表单类突变 → 优先 Server Actions；
 3. 客户端数据获取、轮询、乐观更新 → tRPC；（流式对话原列于此，后经 ADR-0014 改划至 Route Handler，不走 tRPC）
 4. 所有 procedure 入参用 zod 校验，schema 从 Drizzle 表结构推导，保证校验与表定义不漂移。
+
+> 2026-11-13：本决策被 [ADR-0025](./client-data-layer) 整体取代——分工边界第 1、2 项被其继承，第 3 项承载方式改为 TanStack Query + Server Actions，第 4 项的校验位置移入 Server Function 函数体。
 
 ## 备选方案
 
@@ -66,3 +68,4 @@ description: tRPC v11 服务客户端类型安全 RPC；服务端组件直连数
 - [ADR-0006：Drizzle ORM](./drizzle-orm)
 - [ADR-0009：zustand](./zustand)
 - [ADR-0014：LLM 接入层 Vercel AI SDK](./vercel-ai-sdk)（修正本决策分工边界第 3 项：流式对话改走 Route Handler）
+- [ADR-0025：客户端数据层 TanStack Query + Server Actions](./client-data-layer)（取代本决策）

@@ -1,6 +1,6 @@
 ---
 title: ADR-0013：认证与会话采用 Better Auth
-description: better-auth 1.7，Drizzle/Redis/tRPC 一手集成，用户与会话数据留在自有 PostgreSQL，插件化覆盖 2FA/组织/魔术链接
+description: better-auth 1.7，Drizzle/Redis 一手集成，用户与会话数据留在自有 PostgreSQL，插件化覆盖 2FA/组织/魔术链接
 ---
 
 # ADR-0013：认证与会话采用 Better Auth
@@ -15,7 +15,7 @@ description: better-auth 1.7，Drizzle/Redis/tRPC 一手集成，用户与会话
 
 ## 背景
 
-- 技术栈已定为 Next.js 16 App Router + PostgreSQL/Drizzle + Redis + tRPC（ADR-0001/0005/0006/0007/0008）。认证方案要和这四件东西都低摩擦集成：RSC 里取会话、会话表与业务表同库同迁移、缓存与限流走 Redis、鉴权结果注入 tRPC context。
+- 技术栈已定为 Next.js 16 App Router + PostgreSQL/Drizzle + Redis + tRPC（ADR-0001/0005/0006/0007/0008；tRPC 后被 ADR-0025 取代）。认证方案要和这四件东西都低摩擦集成：RSC 里取会话、会话表与业务表同库同迁移、缓存与限流走 Redis、鉴权结果注入 tRPC context（取代后改为服务端函数内直接调用，见决策条目）。
 - 产品是 AI 学习陪伴应用，对话与学习记录涉及用户敏感情绪内容：用户与会话数据必须留在自有数据库（ADR-0005 已确立数据自持与自托管），排除数据面托管在第三方 SaaS 的方案。
 - 面向个人学习者的 MVP：邮箱密码 + 主流 OAuth 起步，后续可能需要 2FA、多会话、组织/家庭共学等能力，希望按需打开而非二次开发。
 - TypeScript strict：会话与用户类型要贯通到 tRPC 与 RSC，不接受 `any` 断言式接入。
@@ -26,7 +26,7 @@ description: better-auth 1.7，Drizzle/Redis/tRPC 一手集成，用户与会话
 
 - 服务端实例经内置 drizzleAdapter 直接使用 ADR-0006 的 Drizzle schema：user/session/account/verification 表与业务数据同库，由 drizzle-kit 统一迁移。
 - App Router 以 catch-all 路由挂载认证端点（官方 Next.js 集成）；服务端组件与中间件从中取会话做鉴权。
-- 客户端登录 UI 由官方客户端 SDK 驱动；tRPC context 由会话结果注入，未登录走受保护 procedure。
+- 客户端登录 UI 由官方客户端 SDK 驱动；服务端鉴权统一在 RSC 与 Server Action 内经 `auth.api.getSession` 直接调用，未登录按各自入口拒绝（原为注入 tRPC context、走受保护 procedure，tRPC 被 ADR-0025 取代后修订，2026-11-13）。
 - 会话缓存与限流计数走 secondaryStorage，接官方 Redis 存储实现（ADR-0007）。
 - 2FA、魔术链接、组织、API Key 等能力按插件按需启用，不默认全开。
 - 版本策略：锁 minor；安全通告的补丁版本按事件响应即时跟进（见风险）。
@@ -76,5 +76,5 @@ description: better-auth 1.7，Drizzle/Redis/tRPC 一手集成，用户与会话
 - [ADR-0005：PostgreSQL 17 + pgvector](./postgresql-pgvector)
 - [ADR-0006：Drizzle ORM](./drizzle-orm)
 - [ADR-0007：Redis](./redis)
-- [ADR-0008：tRPC API 层](./trpc)
+- [ADR-0025：客户端数据层 TanStack Query + Server Actions](./client-data-layer)（鉴权注入点随其取代 tRPC 而修订）
 - [ADR-0012：Vitest 单元测试](./vitest)
