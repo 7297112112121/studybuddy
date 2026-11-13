@@ -35,6 +35,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # 生成 Next.js 路由/布局全局类型（LayoutProps 等位于 .next/types，gitignored），
+      # 全新 checkout 上必须先生成，Type-check 才能通过（next typegen 秒级完成）
+      - name: Type definitions
+        run: npx next typegen
+
       - name: Type-check
         run: npm run type-check
 
