@@ -14,6 +14,9 @@
     "type-check": "tsc --noEmit",
     "lint:circular": "dpdm src/app/layout.tsx --circular --exit-code circular:1 --warning false --progress false",
     "lint:unused": "knip",
+    "test": "node scripts/run-vitest.mjs run",
+    "test:watch": "node scripts/run-vitest.mjs",
+    "test:e2e": "playwright test",
     "docs:dev": "npm run start --workspace website",
     "docs:build": "npm run build --workspace website",
     "docs:serve": "npm run serve --workspace website",
@@ -28,16 +31,24 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@next/playwright": "16.4.6",
+    "@playwright/test": "~1.65.0",
     "@tailwindcss/turbopack": "4.3.3",
-    "@types/node": "^20",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.2.0",
     "dpdm": "^4.3.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "jsdom": "^31.0.1",
     "knip": "^6.45.1",
     "lint-staged": "^17.6.0",
     "tailwindcss": "4.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "5.1.0"
   }
 }
