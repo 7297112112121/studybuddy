@@ -1,0 +1,41 @@
+# 依赖监听：Dependabot 版本更新 + 安全告警（ADR-0021 依赖层）。
+# 现已配置：npm（根 + website workspace）与 github-actions 生态。
+# P3 预留：docker 生态（监听 compose.yaml 中钉版本的基础设施镜像，seaweedfs 为重点监听对象），
+# 待 ADR-0016 的 compose.yaml 落地后追加：
+#   - package-ecosystem: docker
+#     directory: "/"
+#     schedule:
+#       interval: weekly
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: npm
+    directory: "/website"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps-web)"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(ci)"

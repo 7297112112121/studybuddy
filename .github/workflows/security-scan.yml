@@ -1,0 +1,32 @@
+# 每周安全周扫（ADR-0021）：Trivy fs 扫描仓库存量依赖与基础设施配置。
+# 门禁（--exit-code 1 阻断 HIGH/CRITICAL）位于 P3 构建流水线的镜像扫描步骤，只看新增；
+# 本作业承担存量兜底：scheduled 作业失败会向仓库所有者发送邮件通知，即告警通道。
+# 无法立即修复的漏洞进 .trivyignore 显式豁免并注明原因（豁免必须写明理由，季度回顾清理）。
+
+name: Security scan
+
+on:
+  schedule:
+    - cron: "0 2 * * 1" # 每周一 UTC 02:00（北京 10:00）
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trivy-fs:
+    name: Trivy fs scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Trivy fs scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: 1
+          version: v0.76.2 # Trivy 本体锁定版本（ADR-0021）
