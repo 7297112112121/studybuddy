@@ -1,0 +1,42 @@
+# 构建上下文只保留应用构建所需（package.json / package-lock.json /
+# next.config.ts / tsconfig.json / next-env.d.ts / src/ / public/），
+# 其余仓库内容一律不进镜像构建。
+#
+# 关键排除项：website/ 工作区——Dockerfile 阶段 1 只装根工作区依赖
+#（npm ci 对缺失工作区自动跳过），避免 Docusaurus 全家桶拖慢构建。
+node_modules
+.next
+.git
+.github
+.githooks
+.claude
+.codex
+.agents
+.dsh
+.env*
+
+# 工作区与文档（构建不需要）
+website
+my-website
+packages
+docs
+
+# 测试与工具链
+tests
+e2e
+test-results
+playwright.config.ts
+vitest.config.ts
+knip.ts
+eslint.config.mjs
+scripts
+
+# 部署编排自身（只被 compose 引用，不进镜像）
+compose.yaml
+Caddyfile
+
+# 杂项
+.trivyignore
+tsconfig.tsbuildinfo
+*.md
+LICENSE
