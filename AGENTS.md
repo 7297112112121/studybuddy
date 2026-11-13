@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents (e.g. Claude Code) when working 
 
 ## 项目概览
 
-学习陪伴伙伴(studybuddy)Web 应用,基于 Next.js 16.4.6(App Router)+ React 19 + TypeScript(strict)技术栈构建,样式使用 Tailwind CSS 4。仓库为 npm workspaces 结构:主应用代码位于 `app/` 目录,文档站点位于 `website/`(Docusaurus)。
+学习陪伴伙伴(studybuddy)Web 应用,基于 Next.js 16.4.6(App Router)+ React 19 + TypeScript(strict)技术栈构建,样式使用 Tailwind CSS 4。仓库为 npm workspaces 结构:主应用代码位于 `src/` 目录(目录约定见 `docs/dev/代码目录`),文档站点位于 `website/`(Docusaurus)。
 
 ## 常用命令
 
@@ -29,8 +29,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## 架构与约定
 
-- **App Router**:路由与布局都在 `app/` 下,根布局为 `app/layout.tsx`(加载 Geist 字体并注入 CSS 变量)。
-- **路径别名**:`@/*` 映射到项目根目录(见 `tsconfig.json`)。
+- **App Router**:路由与布局都在 `src/app/` 下,根布局为 `src/app/layout.tsx`(加载 Geist 字体并注入 CSS 变量)。
+- **路径别名**:`@/*` 映射到 `./src/*`(见 `tsconfig.json`)。
 - 根目录的 `my-website/` 仅是开发服务器生成自签名证书时遗留的空目录,不属于项目,忽略即可。
 
 ## Git 与版本约定
