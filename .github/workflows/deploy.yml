@@ -86,8 +86,14 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
+          # accept-new：首次连接自动信任主机指纹（与 ssh-keyscan 同为 TOFU 信任模型），
+          # 但少一条独立命令——keyscan 失败会因 bash -e 静默中止（5 秒超时 + stderr 屏蔽，
+          # 2026-11-13 首次部署即因此零输出失败），ssh 直连失败则能看到真实错误。
+          # ConnectTimeout：服务器 22 端口不可达时 15 秒内明确报错，而非挂满作业时限。
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=15 \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
             "cd $DEPLOY_DIR && git fetch origin && git checkout $SHORT_SHA && ./scripts/deploy.sh $SHORT_SHA dev"
 
   deploy-test:
@@ -106,5 +112,9 @@ jobs:
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
+          # SSH 首连方式说明见 deploy-dev 作业（accept-new + ConnectTimeout）
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=15 \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
             "cd $DEPLOY_DIR && git fetch origin && git checkout $SHORT_SHA && ./scripts/deploy.sh $SHORT_SHA test"
