@@ -33,6 +33,10 @@ ENV NODE_ENV=production \
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+# 剥离 npm：纯构建期工具，运行时只需 node 二进制。其 vendored 依赖
+# （undici 6.28.0 / brace-expansion 5.0.9，npm 11.20.0 自用副本）带 HIGH CVE
+# 且上游 node:26.13 尚无修复版——剥离即消除，不走 .trivyignore 豁免（ADR-0021）
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

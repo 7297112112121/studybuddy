@@ -62,9 +62,8 @@ jobs:
 
   # 镜像可构建性校验（CI/CD 阶段 1，ADR-0016 standalone 镜像）：
   # 只构建不推送、零机密接触，与 verify 并行互不阻塞。
-  # MVP 从简不用 buildx 缓存；阶段 2 构建挪入部署流水线时再评估缓存。
-  # 注意:新增作业的 check 名(Docker build)暂未加入 ruleset 必需检查,
-  # 合并后需在 master-branch-protection 规则集中补录(见 PR 说明)。
+  # check 名「Docker build」已录入 master 分支保护必需检查，构建失败阻断合并。
+  # MVP 从简不用 buildx 缓存；部署流水线（deploy.yml）同款构建，缓存待有真实瓶颈再评估。
   docker:
     name: Docker build
     runs-on: ubuntu-latest

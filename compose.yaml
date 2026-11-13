@@ -1,16 +1,15 @@
-# 部署编排骨架（CI/CD 阶段 1，ADR-0016）。
-# 本阶段只落 app + 反向代理两个服务；PG / Redis / SeaweedFS 按应用实际接入
-# 逐个补齐——拓扑终态仍以 ADR-0016 五服务为准，此为实施顺序而非架构变更。
+# 部署编排（ADR-0016）。app + 反向代理两服务；PG / Redis / SeaweedFS 按应用
+# 实际接入逐个补齐——拓扑终态仍以 ADR-0016 五服务为准，此为实施顺序而非架构变更。
 #
-# 阶段 2 接入 TCR（ADR-0020）后：APP_IMAGE 指向
-# ccr.ccs.tencentyun.com/studybuddy/app:<短SHA>，由 CI 推送，届时移除 build 段。
+# 镜像来自 TCR（ADR-0020）：APP_IMAGE 由 scripts/deploy.sh 注入
+# （ccr.ccs.tencentyun.com/studybuddy/app:<短SHA>）。
+# 本地体验：docker build --target runner -t studybuddy-app:local . 后直接 up（默认 tag 兜底）。
+#
+# dev/test 共居一台服务器（ADR-0018）：以不同 compose project
+# （studybuddy-dev / studybuddy-test）+ 不同端口（80/443 与 8080/8443）区分。
 services:
   app:
     image: ${APP_IMAGE:-studybuddy-app:local}
-    build:
-      context: .
-      # Dockerfile 的 runner 阶段（最终阶段，显式声明便于阅读）
-      target: runner
     restart: unless-stopped
     # 应用机密只经服务器本地 .env 注入（ADR-0016/0022：不进仓库、不进镜像、不过 CI）；
     # 骨架期文件不存在也可启动
@@ -42,9 +41,18 @@ services:
     # 钉 minor 线（ADR-0016 版本纪律）
     image: caddy:2.10-alpine
     restart: unless-stopped
+    # 宿主端口可参数化：dev 用默认 80/443，test 共居同机改用 8080/8443（ADR-0018）
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    healthcheck:
+      # 探容器内 80 端口：caddy 探活 = caddy 存活且上游 app 可达（502 会失败），
+      # 使 compose up --wait 等到「整条链路」通才算部署完成
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # 证书与 OCSP 状态持久化，避免每次重建容器重新签发
