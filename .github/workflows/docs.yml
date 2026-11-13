@@ -8,7 +8,9 @@ on:
       - 'website/**'
       - 'package.json'
       - 'package-lock.json'
-      - '.github/workflows/docs.yml'
+  # 工作流自身变更（如 action 钉版升级）不改变站点产物，不再自动触发部署；
+  # 需要时可手动触发
+  workflow_dispatch:
 
 permissions:
   contents: read
