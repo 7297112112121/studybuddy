@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
 
       - name: Install dependencies
@@ -59,3 +59,18 @@ jobs:
       # Compose 栈（PG / Redis / SeaweedFS）待 ADR-0016 落地后再接入
       - name: Playwright E2E
         run: npm run test:e2e
+
+  # 镜像可构建性校验（CI/CD 阶段 1，ADR-0016 standalone 镜像）：
+  # 只构建不推送、零机密接触，与 verify 并行互不阻塞。
+  # MVP 从简不用 buildx 缓存；阶段 2 构建挪入部署流水线时再评估缓存。
+  # 注意:新增作业的 check 名(Docker build)暂未加入 ruleset 必需检查,
+  # 合并后需在 master-branch-protection 规则集中补录(见 PR 说明)。
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build app image
+        run: docker build --target runner -t studybuddy-app:pr .

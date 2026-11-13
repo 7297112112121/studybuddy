@@ -1,0 +1,10 @@
+# 反向代理入口（ADR-0016）：caddy 是 app 的唯一公网入口。
+#
+# SITE_ADDRESS 环境变量控制监听地址（服务器 .env 注入）：
+#   未设置（本地骨架）      → :80，纯 HTTP；
+#   设置为域名（如 app.example.com）→ Caddy 自动签发 Let's Encrypt 证书，
+#     80 上自动重定向 HTTPS，443 上服务。
+# 开发 / 测试环境共居同一台服务器时，用不同 compose project + 不同域名区分（ADR-0018）。
+{$SITE_ADDRESS::80} {
+	reverse_proxy app:3000
+}
