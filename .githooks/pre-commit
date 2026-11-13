@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# pre-commit 门禁：暂存区 lint-staged；master 分支追加全量类型检查。
+# 启用方式：git config core.hooksPath .githooks（package.json 的 prepare 脚本已自动执行）。
+
+set -e
+
+npx lint-staged
+
+# master 为主干分支，合入前跑全量类型检查；短生命周期分支只跑 lint-staged 以保持提交轻快。
+if [ "$(git branch --show-current)" = "master" ]; then
+  npm run type-check
+fi

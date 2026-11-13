@@ -11,9 +11,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "type-check": "tsc --noEmit",
+    "lint:circular": "dpdm src/app/layout.tsx --circular --exit-code circular:1 --warning false --progress false",
+    "lint:unused": "knip",
     "docs:dev": "npm run start --workspace website",
     "docs:build": "npm run build --workspace website",
-    "docs:serve": "npm run serve --workspace website"
+    "docs:serve": "npm run serve --workspace website",
+    "prepare": "git config core.hooksPath .githooks"
+  },
+  "lint-staged": {
+    "*.{js,mjs,ts,tsx}": "eslint --fix"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -25,8 +32,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dpdm": "^4.3.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "knip": "^6.45.1",
+    "lint-staged": "^17.6.0",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
   }
