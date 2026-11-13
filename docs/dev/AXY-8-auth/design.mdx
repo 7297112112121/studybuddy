@@ -1,0 +1,395 @@
+---
+title: 'Design: AXY-8 登录注册'
+description: 登录注册的架构设计(数据模型/契约/UI/组件)
+sidebar_position: 2
+---
+
+# Design: AXY-8 登录注册
+
+| 对应 Proposal | [AXY-8 登录注册](./proposal) | 状态 | 草案 |
+| ---- | ---- | ---- | ---- |
+| 日期 | 2026-11-14 | 批准人 | 待批准后填写 |
+
+## 架构总览
+
+认证底座为 Better Auth 1.7（[ADR-0013](../adr/better-auth)）：drizzleAdapter 接自有 PG、phoneNumber 插件提供手机号登录端点、`@better-auth/redis-storage`（ioredis）作 secondaryStorage，会话双写 PG + Redis。三个关键取舍：
+
+1. **注册不走插件的 OTP 注册路径**（短信通道为本期非目标 #1），由 `modules/auth/service.ts` 在单事务内直接插表（user + credential account），密码经 `better-auth/crypto` 的 `hashPassword`（与核心同参数 scrypt）。这正是 phoneNumber 插件文档对迁移/种子用户要求的形态：「account 表存在 `providerId = "credential"` 记录即可用 `/sign-in/phone-number` 登录」。
+2. **登录/登出由客户端 SDK 直调**（ADR-0013「客户端登录 UI 由官方客户端 SDK 驱动」）；**注册是表单突变，走 Server Action 判别联合返回**（[ADR-0025](../adr/client-data-layer)）。两个 ADR 的边界在此互补而非冲突。
+3. **user.email 为 Better Auth 核心必填列**，本产品无邮箱账号，存确定性占位邮箱 `${phone}@phone.styb.invalid`（`.invalid` 为 RFC 2606 保留 TLD，永不展示、不投递）——与 phoneNumber 插件 `signUpOnVerification.getTempEmail` 的官方模式同构；`/sign-up/email`、`/sign-in/email` 端点经 before-hook 显式禁用（非目标 #4：仅手机号注册）。
+
+分层遵循[代码目录](../代码目录)：`src/lib/` 放底座（auth 实例、auth-client、redis、路由常量），`src/modules/auth/` 按三段式落业务（本特性即「落地步骤 1」的样板模块），`src/app/(auth)`、`src/app/(app)` 为薄壳路由。会话策略：`storeSessionInDatabase: true`——Redis 为首要查询层、PG 兜底；退出登录时 Better Auth 同步删除 Redis 键与 PG 行（R11）。
+
+实现阶段须先读 `node_modules/next/dist/docs/` 中 App Router 相关指南（AGENTS.md 约定：Next 16 与训练数据存在破坏性差异）。
+
+## 数据模型
+
+**放置约定（本设计立样板）**：drizzle 表定义在 `src/modules/auth/schema.ts`（模块属主，含 zod 推导）；`src/db/schema.ts` 为公共契约 barrel（`export * from '@/modules/auth/schema'`，依赖规则 5「人人可读、写入仅属主」）；`src/db/client.ts` 以 `{ schema, casing: 'snake_case' }` 构造单例。迁移由 drizzle-kit 生成至 `src/db/migrations`（[ADR-0006](../adr/drizzle-orm)）。
+
+```
+user 1 ── N account（credential 记录持密码摘要）
+user 1 ── N session（Redis 缓存 + PG 双写）
+verification 独立（OTP 通道就绪前为空表，结构齐备）
+```
+
+| 实体 | 字段 | 类型 | 约束 | 说明 |
+| ---- | ---- | ---- | ---- | ---- |
+| user | id | text | PK | `crypto.randomUUID()` |
+| | name | text | NOT NULL | 注册时取手机号（与插件 `getTempName` 默认一致） |
+| | email | text | NOT NULL UNIQUE | 占位邮箱 `phoneToPlaceholderEmail(phone)`，UI 永不展示 |
+| | email_verified | boolean | NOT NULL default false | |
+| | image | text | nullable | 本期不用 |
+| | phone_number | text | NOT NULL UNIQUE | **R14 唯一索引**；合法域 `^1[3-9]\d{9}$` |
+| | phone_number_verified | boolean | NOT NULL default false | 短信通道就绪后经 OTP 流程置真 |
+| | agreement_version | text | NOT NULL | **R15**；当前 `'v1'`（协议正文为占位，非目标 #5） |
+| | agreed_at | timestamptz | NOT NULL | **R15**；注册事务内写入 |
+| | created_at / updated_at | timestamptz | NOT NULL default now() | |
+| account | id | text | PK | uuid |
+| | account_id | text | NOT NULL | credential 场景下 = user.id |
+| | provider_id | text | NOT NULL | `'credential'` |
+| | user_id | text | NOT NULL REFERENCES user(id) ON DELETE CASCADE | |
+| | password | text | nullable | scrypt 摘要（`盐:哈希` 格式），**R13：永不存明文** |
+| | access_token / refresh_token / id_token / token_type / scope | text | nullable | OAuth 场景才用，本期恒空 |
+| | access_token_expires_at / refresh_token_expires_at | timestamptz | nullable | 同上 |
+| | created_at / updated_at | timestamptz | NOT NULL default now() | |
+| session | id | text | PK | |
+| | token | text | NOT NULL UNIQUE | 会话令牌，同名为 Redis 键 |
+| | user_id | text | NOT NULL REFERENCES user(id) ON DELETE CASCADE | |
+| | expires_at | timestamptz | NOT NULL | 会话时长 7 天 |
+| | ip_address / user_agent | text | nullable | |
+| | created_at / updated_at | timestamptz | NOT NULL default now() | |
+| verification | id | text | PK | |
+| | identifier | text | NOT NULL | 手机号 |
+| | value | text | NOT NULL | OTP 一次性令牌 |
+| | expires_at | timestamptz | NOT NULL | |
+| | created_at / updated_at | timestamptz | NOT NULL default now() | |
+
+schema.ts 内的 zod 推导（服务端入参校验，边界 #1 双重校验的后端半边）：
+
+```ts
+export const registerInputSchema = z
+  .object({
+    phone: z.string().regex(PHONE_RE),
+    password: z.string().regex(PASSWORD_RE),
+    confirmPassword: z.string(),
+    agreementAccepted: z.literal(true),
+  })
+  .refine((v) => v.password === v.confirmPassword);
+export type RegisterInput = z.infer<typeof registerInputSchema>;
+```
+
+## 契约
+
+签名级精确；模块内函数一律显式返回类型（代码目录「类型禁推断」约定）。
+
+### 环境变量（.env.example 增补）
+
+```
+BETTER_AUTH_SECRET=          # ≥32 字符随机串
+BETTER_AUTH_URL=http://localhost:3000
+DATABASE_URL=postgresql://studybuddy:***@localhost:5432/studybuddy
+REDIS_URL=redis://localhost:6379
+```
+
+### src/lib/redis.ts
+
+```ts
+import Redis from 'ioredis';
+/** 单例；REDIS_URL 连接；仅存可丢失数据（ADR-0007 纪律） */
+export const redis: Redis;
+```
+
+### src/lib/auth.ts（Better Auth 实例，服务端 only）
+
+```ts
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { phoneNumber } from 'better-auth/plugins';
+import { redisStorage } from '@better-auth/redis-storage';
+import { APIError } from 'better-auth/api';
+
+/** 与 modules/auth/validators 的 PHONE_RE 保持一致（同步性由单元测试守护） */
+const PHONE_RE = /^1[3-9]\d{9}$/;
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, { provider: 'pg' }),
+  secondaryStorage: redisStorage({ client: redis, keyPrefix: 'better-auth:' }),
+  session: { storeSessionInDatabase: true, expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },
+  emailAndPassword: { enabled: true, minPasswordLength: 8, maxPasswordLength: 20 },
+  plugins: [
+    phoneNumber({
+      phoneNumberValidator: (p: string) => PHONE_RE.test(p),
+      // 短信通道未就绪（非目标 #1）：OTP 端点可达但码无处投递，不可被利用；
+      // 通道就绪后替换为真实发送实现（后续迭代）
+      sendOTP: async () => {},
+    }),
+  ],
+  hooks: {
+    before: [
+      {
+        // 非目标 #4：仅手机号注册。显式禁用邮箱注册/登录端点，防 API 直连绕过
+        matcher: (ctx) => ctx.path === '/sign-up/email' || ctx.path === '/sign-in/email',
+        handler: async () => {
+          throw new APIError('FORBIDDEN', { message: 'Email auth is disabled' });
+        },
+      },
+    ],
+  },
+  trustedOrigins: [process.env.BETTER_AUTH_URL!],
+});
+```
+
+`emailAndPassword.enabled: true` 是 phoneNumber 插件密码校验的基座；邮箱端点本身已被 hook 拦死。限流保持默认开启（全局规则 + 插件对手机号路径的 10 次/60 秒限制），防凭证填充。
+
+### src/lib/auth-client.ts（客户端 SDK）
+
+```ts
+import { createAuthClient } from 'better-auth/client';
+import { phoneNumberClient } from 'better-auth/client/plugins';
+
+export const authClient = createAuthClient({ plugins: [phoneNumberClient()] });
+// authClient.signIn.phoneNumber({ phoneNumber, password, rememberMe?: true })
+//   : Promise<{ data?: { user; session }; error?: { code: string; message: string; status: number } }>
+// authClient.signOut(): Promise<{ data?; error? }>
+```
+
+### src/lib/routes.ts（边界 #7：路由常量唯一来源）
+
+```ts
+export const ROUTES = { login: '/login', register: '/register', workbench: '/workbench' } as const;
+```
+
+### modules/auth/validators.ts（纯函数，零 IO，单元测试锚点）
+
+```ts
+export const PHONE_RE = /^1[3-9]\d{9}$/;
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;          // 「本地名@域名.后缀」
+export const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,20}$/;   // R3
+
+export type AccountKind = 'phone' | 'email';
+export type AccountCheck =
+  | { ok: true; kind: AccountKind }
+  | { ok: false; messageKey: 'auth.account.required' | 'auth.account.invalid' };
+
+export function validateAccount(raw: string): AccountCheck;                    // R1/R2
+export function validatePassword(
+  raw: string,
+): { ok: true } | { ok: false; messageKey: 'auth.password.required' | 'auth.password.invalid' }; // R3
+
+export type RegisterFormErrors = Partial<{
+  phone: 'auth.register.phoneInvalid';
+  password: 'auth.password.required' | 'auth.password.invalid';
+  confirmPassword: 'auth.register.passwordMismatch';
+  agreement: 'auth.agreement.required';
+}>;
+export function validateRegisterForm(v: {
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  agreementAccepted: boolean;
+}): RegisterFormErrors | null;                                                // R8
+```
+
+### modules/auth/service.ts（写路径，注册事务）
+
+```ts
+import { hashPassword } from 'better-auth/crypto';
+
+export const AGREEMENT_VERSION = 'v1' as const;
+export function phoneToPlaceholderEmail(phone: string): string; // `${phone}@phone.styb.invalid`
+
+export type RegisterOutcome =
+  | { ok: true; userId: string }
+  | { ok: false; error: 'PHONE_ALREADY_REGISTERED' };
+
+/** 单事务：校验由调用方完成；插入 user（含 agreement_version/agreed_at）+ credential account（R9/R13/R15）*/
+export async function registerWithPhone(input: { phone: string; password: string }): Promise<RegisterOutcome>;
+// 错误情形：PG 23505 且约束为 user_phone_number 唯一索引 → PHONE_ALREADY_REGISTERED（R10/R14）
+// 纪律：本函数与调用链不记录任何入参（R13 日志无明文密码）
+```
+
+### modules/auth/queries.ts（读路径，RSC 调用）
+
+```ts
+export type AuthSession = {
+  user: { id: string; name: string; phoneNumber: string };
+  session: { id: string; userId: string; expiresAt: Date };
+};
+/** auth.api.getSession({ headers: await headers() }) 的映射封装；未登录返回 null */
+export async function getCurrentSession(): Promise<AuthSession | null>;
+```
+
+### modules/auth/actions.ts（'use server'，判别联合返回，ADR-0025）
+
+```ts
+export type RegisterActionResult =
+  | { ok: true }
+  | { ok: false; error: 'INVALID_INPUT'; fieldErrors: RegisterFormErrors }
+  | { ok: false; error: 'PHONE_ALREADY_REGISTERED' };
+
+/** registerInputSchema 复验（边界 #1 后端校验）→ registerWithPhone */
+export async function registerAction(input: RegisterInput): Promise<RegisterActionResult>;
+```
+
+### modules/auth/errors.ts（R7 客户端统一文案映射，client-safe）
+
+```ts
+export type SignInErrorKey =
+  | 'auth.error.invalidCredentials'
+  | 'auth.error.tooManyAttempts'
+  | 'auth.error.unknown';
+
+/** 任一登录失败（用户不存在/密码错误/密码为空/格式拒绝）→ invalidCredentials；429 → tooManyAttempts */
+export function mapSignInError(err: { status?: number; code?: string } | null | undefined): SignInErrorKey;
+```
+
+### 路由层薄壳
+
+```ts
+// src/app/api/auth/[...all]/route.ts —— Better Auth 全部端点（含 /sign-in/phone-number、/sign-out）
+import { toNextJsHandler } from 'better-auth/next-js';
+export const { GET, POST } = toNextJsHandler(auth.handler);
+
+// src/app/(auth)/layout.tsx（RSC）—— R12 守卫
+const session = await getCurrentSession();
+return session ? <AuthRedirect /> : children;   // 已登录不渲染表单
+
+// src/app/(auth)/login/page.tsx、register/page.tsx（RSC 薄壳）
+<AuthScreen initialView="login" | "register" />
+
+// src/app/(app)/layout.tsx（RSC）—— 受保护路由拦截（边界 #6）
+const session = await getCurrentSession();
+if (!session) redirect(ROUTES.login);
+```
+
+### 契约总表
+
+| 契约 | 调用方 | 被调方 | 错误情形 |
+| ---- | ---- | ---- | ---- |
+| `registerAction` | RegisterForm（client） | actions → service | INVALID_INPUT（zod 复验不过）/ PHONE_ALREADY_REGISTERED |
+| `registerWithPhone` | registerAction | service → db 事务 | 23505 → PHONE_ALREADY_REGISTERED |
+| `hashPassword` | service | better-auth/crypto | 无业务错误（scrypt） |
+| `authClient.signIn.phoneNumber` | LoginForm（client） | POST /api/auth/sign-in/phone-number | 失败经 `mapSignInError` 统一为 R7 文案 |
+| `authClient.signOut` | SignOutButton（client） | POST /api/auth/sign-out | 失败仍强制 `router.replace(ROUTES.login)` |
+| `getCurrentSession` | (auth)/(app) 布局、workbench 页 | queries → lib/auth | 未登录 → null → 守卫动作 |
+| `validateAccount` / `validatePassword` / `validateRegisterForm` | 两个表单组件 | validators（纯函数） | 返回 messageKey，不抛异常 |
+| `auth.handler` | api/auth/[...all] | Better Auth 端点 | 邮箱端点被 hook 403；限流 429 |
+
+## UI 与组件
+
+```
+app/layout.tsx (RSC，挂 NextIntlClientProvider)
+app/(auth)/layout.tsx (RSC 守卫，R12)
+├─ 已登录 → AuthRedirect (client：history.length > 1 → router.back()；否则 router.replace(workbench))
+└─ 未登录 → children
+   ├─ login/page.tsx    → <AuthScreen initialView="login" />
+   └─ register/page.tsx → <AuthScreen initialView="register" />
+
+AuthScreen (client，模块私有) —— 视图切换器
+├─ 状态（全部 useState，提升于此）：
+│    activeView: 'login' | 'register'
+│    表单值 { account, password, confirmPassword, agreementAccepted }  ← R16 切换保留
+│    errors（切换视图时清空）← R16
+│    submitting: boolean ← R5
+├─ AuthTabs（顶部 tab，R16）
+├─ LoginForm（受控）或 RegisterForm（受控）
+│  ├─ AccountField（登录：手机号/邮箱）/ PhoneField（注册：maxLength=11，边界 #1）
+│  ├─ PasswordField ×1~2（R17 显隐切换，登录/注册/确认密码三处复用）
+│  ├─ AgreementCheckbox（R4；协议链接占位不跳转，边界 #9）
+│  ├─ FormSummary（R1 顶部汇总，按未通过项数计数，ICU 复数）
+│  ├─ SubmitButton（R5：登录中…/注册中…，submitting 时禁用）
+│  ├─ ForgotPasswordLink（R19，仅登录视图：点击提示暂未开通）
+│  └─ OAuthPlaceholder（R18：微信登录/手机号一键登录，禁用态）
+└─ ViewSwitchLink（底部链接，R16；R10「去登录」复用此切换并带入手机号）
+
+app/(app)/layout.tsx (RSC 守卫) 
+app/(app)/workbench/page.tsx (RSC 占位：手机号 + SignOutButton；AXY-12 替换)
+SignOutButton (client：authClient.signOut() → router.replace(ROUTES.login))
+```
+
+**状态归属**：表单值、错误、loading 全部为客户端局部状态（轴 5 阶段 0：不入 zustand、无 TanStack Query 场景）；会话真相只在服务端（`getCurrentSession`），客户端不镜像。**URL 同步**：视图切换不导航，`history.replaceState` 同步 `/login` ↔ `/register`，刷新/直开/书签行为一致。**登录/注册成功跳转**一律 `router.replace(ROUTES.workbench)`，避免登录页残留历史（后退再触发 R12 守卫）。
+
+**文案（ADR-0010 next-intl，无前缀策略，本特性落地最小设施）**：`next-intl@^4`（peerDeps 已覆盖 Next 16）、`next.config.ts` 接 `createNextIntlPlugin`、`src/i18n/request.ts`（cookie 协商，默认 zh-CN）、`src/locales/zh-CN/auth.json`。键清单（E2E 断言以此渲染文案为准）：
+
+| 键 | 文案 |
+| ---- | ---- |
+| auth.account.required | 请输入手机号或邮箱 |
+| auth.account.invalid | 格式不对：手机号 11 位，或 name@mail.com |
+| auth.password.required | 请输入密码 |
+| auth.password.invalid | 密码为 8—20 位，需含字母与数字 |
+| auth.register.phoneInvalid | 请输入 11 位有效手机号 |
+| auth.register.passwordMismatch | 两次输入的密码不一致 |
+| auth.agreement.required | 请阅读并勾选《用户协议》与《隐私政策》 |
+| auth.error.invalidCredentials | 账号或密码不对 |
+| auth.error.tooManyAttempts | 操作过于频繁，请稍后再试 |
+| auth.error.phoneRegistered | 该手机号已注册，去登录 |
+| auth.error.unknown | 出了点问题，请稍后再试 |
+| auth.forgotPassword.unavailable | 找回密码功能暂未开通 |
+| auth.oauth.placeholder | 本期不做，仅占位 |
+| auth.summary.errors | 有 \{count\} 项需要修改（ICU 复数） |
+| auth.submit.loggingIn / auth.submit.registering | 登录中… / 注册中… |
+
+**组件实现**：auth 表单为 `modules/auth/components/` 模块私有组件，Tailwind 4 手写对齐线框图低保真样式；不初始化 shadcn/ui（ADR-0004 约定的是 `components/ui/` 共享层，跨模块共享 UI 需求出现时再引入）。
+
+## 错误与边界处理
+
+| proposal 边界项 | 处理方式 | 落点 |
+| ---- | ---- | ---- |
+| B1 手机号合法域 | PHONE_RE 前端（validators）+ 后端（zod + `phoneNumberValidator`）双重校验；注册框 maxLength=11 | validators.ts / schema.ts / lib/auth.ts / PhoneField |
+| B2 邮箱仅为登录输入形态 | `validateAccount` 判 kind='email'：客户端直接呈现 R7 统一文案、不发起请求；API 直连 `/sign-in/email`、`/sign-up/email` 被 hook 403；占位邮箱格式可登录但需正确密码，无存在性探测面 | validators.ts / mapSignInError / lib/auth.ts hooks |
+| B3 密码规则三处一致 | PASSWORD_RE 单一来源，登录框/注册框/确认密码框共用 `validatePassword`；后端 zod + `minPasswordLength/maxPasswordLength` | validators.ts / schema.ts / PasswordField |
+| B4 验证码字段隐藏 | 注册表单无该字段；`sendOTP` 为 no-op（OTP 码无处投递，端点不可被利用），字段恢复属后续迭代 | RegisterForm / lib/auth.ts |
+| B5 会话与退出 | `storeSessionInDatabase: true` 双写；`signOut` 由 Better Auth 删 Redis 键 + PG 行；E2E 验证退出后直连/后退均被挡 | lib/auth.ts / SignOutButton |
+| B6 服务端未登录拦截 | (app) 布局 RSC 守卫 `redirect(ROUTES.login)`，未登录响应不含受保护内容；(app) 页面因读 cookie 为动态渲染，后退导航触发 RSC 重取 | (app)/layout.tsx |
+| B7 路由路径常量化 | ROUTES 唯一来源，守卫/表单/跳转全部引用 | lib/routes.ts |
+| B8 并发注册仅一次成功 | user.phone_number 唯一索引 + 单事务；23505 映射为 PHONE_ALREADY_REGISTERED | service.ts |
+| B9 协议占位但勾选真实 | 链接 `preventDefault` 不跳转；勾选状态经 registerAction 落库（R15） | AgreementCheckbox / service.ts |
+| B10 工作台未实现 | (app)/workbench 占位页（标题 + 手机号 + 退出按钮），AXY-12 替换；R6/R9/R12 验收锚点为「到达 /workbench 且渲染占位标识」 | workbench/page.tsx |
+
+## 需求承载对照
+
+| R | 承载 |
+| - | ---- |
+| R1 | LoginForm：`validateAccount` 留空 → 字段文案 + FormSummary 计数，表单不提交 |
+| R2 | `validateAccount`（PHONE_RE / EMAIL_RE）；改填合法后错误清除（受控状态） |
+| R3 | `validatePassword`（PASSWORD_RE），三处输入框共用 |
+| R4 | AgreementCheckbox + 登录/注册两表单提交前校验勾选，未勾选不提交、勾选框错误态高亮 |
+| R5 | AuthScreen.submitting → SubmitButton 文案与禁用 |
+| R6 | 登录成功 `router.replace(ROUTES.workbench)`；链路不查询任何档案表（PO 修订），已/未建档行为天然一致 |
+| R7 | `mapSignInError` 客户端统一 + API 层三情形（不存在/错密码/空密码直连 POST）同文案断言（见开放问题 #1 兜底） |
+| R8 | RegisterForm 字段集（手机号/密码/确认密码/协议）+ `validateRegisterForm` 文案 |
+| R9 | registerAction 成功 → `authClient.signIn.phoneNumber`（自动登录）→ workbench |
+| R10 | service 23505 → PHONE_ALREADY_REGISTERED → 文案含「去登录」链接 → AuthScreen 切换视图并带入手机号 |
+| R11 | `authClient.signOut`（删 Redis+PG）+ (app) 守卫 + SignOutButton 跳登录页 |
+| R12 | (auth) 布局守卫 → AuthRedirect（有历史 back / 无历史 replace(workbench)），不渲染表单 |
+| R13 | `hashPassword`（scrypt 摘要）+ service/action 全链路不记录入参（集成测试查库查日志） |
+| R14 | user.phone_number 唯一索引 + 事务 + 23505 映射（集成测试并发双注册） |
+| R15 | 注册事务写入 agreement_version='v1' 与 agreed_at（集成测试查库断言） |
+| R16 | AuthScreen 提升表单值状态、切换清错误、`history.replaceState` URL 同步 |
+| R17 | PasswordField 显隐切换 |
+| R18 | OAuthPlaceholder 禁用按钮 + auth.oauth.placeholder 文案 |
+| R19 | ForgotPasswordLink 点击提示 auth.forgotPassword.unavailable |
+
+## 与 ADR 的关系
+
+| 涉及技术 | ADR | 一致性 |
+| ---- | ---- | ---- |
+| Better Auth | [ADR-0013](../adr/better-auth) | 一致：drizzleAdapter、secondaryStorage、`auth.api.getSession` 服务端调用、客户端 SDK 驱动登录 UI；phoneNumber 插件属「按需启用」范围。注册走 service 插表是 ADR 未覆盖的实现层选择（依据插件文档对 credential 账号的要求），不构成偏离 |
+| PostgreSQL + Drizzle | [ADR-0005](../adr/postgresql-pgvector) / [ADR-0006](../adr/drizzle-orm) | 一致；驱动选 postgres-js 属 ADR 未覆盖的实现细节 |
+| Redis | [ADR-0007](../adr/redis) | 一致：ioredis ^5（`@better-auth/redis-storage` 的 peerDeps 即 ioredis）；仅存会话缓存/限流计数等可丢失数据 |
+| 客户端数据层 | [ADR-0025](../adr/client-data-layer) | 一致：注册=表单突变→Server Action 判别联合；登录=ADR-0013 明示的 SDK 直调特例；本期无 TanStack Query 场景 |
+| i18n | [ADR-0010](../adr/i18n) | 一致：本特性落地 next-intl 最小基础设施（无前缀策略）+ zh-CN/auth.json 文案集中 |
+| UI 组件库 | [ADR-0004](../adr/shadcn-ui) | 不冲突：auth 组件为模块私有（Tailwind 4 手写），不初始化 `components/ui/`；共享 UI 需求出现时再按 ADR 引入 |
+| Vitest / Playwright | [ADR-0012](../adr/vitest) / [ADR-0017](../adr/playwright-e2e) | 一致：validators 单测、service/端点集成测、全流程 E2E（见需求承载对照） |
+
+**豁免项不进设计范围**：Q1（接口 p95 ≤ 500ms）、Q2（首屏可交互 ≤ 2s）已豁免（proposal 豁免项表，2026-11-14），移交测试提质阶段。
+
+**新增依赖**：`better-auth@^1.7`（锁 minor，ADR-0013）、`@better-auth/redis-storage@^1.7`、`ioredis@^5`、`drizzle-orm@^1`、`postgres`、`next-intl@^4`；dev：`drizzle-kit`。
+
+## 开放问题
+
+| # | 问题 | 不阻塞什么 |
+| - | ---- | ---- |
+| 1 | phoneNumber 插件 `/sign-in/phone-number` 对「用户不存在/密码错误」是否原生同文案（同族 username 插件源码已佐证统一 + 哈希时序缓解）；R7 集成测试实测。若有差异，兜底：登录改由 Server Action 包装 `auth.api.signInPhoneNumber` 统一返回——数据模型、组件树、注册路径均不变 | 其余设计定稿与实现启动；集成测试阶段闭合 |
+| 2 | `authClient.signIn.phoneNumber` 的确切方法名以 `phoneNumberClient` 生成类型为准（契约锚点是端点 `POST /sign-in/phone-number`，客户端方法仅是 SDK 语法糖） | 数据模型、service、守卫等全部其余设计；实现首日核对 |
+| 3 | 工作台占位页形态（标题 + 手机号 + 退出按钮）由 AXY-12 正式设计替换 | 本特性验收（proposal 边界 #10 已确认占位承接） |
