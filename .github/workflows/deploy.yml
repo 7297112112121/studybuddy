@@ -1,0 +1,110 @@
+# 部署流水线第二层（ADR-0018 触发晋升）：
+#   push master → 构建 standalone 镜像 → Trivy 镜像门禁（ADR-0021，HIGH/CRITICAL 阻断）
+#   → 推 TCR（ADR-0020，tag = 短 SHA）→ 自动部署开发环境 → 健康检查
+#   → 自动部署测试环境 → 健康检查。
+# 机密分界（ADR-0022）：本流水线只接触 TCR 推送凭证与部署 SSH key（environment secret），
+# 应用运行时机密只存服务器本地 .env，零过 CI；PR 校验（ci.yml）零机密，两层互不重叠。
+# 回滚 = 在 Actions 页面重跑历史成功的 Deploy 运行（重放历史 tag 部署作业，ADR-0018）。
+
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  # 手动入口：无新提交时重建环境 / 部署验证；亦是回滚重放的备用通道
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同流水线并发：新部署取消旧部署，避免堆积（ADR-0018）
+concurrency:
+  group: deploy-master
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ccr.ccs.tencentyun.com
+  IMAGE: ccr.ccs.tencentyun.com/studybuddy/app
+  DEPLOY_USER: root
+  DEPLOY_DIR: /opt/studybuddy
+
+jobs:
+  build:
+    name: Build & scan & push
+    runs-on: ubuntu-latest
+    # TCR 推送凭证存于 dev 环境（ADR-0022 分环境隔离；dev/test 共居一台服务器）
+    environment: dev
+    outputs:
+      short-sha: ${{ steps.meta.outputs.short-sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Compute image tag
+        id: meta
+        run: echo "short-sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to TCR
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.TCR_USERNAME }}
+          password: ${{ secrets.TCR_PASSWORD }}
+
+      - name: Build app image
+        run: docker build --target runner -t ${{ env.IMAGE }}:${{ steps.meta.outputs.short-sha }} .
+
+      # 镜像门禁（ADR-0021）：构建之后、推仓库之前，HIGH/CRITICAL 即失败；
+      # 无法立即修复的漏洞进 .trivyignore 显式豁免并注明原因
+      - name: Trivy image gate
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.IMAGE }}:${{ steps.meta.outputs.short-sha }}
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: 1
+          version: v0.76.2 # Trivy 本体锁定版本（ADR-0021）
+
+      - name: Push to TCR
+        run: docker push ${{ env.IMAGE }}:${{ steps.meta.outputs.short-sha }}
+
+  deploy-dev:
+    name: Deploy dev
+    needs: build
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      # 原生 ssh 部署（ADR-0018）：不用第三方 SSH action（ADR-0022 供应链纪律）；
+      # 服务器端执行 repo 内 scripts/deploy.sh，compose 文件即部署文档
+      - name: Deploy over SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          SHORT_SHA: ${{ needs.build.outputs.short-sha }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd $DEPLOY_DIR && git fetch origin && git checkout $SHORT_SHA && ./scripts/deploy.sh $SHORT_SHA dev"
+
+  deploy-test:
+    name: Deploy test
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Deploy over SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          SHORT_SHA: ${{ needs.build.outputs.short-sha }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd $DEPLOY_DIR && git fetch origin && git checkout $SHORT_SHA && ./scripts/deploy.sh $SHORT_SHA test"
