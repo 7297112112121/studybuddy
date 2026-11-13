@@ -12,7 +12,7 @@ sidebar_position: 2
 
 1. **纵向按业务切**：`modules/` 按业务域聚合，UI、状态、服务端逻辑同处一模块目录；
 2. **agent 是能力，不是业务域**：AI 子系统零业务知识，业务知识只经注入口流入；
-3. **依赖单向**：三条主链路无环路；边界规则目标 ESLint 固化，落地前靠评审。
+3. **依赖单向**：三条主链路无环路；边界规则已固化进 ESLint（见[守护机制](#守护机制)）。
 
 ## 总览
 
@@ -132,6 +132,17 @@ export function chainWeeklySummary(input: ...): { messages: ModelMessage[] } { .
 4. `components/`、`stores/`、`locales/` 不 import `modules` 内部，可经 `index.ts` 取类型与数据；
 5. `db/schema` 是全项目公共契约层：人人可读，写入仅属主模块。
 
+## 守护机制
+
+依赖规则由工具硬性守护，评审兜底：
+
+- **ESLint 分层矩阵**：`no-restricted-imports` 按目录注入，把依赖规则 1–5 硬性化（`agent/` 禁 `app/`、`modules/`，跨模块深路径全禁）。
+- **根 barrel 自引用禁令**：模块内禁 import 本模块顶入口，一律相对导入防循环。
+- **显式豁免只减不增**：暂不可修复的违规以显式清单降级为 warn，新增须评审说明，当前为空。
+- **循环与死代码检测**：`lint:circular`（dpdm）、`lint:unused`（knip）。
+- **pre-commit 门禁**：lint-staged，master 分支加跑 type-check。
+- **类型禁推断**：`modules/`、`components/` 禁 `Awaited<ReturnType<…>>`，返回类型显式声明。
+
 ## 数据流向
 
 ```
@@ -208,10 +219,7 @@ RAG 离线腿：documents service ──→ agent/rag（分块 + embedMany）─
 
 ## 落地步骤
 
-项目当前为脚手架，初始迁移零成本：
+初始迁移（`app/` 移入 `src/`、别名 `@/*` 指向 `./src/*`、依赖规则进 ESLint）已完成，余下两项：
 
-1. `app/` 移入 `src/app/`，建 `src/{modules,agent,db,lib,components,stores,locales}` 骨架目录；
-2. `tsconfig.json` 路径别名 `@/*` 改指 `./src/*`；
-3. auth 模块按三段式先行落地，作后续模块样板（[ADR-0013](./adr/better-auth)）；
-4. `api/chat/route.ts` 随首个对话用户故事落地，固化组装顺序；
-5. 依赖规则固化进 ESLint（`no-restricted-imports` 或 boundaries 插件），作为技术债项跟踪。
+1. auth 模块按三段式先行落地，作后续模块样板（[ADR-0013](./adr/better-auth)）；
+2. `api/chat/route.ts` 随首个对话用户故事落地，固化组装顺序。
