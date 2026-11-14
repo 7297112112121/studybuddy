@@ -53,8 +53,19 @@ jobs:
           username: ${{ secrets.TCR_USERNAME }}
           password: ${{ secrets.TCR_PASSWORD }}
 
+      # gha 缓存需要 docker-container 驱动的 builder（默认 docker 驱动不支持缓存导出）
+      - name: Set up buildx builder
+        run: docker buildx create --use --driver docker-container
+
+      # gha 缓存（runner 间复用构建层）：层摘要跨运行稳定 → TCR 端去重生效，
+      # 推送从全量 ~20 分钟降到「仅变更层」。mode=max 缓存全部中间阶段（deps 层），
+      # 这是 npm ci 产出可复用的关键。首次运行缓存为冷，仍需全量构建推送一次。
       - name: Build app image
-        run: docker build --target runner -t ${{ env.IMAGE }}:${{ steps.meta.outputs.short-sha }} .
+        run: >-
+          docker buildx build --target runner
+          --cache-from type=gha --cache-to type=gha,mode=max
+          --load
+          -t ${{ env.IMAGE }}:${{ steps.meta.outputs.short-sha }} .
 
       # 镜像门禁（ADR-0021）：构建之后、推仓库之前，HIGH/CRITICAL 即失败；
       # 无法立即修复的漏洞进 .trivyignore 显式豁免并注明原因
