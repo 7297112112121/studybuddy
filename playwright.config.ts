@@ -16,6 +16,11 @@ export default defineConfig({
   testDir: "e2e",
   // E2E 与单测互不越界：vitest 的 include 已锁定 tests/**，此处 testDir 锁定 e2e/。
   fullyParallel: true,
+  // 串行执行（Task 12 实测）：生产构建下 Better Auth 限流默认开启，
+  // /sign-in/* 路径有 3 次/10 秒的特殊规则（get-default-special-rules），
+  // 并行 worker 的注册自动登录/显式登录会互相挤爆限流窗口呈现 429。
+  // 配合 e2e/helpers/auth.ts 的 throttleSignIn 保持每次登录 ≥3.5s 间距。
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
