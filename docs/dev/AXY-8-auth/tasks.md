@@ -582,3 +582,6 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: 根布局加 `export const instant = false`（Task 8） — Next 16.4.6 `cacheComponents: true` 下 getMessages() 经 cookies() 使预渲染报「uncached or runtime data during prerendering」；cookie 语言协商是 ADR-0010 硬要求，豁免为 Next 官方迁移指南推荐手段（注释已注明回迁条件：语言协商迁至 proxy 后移除） — 全站路由标记 ƒ（Dynamic），失去静态预渲染；ADR-0010 终态（proxy 层协商）落地时须回迁
 - 裁决: 根布局 `lang="en"` 改 `lang="zh-CN"`（Task 8） — 与 ADR-0010 唯一目标语言 zh-CN 对齐 — 无
 - 裁决: `vitest.config.ts` 增 next-intl/next 的单测解析适配（Task 8） — 单测环境无 react-server 导出条件，`next-intl/server` 解析到 react-client 桩即抛错；适配为生产等价接线（react-server 构建 + config 别名 + next/headers 显式扩展名），仅影响单测解析不改产品构建 — 适配指向 next-intl 内部构建路径，升级 next-intl 大版本时可能需复核
+- 裁决: FormSummary 汇总计数不含协议勾选错误（Task 9） — 任务自测用例「账号留空+密码合法+协议未勾选 → 有 1 项需要修改」与「按全部 errors 键数计数」矛盾（后者为 2）；协议错误仍单独呈现（勾选错误态），与线框图行为一致；实现为 AuthScreen 下发给 FormSummary 的 errors 不含 agreement — 汇总数与字段错误数语义分离，后续改文案计数规则时两处要同步
+- 裁决: PasswordField 显隐布尔与 ForgotPasswordLink 提示显示态保留为组件内局部 state（Task 9） — design「状态提升」清单仅列 activeView/表单值/errors/submitting 四项；显隐是三输入框各自独立的同构状态，提升反而破坏复用 — 若未来需要跨字段统一显隐，需改 PasswordField props
+- 裁决: 非 16 键的结构性布局文案（「手机号 / 邮箱」「注册并进入」「微信登录」等）硬编码中文于组件（Task 9） — auth.json 键清单（16 键）不含布局文案，与 Task 8 最小 i18n 设施一致 — 后续扩 i18n 键时改动点集中在各字段组件；多语言启动前需补齐
