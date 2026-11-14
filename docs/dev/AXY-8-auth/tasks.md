@@ -563,3 +563,8 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: `.gitignore` 补 `!.env.example` 例外（Task 1） — 既有 `.env*` 通配会把任务要求入库的 `.env.example` 一并忽略 — 无
 - 裁决: compose.dev.yaml 的 redis 未配持久化卷（Task 1） — 任务原文仅要求 postgres 数据卷；redis 仅作会话缓存，重建即失效可接受 — dev 环境 Redis 数据不跨容器重建保留
 - 裁决: confirmPassword 一致性检查仅在 password 自身校验通过时执行（Task 2） — 任务用例「password '' → 仅返回 password 一项错误」与「confirmPassword 为空即不一致」的字面叠加互相矛盾（会同时返回 confirmPasswordMismatch）；密码本身不合法时不再叠加不一致错误，与任务注记「确认密码强度由与 password 一致间接保证」一致，且符合表单 UX — 若产品期望密码错误时同时提示确认框，需回改 validators 与测试
+- 裁决: drizzle-kit 由 ^0.31.11 升至 ^1.0.0-rc.5、新装 zod ^4.6.7（Task 3） — drizzle-kit 0.31.11 要求 orm 兼容 API v10 而 drizzle-orm 1.0 RC 报 v14，db:generate 硬性退出，钉死版本组合无法产出迁移；zod 此前仅为传递依赖，显式直用需入 dependencies（同版本无漂移） — 均为 RC 通道版本，stable 发布后需复核升级
+- 裁决: casing 从 client/config 运行时选项改为表定义时 `snakeCase.table(...)` 烘焙（Task 3） — drizzle-orm 1.0 RC 删除了运行时 casing 选项（以 node_modules 类型实测为准）；语义不变（camelCase 属性名 → snake_case 列名），已验证迁移 SQL 逐列一致 — 后续任务建表须沿用此写法，不得再传 casing 选项
+- 裁决: db client 类型为 `PostgresJsDatabase`，经 `defineRelations` + `drizzle({ client, relations })` 构造（Task 3） — 任务原文的 `NodePgDatabase` 与 postgres-js 驱动不匹配；RC 的 pg driver 配置 Omit 了 schema，表关系须单独经 relations 传入 — Task 4 的 drizzleAdapter 接 db 时注意此形态
+- 裁决: `src/db/schema.ts` barrel 内部用相对导入而非 `@/modules/auth/schema`（Task 3） — drizzle-kit 的 esbuild 不解析 tsconfig 路径别名，别名导入使 db:generate 失败 — 与「模块内相对导入」纪律方向一致，无代价
+- 裁决: 迁移目录布局为 `<timestamp>_<name>/migration.sql + snapshot.json`（Task 3） — drizzle-kit 1.0 RC 改目录式布局（0.x 为平铺单文件）；Task 5 集成基座的 migrator 应用路径须按此布局传 `migrationsFolder: 'src/db/migrations'` — 无
