@@ -18,6 +18,8 @@
     "test": "node scripts/run-vitest.mjs run",
     "test:watch": "node scripts/run-vitest.mjs",
     "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
     "docs:dev": "npm run start --workspace website",
     "docs:build": "npm run build --workspace website",
     "docs:serve": "npm run serve --workspace website",
@@ -35,7 +37,8 @@
     "next-intl": "^4.15.1",
     "postgres": "^4.1.1",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@next/playwright": "16.4.6",
@@ -48,7 +51,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.2.0",
     "dpdm": "^4.3.0",
-    "drizzle-kit": "^0.31.11",
+    "drizzle-kit": "^1.0.0-rc.5",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "jsdom": "^31.0.1",
