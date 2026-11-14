@@ -45,3 +45,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **分支模型**:GitHub Flow——直接在 `master` 上开发或拉短生命周期分支,经 PR 合并回 `master`。
 - **版本管理**:语义化版本(SemVer),当前版本 `0.1.0`(见 `package.json`)。
 - **输出语言**:面向用户的回复与提交说明使用中文。
+
+## 已启用的mcp服务
+本项目已启用 codegraph MCP，存在 .codegraph 索引。
+规则：
+1. 查询符号、调用方、被调用方、修改影响范围，优先使用 codegraph 工具（codegraph_callers / codegraph_callees / codegraph_impact）
+2. rg / read 仅用于模糊文本查找、读取codegraph返回之外的补充文件
+3. 不要重复read codegraph已经返回源码片段的文件
+
