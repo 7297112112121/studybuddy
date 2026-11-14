@@ -106,43 +106,48 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { phoneNumber } from 'better-auth/plugins';
 import { redisStorage } from '@better-auth/redis-storage';
-import { APIError } from 'better-auth/api';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 
 /** 与 modules/auth/validators 的 PHONE_RE 保持一致（同步性由单元测试守护） */
 const PHONE_RE = /^1[3-9]\d{9}$/;
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: 'pg' }),
+  database: drizzleAdapter(db, {
+    provider: 'pg',
+    // drizzle-orm 1.0 RC 移除 client 构造 schema 选项，适配器 fullSchema 回退
+    // 不再可用，故在此显式传入表映射（Task 4 裁决）
+    schema: { user, account, session, verification },
+  }),
   secondaryStorage: redisStorage({ client: redis, keyPrefix: 'better-auth:' }),
   session: { storeSessionInDatabase: true, expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },
   emailAndPassword: { enabled: true, minPasswordLength: 8, maxPasswordLength: 20 },
   plugins: [
     phoneNumber({
-      phoneNumberValidator: (p: string) => PHONE_RE.test(p),
+      phoneNumberValidator: (phoneNumber: string) => PHONE_RE.test(phoneNumber),
       // 短信通道未就绪（非目标 #1）：OTP 端点可达但码无处投递，不可被利用；
       // 通道就绪后替换为真实发送实现（后续迭代）
       sendOTP: async () => {},
     }),
   ],
+  // 选项级 hooks.before 在 Better Auth 1.7 为单个 AuthMiddleware，
+  // 非插件级 { matcher, handler } 数组形态（Task 4 裁决）
   hooks: {
-    before: [
-      {
-        // 非目标 #4：仅手机号注册。显式禁用邮箱注册/登录端点，防 API 直连绕过
-        matcher: (ctx) => ctx.path === '/sign-up/email' || ctx.path === '/sign-in/email',
-        handler: async () => {
-          throw new APIError('FORBIDDEN', { message: 'Email auth is disabled' });
-        },
-      },
-    ],
+    before: createAuthMiddleware(async (ctx) => {
+      // 非目标 #4：仅手机号注册。显式禁用邮箱注册/登录端点，防 API 直连绕过
+      if (ctx.path === '/sign-up/email' || ctx.path === '/sign-in/email') {
+        throw new APIError('FORBIDDEN', { message: 'Email auth is disabled' });
+      }
+    }),
   },
-  trustedOrigins: [process.env.BETTER_AUTH_URL!],
+  trustedOrigins: [process.env.BETTER_AUTH_URL ?? 'http://localhost:3000'],
+  // Better Auth 1.7 运行时 schema 校验对 registerWithPhone 直写的
+  // agreementVersion/agreedAt 列（R15）误报 SchemaMismatchError，
+  // 而本设计无自身可达的 user 插入路径，故关闭（Task 6 裁决）
+  advanced: { database: { validateSchema: false } },
 });
 ```
 
-> **实现裁决注记**（spec-review 批次回写，对应 tasks.md Task 4 / Task 6 裁决）
->
-> - `hooks.before` 实为**单个** `createAuthMiddleware` 返回的中间件函数：上方代码块中的数组形态是插件级 hook 形状，Better Auth 1.7 选项级 `hooks.before` 实测为单个 `AuthMiddleware`，实现以 `createAuthMiddleware` 落成等价语义（Task 4 实测）。
-> - 配置须加 `advanced.database.validateSchema: false`：Better Auth 1.7 运行时 schema 校验对 `registerWithPhone` 直写的 `agreementVersion`/`agreedAt` 列误报 `SchemaMismatchError`，而本设计不存在 Better Auth 自身可达的 user 插入路径，校验属误报故关闭（Task 6 裁决）。
+> 实现裁决（hooks.before 形态、validateSchema 关闭、drizzleAdapter schema 显式映射、trustedOrigins 兜底）见 tasks.md 裁决记录 Task 4 / Task 6。
 
 `emailAndPassword.enabled: true` 是 phoneNumber 插件密码校验的基座；邮箱端点本身已被 hook 拦死。限流保持默认开启：内置 specialRule 对登录路径 3 次/10 秒（实测覆盖 `/sign-in/phone-number`，见 tasks.md Task 12 裁决），防凭证填充；phoneNumber 插件的 10 次/60 秒 rateLimit 规则不覆盖顶层 sign-in 路径。
 
@@ -162,6 +167,7 @@ export const authClient = createAuthClient({ plugins: [phoneNumberClient()] });
 
 ```ts
 export const ROUTES = { login: '/login', register: '/register', workbench: '/workbench' } as const;
+export type Routes = typeof ROUTES;
 ```
 
 ### modules/auth/validators.ts（纯函数，零 IO，单元测试锚点）
@@ -314,7 +320,7 @@ SignOutButton (client：authClient.signOut() → router.replace(ROUTES.login))
 
 **状态归属**：表单值、错误、loading 全部为客户端局部状态（轴 5 阶段 0：不入 zustand、无 TanStack Query 场景）；会话真相只在服务端（`getCurrentSession`），客户端不镜像。**URL 同步**：视图切换不导航，`history.replaceState` 同步 `/login` ↔ `/register`，刷新/直开/书签行为一致。**登录/注册成功跳转**一律 `router.replace(ROUTES.workbench)`，避免登录页残留历史（后退再触发 R12 守卫）。
 
-**文案（ADR-0010 next-intl，无前缀策略，本特性落地最小设施）**：`next-intl@^4`（peerDeps 已覆盖 Next 16）、`next.config.ts` 接 `createNextIntlPlugin`、`src/i18n/request.ts`（~~cookie 协商，默认 zh-CN~~ 实现裁决注记 2026-11-14：单语言阶段 cookie 协商为可证明死代码——唯一支持语言 zh-CN 且全站无 NEXT_LOCALE 写入点，已改为固定 zh-CN 并移除 requestLocale 读取（next-intl 该兜底经 headers() 读头），使根布局 getMessages() 恢复静态预渲染、消除全站空静态 shell；多语言时按 ADR-0010 终态将协商迁入 proxy）、`src/locales/zh-CN/auth.json`。键清单（E2E 断言以此渲染文案为准）：
+**文案（ADR-0010 next-intl，无前缀策略，本特性落地最小设施）**：`next-intl@^4`（peerDeps 已覆盖 Next 16）、`next.config.ts` 接 `createNextIntlPlugin`、`src/i18n/request.ts`（固定返回 zh-CN：单语言阶段 cookie 协商是可证明的死代码——唯一支持语言 zh-CN 且全站无 NEXT_LOCALE 写入点；固定 locale 移除 requestLocale 读取，使根布局 getMessages() 恢复静态预渲染、消除全站空静态 shell；多语言时按 ADR-0010 终态将协商迁入 proxy）、`src/locales/zh-CN/auth.json`。键清单（E2E 断言以此渲染文案为准）：
 
 | 键 | 文案 |
 | ---- | ---- |
@@ -393,8 +399,8 @@ SignOutButton (client：authClient.signOut() → router.replace(ROUTES.login))
 
 ## 开放问题
 
-| # | 问题 | 不阻塞什么 |
-| - | ---- | ---- |
-| 1 | phoneNumber 插件 `/sign-in/phone-number` 对「用户不存在/密码错误」是否原生同文案（同族 username 插件源码已佐证统一 + 哈希时序缓解）；R7 集成测试实测。若有差异，兜底：登录改由 Server Action 包装 `auth.api.signInPhoneNumber` 统一返回——数据模型、组件树、注册路径均不变**已实测闭合（Task 6，2026-11-14）：原生一致，无需兜底——三情形（未注册+任意密码/已注册+错密码/已注册+空密码）均为 401 + `INVALID_PHONE_NUMBER_OR_PASSWORD`，状态码、code、message 完全一致（见 tests/integration/auth/endpoints.test.ts）** | 其余设计定稿与实现启动；集成测试阶段闭合 |
-| 2 | `authClient.signIn.phoneNumber` 的确切方法名以 `phoneNumberClient` 生成类型为准（契约锚点是端点 `POST /sign-in/phone-number`，客户端方法仅是 SDK 语法糖）**已实测闭合（Task 4，2026-11-14）：方法名一致——`better-auth/dist/plugins/phone-number` 的 `signInPhoneNumber` 端点经客户端 path-to-object 生成为 `signIn.phoneNumber`；`tests/lib/auth-client.test.ts` 的存在性断言为常驻守护** | 数据模型、service、守卫等全部其余设计；实现首日核对 |
-| 3 | 工作台占位页形态（标题 + 手机号 + 退出按钮）由 AXY-12 正式设计替换 | 本特性验收（proposal 边界 #10 已确认占位承接） |
+| # | 问题 | 不阻塞什么 | 处置 |
+| - | ---- | ---- | ---- |
+| 1 | phoneNumber 插件 `/sign-in/phone-number` 对「用户不存在/密码错误」是否原生同文案；若有差异，兜底：登录改由 Server Action 包装 `auth.api.signInPhoneNumber` 统一返回 | 其余设计定稿与实现启动 | 已实测闭合（Task 6，2026-11-14）：原生一致，无需兜底——三情形（未注册+任意密码/已注册+错密码/已注册+空密码）均为 401 + `INVALID_PHONE_NUMBER_OR_PASSWORD`，状态码、code、message 完全一致（tests/integration/auth/endpoints.test.ts） |
+| 2 | `authClient.signIn.phoneNumber` 的确切方法名以 `phoneNumberClient` 生成类型为准（契约锚点是端点 `POST /sign-in/phone-number`） | 数据模型、service、守卫等全部其余设计 | 已实测闭合（Task 4，2026-11-14）：方法名一致——`signInPhoneNumber` 端点经客户端 path-to-object 生成为 `signIn.phoneNumber`（tests/lib/auth-client.test.ts 常驻守护） |
+| 3 | 工作台占位页形态（标题 + 手机号 + 退出按钮）由 AXY-12 正式设计替换 | 本特性验收（proposal 边界 #10 已确认占位承接） | 待定稿（AXY-12 承接） |

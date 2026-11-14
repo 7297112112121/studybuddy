@@ -60,9 +60,8 @@ export const auth = betterAuth({
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       // 非目标 #4：仅手机号注册。显式禁用邮箱注册/登录端点，防 API 直连绕过
-      // （design 契约为 matcher+handler 数组形态，即插件级 hook 形状；
-      // betterAuth 选项级 hooks.before 在 1.7 为单个 AuthMiddleware，
-      // 故以 createAuthMiddleware 落成等价语义）。
+      // （选项级 hooks.before 在 Better Auth 1.7 为单个 AuthMiddleware，
+      // 非插件级 { matcher, handler } 数组形态）。
       if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
         throw new APIError("FORBIDDEN", { message: "Email auth is disabled" });
       }
@@ -76,7 +75,7 @@ export const auth = betterAuth({
       // agreementVersion/agreedAt（R15 留痕）由 registerWithPhone 在注册
       // 事务中写入，Better Auth 自身不存在可达的 user 插入路径
       // （sign-up/email 被 hook 403、OTP 注册因 sendOTP no-op 不可利用），
-      // 校验属误报，故关闭（Task 6 实测发现，待 design 回写）。
+      // 校验属误报，故关闭（Task 6 裁决）。
       validateSchema: false,
     },
   },
