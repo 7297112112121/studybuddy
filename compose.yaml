@@ -6,13 +6,16 @@
 # 本地体验：docker build --target runner -t studybuddy-app:local . 后直接 up（默认 tag 兜底）。
 #
 # dev/test 共居一台服务器（ADR-0018）：以不同 compose project
-# （studybuddy-dev / studybuddy-test）+ 不同端口（80/443 与 8080/8443）区分。
+# （studybuddy-dev / studybuddy-test）+ 不同端口（80/443 与 8080/8443）区分，
+# 各自独立的 PG/Redis（compose 内网服务名同名互不冲突，网络按 project 隔离）。
+#
+# 凭证纪律（ADR-0022）：POSTGRES_PASSWORD 只在服务器本地 .env，
+# 不进仓库、不进镜像、不过 CI——compose 插值缺失即 fail-fast。
 services:
   app:
     image: ${APP_IMAGE:-studybuddy-app:local}
     restart: unless-stopped
-    # 应用机密只经服务器本地 .env 注入（ADR-0016/0022：不进仓库、不进镜像、不过 CI）；
-    # 骨架期文件不存在也可启动
+    # 应用机密只经服务器本地 .env 注入（ADR-0016/0022：不进仓库、不进镜像、不过 CI）
     env_file:
       - path: ./.env
         required: false
@@ -30,11 +33,77 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    # 应用与 DB/Redis 均惰性连接，但 up -d --wait 按此顺序拉起可保证
+    # app 就绪时后端已健康（迁移也已在更早的 migrate 步骤应用）
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     deploy:
       resources:
         limits:
           # 内存限额防共驻互抢（ADR-0018 开发/测试共居 2核4G 的纪律）
           memory: 1g
+
+  postgres:
+    # 与 compose.dev.yaml / CI services 同镜像（pgvector 预留向量检索），仅内部暴露
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: studybuddy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?缺少 POSTGRES_PASSWORD——请在部署目录的本地 .env 提供（ADR-0022，不进仓库）}
+      POSTGRES_DB: studybuddy
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studybuddy -d studybuddy"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # 会话缓存/限流计数均为可丢失数据（ADR-0007 纪律）：内存上限内 LRU 淘汰，
+    # 会话本体双写 PG 兜底（src/lib/auth.ts），淘汰不造成登录态丢失
+    command: redis-server --maxmemory 96mb --maxmemory-policy allkeys-lru
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  # 一次性迁移服务：deploy.sh 在 up 之前 compose run --rm 执行；
+  # profile tools 使其不随 up -d 启动。镜像即 app 镜像（内含迁移件，
+  # 见 Dockerfile），与本地 npm run db:migrate 同一 drizzle migrator 与记账表
+  migrate:
+    profiles: ["tools"]
+    image: ${APP_IMAGE:-studybuddy-app:local}
+    working_dir: /app
+    command: ["node", "db-migrate.mjs"]
+    env_file:
+      - path: ./.env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   caddy:
     # 反向代理（ADR-0016 入口层）：TLS 终止与唯一公网入口。
@@ -65,3 +134,5 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  pg_data:
+  redis_data:

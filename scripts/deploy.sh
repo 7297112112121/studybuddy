@@ -4,7 +4,9 @@
 #
 # 用法：./scripts/deploy.sh <短SHA> <dev|test>
 # 前提：当前目录为服务器上的仓库克隆（部署目录 /opt/studybuddy），
-#       已 git checkout 到目标提交；docker 已登录 TCR（拉取凭证留在服务器本地）。
+#       已 git checkout 到目标提交；docker 已登录 TCR（拉取凭证留在服务器本地）；
+#       本地 .env 已提供 POSTGRES_PASSWORD / DATABASE_URL / REDIS_URL /
+#       BETTER_AUTH_SECRET（ADR-0022：应用机密只存服务器本地）。
 # 幂等：重复执行同一 tag 结果一致；失败即中止，旧容器继续运行。
 
 set -euo pipefail
@@ -34,8 +36,20 @@ export HTTPS_PORT="$https_port"
 
 compose() { docker compose -p "studybuddy-$env_name" "$@"; }
 
+# 应用机密预检（ADR-0022）：.env 缺失时 compose 插值也会 fail-fast，
+# 此处提前一步给出可读指引，避免半途而废
+if ! grep -q '^POSTGRES_PASSWORD=.\+' .env 2>/dev/null; then
+  echo "缺少本地 .env 或 POSTGRES_PASSWORD 为空——请在部署目录提供" >&2
+  echo "POSTGRES_PASSWORD / DATABASE_URL / REDIS_URL / BETTER_AUTH_SECRET（ADR-0022）" >&2
+  exit 1
+fi
+
 # 先拉镜像：拉取失败（网络 / 凭证失效 / 镜像不存在）时旧容器原样运行
-compose pull app caddy
+compose pull app caddy postgres redis
+
+# 数据库迁移（一次性容器，drizzle migrator 增量应用）：
+# 失败即中止——schema 未就绪的 app 不该被拉起，旧容器继续运行
+compose --profile tools run --rm migrate
 
 # --wait：等待所有 healthcheck 服务变 healthy 才返回；超时失败，旧容器不回滚（重放历史部署即回滚）
 compose up -d --wait --wait-timeout 180
