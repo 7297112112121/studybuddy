@@ -9,13 +9,19 @@ This file provides guidance to AI coding agents (e.g. Claude Code) when working 
 ## 常用命令
 
 ```bash
-npm run dev      # 启动开发服务器(默认 http://localhost:3000)
-npm run build    # 生产构建
-npm run start    # 运行生产构建产物
-npm run lint     # ESLint 检查(Flat Config,含 eslint-config-next/core-web-vitals 与 /typescript)
+npm run dev              # 启动开发服务器(默认 http://localhost:3000)
+npm run build            # 生产构建
+npm run start            # 运行生产构建产物
+npm run lint             # ESLint 检查(Flat Config,含 eslint-config-next/core-web-vitals 与 /typescript)
+npm run test             # Vitest 单测
+npm run test:integration # Vitest 集成测试(真实 PG/Redis,globalSetup 自理迁移)
+npm run test:e2e         # Playwright E2E(对生产构建产物跑,webServer 自动 build && start)
+npm run db:generate      # Drizzle 生成数据库迁移
+npm run db:migrate       # Drizzle 应用数据库迁移
+npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 17 + Redis 7)
 ```
 
-尚未安装测试框架;无独立的后端/数据库服务。
+本地开发前置:经 `npm run dev:infra` 启动 PG/Redis(见 `compose.dev.yaml`,凭据 studybuddy/studybuddy);`.env` 从 `.env.example` 复制并填入 `BETTER_AUTH_SECRET`。CI 流水线(`.github/workflows/ci.yml`)以 services 容器提供同款 PG/Redis。
 
 <!-- BEGIN:nextjs-agent-rules -->
 
