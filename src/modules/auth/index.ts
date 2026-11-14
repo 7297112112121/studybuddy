@@ -7,6 +7,9 @@
  */
 export { getCurrentSession } from "./queries";
 export { registerAction } from "./actions";
+export { default as AuthScreen } from "./components/AuthScreen";
+export { default as AuthRedirect } from "./components/AuthRedirect";
+export { default as SignOutButton } from "./components/SignOutButton";
 export type { AuthSession } from "./queries";
 export type { RegisterActionResult } from "./actions";
 export type { RegisterInput } from "./schema";
