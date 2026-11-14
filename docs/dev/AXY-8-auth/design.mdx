@@ -314,7 +314,7 @@ SignOutButton (client：authClient.signOut() → router.replace(ROUTES.login))
 
 **状态归属**：表单值、错误、loading 全部为客户端局部状态（轴 5 阶段 0：不入 zustand、无 TanStack Query 场景）；会话真相只在服务端（`getCurrentSession`），客户端不镜像。**URL 同步**：视图切换不导航，`history.replaceState` 同步 `/login` ↔ `/register`，刷新/直开/书签行为一致。**登录/注册成功跳转**一律 `router.replace(ROUTES.workbench)`，避免登录页残留历史（后退再触发 R12 守卫）。
 
-**文案（ADR-0010 next-intl，无前缀策略，本特性落地最小设施）**：`next-intl@^4`（peerDeps 已覆盖 Next 16）、`next.config.ts` 接 `createNextIntlPlugin`、`src/i18n/request.ts`（cookie 协商，默认 zh-CN）、`src/locales/zh-CN/auth.json`。键清单（E2E 断言以此渲染文案为准）：
+**文案（ADR-0010 next-intl，无前缀策略，本特性落地最小设施）**：`next-intl@^4`（peerDeps 已覆盖 Next 16）、`next.config.ts` 接 `createNextIntlPlugin`、`src/i18n/request.ts`（~~cookie 协商，默认 zh-CN~~ 实现裁决注记 2026-11-14：单语言阶段 cookie 协商为可证明死代码——唯一支持语言 zh-CN 且全站无 NEXT_LOCALE 写入点，已改为固定 zh-CN 并移除 requestLocale 读取（next-intl 该兜底经 headers() 读头），使根布局 getMessages() 恢复静态预渲染、消除全站空静态 shell；多语言时按 ADR-0010 终态将协商迁入 proxy）、`src/locales/zh-CN/auth.json`。键清单（E2E 断言以此渲染文案为准）：
 
 | 键 | 文案 |
 | ---- | ---- |

@@ -4,15 +4,6 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import "./globals.css";
 
-/**
- * Next 16 cacheComponents 预渲染校验豁免：根布局经 getMessages() 读取请求级
- * i18n 配置（src/i18n/request.ts 按 ADR-0010 做 cookie 协商），cookies() 访问
- * 无法纳入静态预渲染，须允许路由阻塞在请求期渲染（见 Next 官方迁移指南
- * "Opting out of validation"）。待语言协商迁移至 proxy（ADR-0010 终态）后
- * 可移除本豁免，恢复路由静态化。
- */
-export const instant = false;
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -29,8 +20,9 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  // next-intl（ADR-0010）：请求级配置来自 src/i18n/request.ts（cookie 协商、
-  // 缺省 zh-CN），经 Provider 供客户端组件 useTranslations("auth") 消费。
+  // next-intl（ADR-0010）：请求级配置来自 src/i18n/request.ts（固定 zh-CN、
+  // 零动态 API），经 Provider 供客户端组件 useTranslations("auth") 消费；
+  // getMessages() 因此可纳入静态预渲染（根布局无 instant 豁免）。
   const messages = await getMessages();
 
   return (

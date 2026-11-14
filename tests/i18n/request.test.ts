@@ -3,11 +3,12 @@ import getRequestConfigFn from "@/i18n/request";
 
 /**
  * request.ts 请求级 i18n 配置（ADR-0010 无前缀策略）：
- * 无 [locale] 路由段，requestLocale 恒为 undefined；
- * 无 cookie / 无法读取 cookie（如测试直调、构建期预渲染）时兜底 zh-CN。
+ * 单语言阶段固定 zh-CN（cookie 协商已移除——唯一支持语言 zh-CN 且全站
+ * 无 NEXT_LOCALE 写入点，协商为可证明死代码；见 design.mdx 实现裁决注记）。
+ * requestLocale 参数保留传入以锁定签名兼容，实现不再读取。
  */
 describe("getRequestConfig（ADR-0010 无前缀策略）", () => {
-  it("requestLocale 为 undefined 时兜底 zh-CN，messages 并入 auth 命名空间", async () => {
+  it("固定 zh-CN，messages 并入 auth 命名空间", async () => {
     const config = await getRequestConfigFn({
       requestLocale: Promise.resolve(undefined),
     });
