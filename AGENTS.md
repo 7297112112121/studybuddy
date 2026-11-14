@@ -9,13 +9,19 @@ This file provides guidance to AI coding agents (e.g. Claude Code) when working 
 ## 常用命令
 
 ```bash
-npm run dev      # 启动开发服务器(默认 http://localhost:3000)
-npm run build    # 生产构建
-npm run start    # 运行生产构建产物
-npm run lint     # ESLint 检查(Flat Config,含 eslint-config-next/core-web-vitals 与 /typescript)
+npm run dev              # 启动开发服务器(默认 http://localhost:3000)
+npm run build            # 生产构建
+npm run start            # 运行生产构建产物
+npm run lint             # ESLint 检查(Flat Config,含 eslint-config-next/core-web-vitals 与 /typescript)
+npm run test             # Vitest 单测
+npm run test:integration # Vitest 集成测试(真实 PG/Redis,globalSetup 自理迁移)
+npm run test:e2e         # Playwright E2E(对生产构建产物跑,webServer 自动 build && start)
+npm run db:generate      # Drizzle 生成数据库迁移
+npm run db:migrate       # Drizzle 应用数据库迁移
+npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 17 + Redis 7)
 ```
 
-尚未安装测试框架;无独立的后端/数据库服务。
+本地开发前置:经 `npm run dev:infra` 启动 PG/Redis(见 `compose.dev.yaml`,凭据 studybuddy/studybuddy);`.env` 从 `.env.example` 复制并填入 `BETTER_AUTH_SECRET`。CI 流水线(`.github/workflows/ci.yml`)以 services 容器提供同款 PG/Redis。
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -39,3 +45,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **分支模型**:GitHub Flow——直接在 `master` 上开发或拉短生命周期分支,经 PR 合并回 `master`。
 - **版本管理**:语义化版本(SemVer),当前版本 `0.1.0`(见 `package.json`)。
 - **输出语言**:面向用户的回复与提交说明使用中文。
+
+## 已启用的mcp服务
+本项目已启用 codegraph MCP，存在 .codegraph 索引。
+规则：
+1. 查询符号、调用方、被调用方、修改影响范围，优先使用 codegraph 工具（codegraph_callers / codegraph_callees / codegraph_impact）
+2. rg / read 仅用于模糊文本查找、读取codegraph返回之外的补充文件
+3. 不要重复read codegraph已经返回源码片段的文件
+
