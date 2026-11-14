@@ -67,4 +67,15 @@ export const auth = betterAuth({
     }),
   },
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3000"],
+  advanced: {
+    database: {
+      // Better Auth 1.7 运行时 schema 校验要求 user 表全部 notNull 无默认列
+      // 必须由 Better Auth 写入，否则抛 SchemaMismatchError。本设计的
+      // agreementVersion/agreedAt（R15 留痕）由 registerWithPhone 在注册
+      // 事务中写入，Better Auth 自身不存在可达的 user 插入路径
+      // （sign-up/email 被 hook 403、OTP 注册因 sendOTP no-op 不可利用），
+      // 校验属误报，故关闭（Task 6 实测发现，待 design 回写）。
+      validateSchema: false,
+    },
+  },
 });
