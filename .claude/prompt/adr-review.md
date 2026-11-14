@@ -2,7 +2,7 @@
 
 > 用途:将下面整段提示词连同待审 ADR(文件路径或全文)交给 AI,对其做结构、内容与陷阱三维审查。
 > 依据:Archyl《架构决策记录(ADR):完全指南》(https://www.archyl.com/zh/blog/architecture-decision-records-complete-guide)。
-> 本仓库 ADR 位于 `docs/dev/adr/`,格式为 MDX(Docusaurus frontmatter + 标准章节)。
+> 本仓库 ADR 位于 `docs/dev/adr/`,格式为 Markdown(Docusaurus frontmatter + 标准章节)。
 
 ---
 
@@ -13,7 +13,7 @@
 ### 输入
 
 - 待审 ADR:{{ADR 文件路径或全文}}
-- 参考上下文(可选):`docs/dev/adr/index.mdx`(决策日志)及仓库内其他 ADR
+- 参考上下文(可选):`docs/dev/adr/index.md`(决策日志)及仓库内其他 ADR
 
 ### 审查流程
 

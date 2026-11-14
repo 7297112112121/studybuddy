@@ -23,7 +23,7 @@ proposal 不必通读：**默认读头部表、需求条目表、边界与约束
 
 ### 2. 与既有 ADR、代码目录约定核对
 
-ADR 核对**索引先行**：先读 `docs/dev/adr/index.mdx`，按本特性的技术要点只核对相关 ADR，不通读全部 ADR。核对判据：
+ADR 核对**索引先行**：先读 `docs/dev/adr/index.md`，按本特性的技术要点只核对相关 ADR，不通读全部 ADR。核对判据：
 
 - 有对应 ADR 且一致——照做；
 - 与 ADR 冲突或无 ADR 覆盖的新选型——**先走 ADR 流程，再回来做设计**，不得在 design 里静默偏离；
@@ -33,7 +33,7 @@ ADR 核对与代码目录约定核对相互独立，可各派一个子代理并�
 
 ### 3. 产出设计
 
-按 [templates/design.md](templates/design.md) 写入 `docs/dev/AXY-<N>-<slug>/design.mdx`（与 proposal 同目录，目录已由 proposal-writing 创建）。**各节的合格判据已内联在模板中**（数据模型精确到可直接写 schema、契约精确到签名级且无「待定」、错误边界逐项对应 proposal、需求承载对照覆盖每条 R）——模板是该要求的单源，此处不重复。
+按 [templates/design.md](templates/design.md) 写入 `docs/dev/AXY-<N>-<slug>/design.md`（与 proposal 同目录，目录已由 proposal-writing 创建）。**各节的合格判据已内联在模板中**（数据模型精确到可直接写 schema、契约精确到签名级且无「待定」、错误边界逐项对应 proposal、需求承载对照覆盖每条 R）——模板是该要求的单源，此处不重复。
 
 **裁决回写纪律**：design 是批准工件，契约代码块永远展示**最终形态**——实现期发现设计需修正时，裁决一律记入实现计划的「裁决记录」节，design 至多留一行指针；禁止「错误原貌 + 勘误注记」并存（照抄代码块即中招）。开放问题未决写「待定稿」；闭合后处置列写结论 + 证据指针，问题格保持短问题，不入内联结论。
 
@@ -57,4 +57,4 @@ ADR 核对与代码目录约定核对相互独立，可各派一个子代理并�
 
 ## 产出物
 
-- `docs/dev/AXY-<N>-<slug>/design.mdx` — 架构设计（状态：草案 → 已批准）
+- `docs/dev/AXY-<N>-<slug>/design.md` — 架构设计（状态：草案 → 已批准）

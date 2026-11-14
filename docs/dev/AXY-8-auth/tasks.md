@@ -10,8 +10,8 @@ sidebar_position: 3
 
 **Date:** 2026-11-14
 
-**Spec:** docs/dev/AXY-8-auth/proposal.mdx（需求规范,权威）
-**Design:** docs/dev/AXY-8-auth/design.mdx（架构设计,契约来源）
+**Spec:** docs/dev/AXY-8-auth/proposal.md（需求规范,权威）
+**Design:** docs/dev/AXY-8-auth/design.md（架构设计,契约来源）
 
 ## Global Constraints
 
@@ -600,5 +600,5 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: `src/lib/redis.ts` 的 `createRedis` 去掉 export、内部化为单例工厂（spec-review 批次） — grep 全仓确认唯一调用方是同文件的 `export const redis = createRedis()`，对外契约只有 `redis` 单例本身，export 属契约外暴露；`maxRetriesPerRequest: null` 保留并补注释（ioredis 该选项禁用每命令重试上限，配合 lazyConnect 避免 Redis 抖动时命令快速失败） — 无
 - 裁决: API route 全量导出 GET/POST/PATCH/PUT/DELETE 五方法（spec-review 批次补记档） — design 示意仅 GET/POST，而 `toNextJsHandler(auth.handler)` 返回的对象即含五方法集合，route.ts 以 `export const { ... } = toNextJsHandler(...)` 全量透传，文件头注释已有说明；此处补记 design 与实现的导出面差异 — 若未来 Better Auth 增删方法集合，route 导出面随库版本变化，需复核
 - 裁决: 限流语义陈旧注释纠偏（spec-review 批次） — `src/lib/auth.ts` 与 `tests/integration/helpers.ts` 的注释仍写「phoneNumber 插件 10 次/60 秒限制/防 429」，与 Task 12 裁决实测结论（内置 specialRule 登录路径 3 次/10 秒，插件规则不覆盖顶层 sign-in 路径）矛盾；随裁决更新两处注释表述，代码不动 — 无
-- 裁决: design.mdx 回写 `hooks.before`/`validateSchema` 实现裁决注记、proposal.mdx 同步 R6 验证方式（spec-review 批次） — Task 4 裁决（hooks.before 为单个 `createAuthMiddleware`）、Task 6 裁决（`advanced.database.validateSchema: false`）均承诺「待 design 回写」，proposal R6 的 PO 修订（2026-11-14，非目标 #9 废除建档概念）未同步到验证方式单元格；一并闭合文档欠账 — 无
+- 裁决: design.md 回写 `hooks.before`/`validateSchema` 实现裁决注记、proposal.md 同步 R6 验证方式（spec-review 批次） — Task 4 裁决（hooks.before 为单个 `createAuthMiddleware`）、Task 6 裁决（`advanced.database.validateSchema: false`）均承诺「待 design 回写」，proposal R6 的 PO 修订（2026-11-14，非目标 #9 废除建档概念）未同步到验证方式单元格；一并闭合文档欠账 — 无
 - 裁决: R1 汇总计数的「项」定义为字段项（账号/密码/手机号/确认密码），协议勾选错误不进顶部汇总、仅在勾选框旁单独呈现（spec-review 终审，提出者裁决 2026-11-14） — Task 9 裁决已将协议错误定为局部态，R4 独立定义了协议错误的呈现通道（勾选框高亮），两条文互补而非重叠；proposal R1 措辞随裁决同步修订 — 若未来 UX 评审认为汇总应含协议项，需同改 FormSummary 传参与单测/E2E 断言

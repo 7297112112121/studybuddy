@@ -35,6 +35,9 @@ const config: Config = {
     locales: ['zh-Hans'],
   },
 
+  // 面向 AI 的纯文本端点(llms.txt / 每页 .md / llms-full.txt),见 src/plugins/ai-docs
+  plugins: ['./src/plugins/ai-docs'],
+
   presets: [
     [
       'classic',

@@ -6,7 +6,7 @@ sidebar_position: 4
 
 # Review: AXY-8 登录注册
 
-| 对应规范 | [proposal.mdx](./proposal.mdx) | 审查日期 | 2026-11-14 |
+| 对应规范 | [proposal.md](./proposal.md) | 审查日期 | 2026-11-14 |
 | ---- | ---- | ---- | ---- |
 | 审查基线 | feat/axy-8-auth，HEAD `4a7774c`（含终审修复批 `b6fdd6b` + `4a7774c`） | 判定 | **通过** |
 
@@ -59,7 +59,7 @@ sidebar_position: 4
 ## 契约与裁决核验
 
 - design 契约表与实际签名**逐项一致**（validators/service/queries/actions/errors/routes/auth-client/组件 props/布局守卫）。
-- 全部契约偏离均有裁决记录：hooks.before 单中间件、trustedOrigins 兜底、drizzleAdapter 显式 schema、`validateSchema: false`、AuthRedirect 阈值 `>2`、drizzle client 形态——且 design.mdx 已补「实现裁决注记」回写（`4a7774c`）。
+- 全部契约偏离均有裁决记录：hooks.before 单中间件、trustedOrigins 兜底、drizzleAdapter 显式 schema、`validateSchema: false`、AuthRedirect 阈值 `>2`、drizzle client 形态——且 design.md 已补「实现裁决注记」回写（`4a7774c`）。
 - tasks.md 裁决记录 43 条（含 spec-review 批次 5 条）逐条核到代码，无「记了裁决代码没有」或反向漏记。
 - design 开放问题 #1/#2 的实测闭合结论已回写，与实现注释互相印证。
 
