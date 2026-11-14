@@ -25,7 +25,9 @@ concurrency:
 env:
   REGISTRY: ccr.ccs.tencentyun.com
   IMAGE: ccr.ccs.tencentyun.com/studybuddy/app
-  DEPLOY_USER: root
+  # 服务器禁 root SSH（PermitRootLogin no），部署走 ubuntu 账户；
+  # ubuntu 须在 docker 组（免 sudo 执行 compose），/opt/studybuddy 归 ubuntu 所有
+  DEPLOY_USER: ubuntu
   DEPLOY_DIR: /opt/studybuddy
 
 jobs:
