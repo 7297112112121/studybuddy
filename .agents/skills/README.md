@@ -49,6 +49,7 @@
 ## 新增技能的规则
 
 - 每个技能一个目录，内含 `SKILL.md`（frontmatter：`name` + `description`）与可选的 `templates/`、`references/`。
+- `SKILL.md` 保持精简（约 150 行以内），只做路由、门禁与决策；内容超限时拆 `references/` 按需加载（渐进披露），不往 SKILL.md 里堆细节。
 - `description` 必须写明触发条件与输入前提（引用哪个上游文档），防止相邻技能误触发。
 - 编写风格以 [obra/superpowers](https://github.com/obra/superpowers) 为学习榜样：何时使用/不使用、硬门禁（HARD-GATE）、步骤可检查、合理化对照表（Common Rationalizations）。
 - 通用第三方技能优先当外部依赖安装（登记 skills-lock.json），不手抄进本目录。
