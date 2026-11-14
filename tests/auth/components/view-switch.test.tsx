@@ -3,12 +3,21 @@
  *
  * 覆盖：已填值跨视图保留（表单值提升于 AuthScreen）、切换清空错误、
  * URL 经 history.replaceState 同步 /login ↔ /register（不导航）。
+ *
+ * Task 10 适配：AuthScreen 接入提交流程后渲染期调用 useRouter，
+ * 测试侧 mock next/navigation（本文件不触达提交，无网络边界）。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import AuthScreen from "../../../src/modules/auth/components/AuthScreen";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
+
+const routerReplace = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: routerReplace }),
+}));
 
 afterEach(cleanup);
 

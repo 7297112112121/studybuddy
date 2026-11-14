@@ -1,27 +1,53 @@
 /**
- * Task 9 Step 1：AuthScreen 登录/注册校验链渲染测试（不接网络）。
+ * Task 9 Step 1：AuthScreen 登录/注册校验链渲染测试。
  *
  * 覆盖：R1（顶部汇总）/ R2 / R3（validateAccount·validatePassword 映射）、
  * R4（协议勾选错误态）、R8（注册校验）、R17（密码显隐）、R18（OAuth 占位）、
- * R19（忘记密码占位提示）。「不触发提交」以 onSubmit spy 未被调用断言。
+ * R19（忘记密码占位提示）。「不触发提交」以提交边界（signIn/registerAction）
+ * 未被调用断言。
+ *
+ * Task 10 适配：AuthScreen 移除 onSubmit spy prop、校验通过即真实提交，
+ * 测试侧 mock next/navigation、../actions 与 @/lib/auth-client；
+ * 「校验通过触发提交」改为断言对应提交边界被调用一次。
  */
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import AuthScreen from "../../../src/modules/auth/components/AuthScreen";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
+import { authClient } from "../../../src/lib/auth-client";
+import { registerAction } from "../../../src/modules/auth/actions";
+
+const routerReplace = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: routerReplace }),
+}));
+vi.mock("../../../src/modules/auth/actions", () => ({
+  registerAction: vi.fn(),
+}));
+vi.mock("../../../src/lib/auth-client", () => ({
+  authClient: {
+    signIn: { phoneNumber: vi.fn() },
+    signOut: vi.fn(),
+  },
+}));
+
+const registerMock = vi.mocked(registerAction);
+const signInMock = vi.mocked(authClient.signIn.phoneNumber);
 
 afterEach(cleanup);
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 function renderAuthScreen(
-  props: { initialView?: "login" | "register"; onSubmit?: () => void } = {},
+  props: { initialView?: "login" | "register" } = {},
 ) {
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={{ auth: authMessages }}>
-      <AuthScreen
-        initialView={props.initialView ?? "login"}
-        onSubmit={props.onSubmit}
-      />
+      <AuthScreen initialView={props.initialView ?? "login"} />
     </NextIntlClientProvider>,
   );
 }
@@ -36,8 +62,7 @@ function submitActiveForm(container: HTMLElement): void {
 
 describe("登录校验链（R1/R2/R3/R4）", () => {
   it("账号留空+密码 a1234567 提交 → 账号必填文案 + 顶部「有 1 项需要修改」，不触发提交", () => {
-    const onSubmit = vi.fn();
-    const { container } = renderAuthScreen({ onSubmit });
+    const { container } = renderAuthScreen();
 
     fireEvent.change(screen.getByLabelText("密码"), {
       target: { value: "a1234567" },
@@ -46,7 +71,7 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
 
     expect(screen.getByText("请输入手机号或邮箱")).toBeDefined();
     expect(screen.getByText("有 1 项需要修改")).toBeDefined();
-    expect(onSubmit).not.toHaveBeenCalled();
+    expect(signInMock).not.toHaveBeenCalled();
   });
 
   it("账号密码双空提交 → 顶部「有 2 项需要修改」", () => {
@@ -59,9 +84,9 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
     expect(screen.getByText("有 2 项需要修改")).toBeDefined();
   });
 
-  it("账号 1380013800/密码 abc@mail → 账号格式文案；改填合法并勾选协议后提示消失且触发提交", () => {
-    const onSubmit = vi.fn();
-    const { container } = renderAuthScreen({ onSubmit });
+  it("账号 1380013800/密码 abc@mail → 账号格式文案；改填合法并勾选协议后提示消失且触发提交", async () => {
+    signInMock.mockResolvedValue({ data: null, error: null });
+    const { container } = renderAuthScreen();
     const account = screen.getByLabelText(
       "手机号 / 邮箱",
     ) as HTMLInputElement;
@@ -74,7 +99,7 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
     expect(
       screen.getByText("格式不对：手机号 11 位，或 name@mail.com"),
     ).toBeDefined();
-    expect(onSubmit).not.toHaveBeenCalled();
+    expect(signInMock).not.toHaveBeenCalled();
 
     fireEvent.change(account, { target: { value: "13800138000" } });
     fireEvent.change(password, { target: { value: "study2026" } });
@@ -85,12 +110,11 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
       screen.queryByText("格式不对：手机号 11 位，或 name@mail.com"),
     ).toBeNull();
     expect(screen.queryByText(/项需要修改/)).toBeNull();
-    expect(onSubmit).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(signInMock).toHaveBeenCalledTimes(1));
   });
 
   it("账号 12345678/密码 21 位 → 密码规则文案", () => {
-    const onSubmit = vi.fn();
-    const { container } = renderAuthScreen({ onSubmit });
+    const { container } = renderAuthScreen();
     const password21 = "a12345678901234567890";
 
     fireEvent.change(screen.getByLabelText("手机号 / 邮箱"), {
@@ -102,12 +126,11 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
     submitActiveForm(container);
 
     expect(screen.getByText("密码为 8—20 位，需含字母与数字")).toBeDefined();
-    expect(onSubmit).not.toHaveBeenCalled();
+    expect(signInMock).not.toHaveBeenCalled();
   });
 
   it("合法账号密码未勾选协议提交 → 勾选框 aria-invalid 错误态，不触发提交", () => {
-    const onSubmit = vi.fn();
-    const { container } = renderAuthScreen({ onSubmit });
+    const { container } = renderAuthScreen();
     const checkbox = screen.getByLabelText(
       /我已阅读并同意/,
     ) as HTMLInputElement;
@@ -122,14 +145,15 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
 
     expect(checkbox.getAttribute("aria-invalid")).toBe("true");
     expect(screen.getByText("请阅读并勾选《用户协议》与《隐私政策》")).toBeDefined();
-    expect(onSubmit).not.toHaveBeenCalled();
+    expect(signInMock).not.toHaveBeenCalled();
   });
 });
 
 describe("注册校验链（R8）", () => {
-  it("手机号 1380013800 → 「请输入 11 位有效手机号」；改填合法后提示消失且触发提交", () => {
-    const onSubmit = vi.fn();
-    renderAuthScreen({ initialView: "register", onSubmit });
+  it("手机号 1380013800 → 「请输入 11 位有效手机号」；改填合法后提示消失且触发提交", async () => {
+    registerMock.mockResolvedValue({ ok: true });
+    signInMock.mockResolvedValue({ data: null, error: null });
+    renderAuthScreen({ initialView: "register" });
 
     fireEvent.change(screen.getByLabelText("手机号"), {
       target: { value: "1380013800" },
@@ -144,7 +168,7 @@ describe("注册校验链（R8）", () => {
     fireEvent.click(screen.getByRole("button", { name: "注册并进入" }));
 
     expect(screen.getByText("请输入 11 位有效手机号")).toBeDefined();
-    expect(onSubmit).not.toHaveBeenCalled();
+    expect(registerMock).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText("手机号"), {
       target: { value: "13800138000" },
@@ -152,7 +176,7 @@ describe("注册校验链（R8）", () => {
     fireEvent.click(screen.getByRole("button", { name: "注册并进入" }));
 
     expect(screen.queryByText("请输入 11 位有效手机号")).toBeNull();
-    expect(onSubmit).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(registerMock).toHaveBeenCalledTimes(1));
   });
 
   it("确认密码为空或不一致 → 「两次输入的密码不一致」", () => {
