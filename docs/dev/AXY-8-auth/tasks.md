@@ -585,3 +585,5 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: FormSummary 汇总计数不含协议勾选错误（Task 9） — 任务自测用例「账号留空+密码合法+协议未勾选 → 有 1 项需要修改」与「按全部 errors 键数计数」矛盾（后者为 2）；协议错误仍单独呈现（勾选错误态），与线框图行为一致；实现为 AuthScreen 下发给 FormSummary 的 errors 不含 agreement — 汇总数与字段错误数语义分离，后续改文案计数规则时两处要同步
 - 裁决: PasswordField 显隐布尔与 ForgotPasswordLink 提示显示态保留为组件内局部 state（Task 9） — design「状态提升」清单仅列 activeView/表单值/errors/submitting 四项；显隐是三输入框各自独立的同构状态，提升反而破坏复用 — 若未来需要跨字段统一显隐，需改 PasswordField props
 - 裁决: 非 16 键的结构性布局文案（「手机号 / 邮箱」「注册并进入」「微信登录」等）硬编码中文于组件（Task 9） — auth.json 键清单（16 键）不含布局文案，与 Task 8 最小 i18n 设施一致 — 后续扩 i18n 键时改动点集中在各字段组件；多语言启动前需补齐
+- 裁决: `authClient.signIn.phoneNumber` 失败按 `{ data: null, error: { status, ... } }` 返回值处理而非 reject（Task 10） — better-auth 1.7 客户端经 @better-fetch 未设 `throw: true`，失败不 reject；实现取 `result.error` 喂 mapSignInError，try/catch 仅兜网络层异常归一 unknown（否则测试绿而真实链路坏） — Task 11/12 依赖此行为契约，不得假设 reject 形态
+- 裁决: R10「去登录」以整条文案渲染为单个可点按钮（Task 10） — 16 键文案被 messages.test.ts 逐字锁定（`该手机号已注册，去登录`），不拆分不增键；行为满足 R10（切视图+带入手机号） — accessible name 为全句；若产品要求仅「去登录」三字可点，需改文案结构并动 16 键清单
