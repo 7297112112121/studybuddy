@@ -572,3 +572,6 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: `hooks.before` 落成单个 `createAuthMiddleware` 函数而非 design 的数组形态（Task 4） — design 所写数组形态是插件级 hook 的形状，`@better-auth/core` 选项级 `hooks.before` 在 1.7 为单个 AuthMiddleware；语义等价（`createAuthMiddleware`/`APIError` 自 `better-auth/api` 导出） — design 代码示意与实现形态不一致，后续读 design 者需知此映射
 - 裁决: trustedOrigins 兜底 `[process.env.BETTER_AUTH_URL ?? 'http://localhost:3000']`（Task 4） — design 契约用 `!` 非空断言，无 .env 环境数组会混入 undefined；与无 .env 构建守卫一致 — 无
 - 裁决: `docker build --target runner` 本地验证跳过（Task 4） — Docker Desktop daemon 未运行；`npm run build`（无 .env）已同验通过 — docker 构建守卫延至 Task 13 本地核对时补验
+- 裁决: 23505 唯一冲突映射的约束名扩为 `user_phone_number` + `user_email_key`（Task 5） — 占位邮箱由手机号确定性派生，email 列 UNIQUE 先于 phone 唯一索引抛出（集成实测），仅认 user_phone_number 会漏判 R10/R14；email 冲突当且仅当同号已注册，语义等价（design 原文只写 user_phone_number） — 若未来出现非手机号派生的邮箱注册路径，此等价不再成立，需收紧
+- 裁决: drizzle RC 的 `drizzle()` 仅接受配置对象形态 `drizzle({ client })`，且 migrate 的 23505/constraint_name 在 `DrizzleQueryError.cause` 链上探测（Task 5） — `drizzle(client)` 位置参数被 RC 静默忽略（自建无凭据连接致 28P01）；错误包装形态以 node_modules 类型与集成实测为准 — 后续任务凡构造 drizzle 实例/判 PG 错误码均沿用此形态
+- 裁决: `src/db/client.ts` 类型注解扩为 `PostgresJsDatabase & { $client: postgres.Sql }`（Task 5） — `db.$client` 运行时存在但被原注解抹去，集成测试 teardown 需要；保持显式类型纪律，未改运行时行为 — 无
