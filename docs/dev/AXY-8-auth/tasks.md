@@ -579,3 +579,6 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: `vitest.config.integration.ts` env 注入 `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`（Task 6） — better-auth 1.7 无 secret 时 `betterAuth()` 模块求值即抛错，端点直调测试必须先注入；helpers 模块求值后补设不可靠，只能落在 config env — Task 13 的 CI job env 须覆盖同组变量
 - 裁决: `mapSignInError` 对裸 400（无 code）也映射 invalidCredentials（Task 7） — design 注释「任一登录失败（含格式拒绝）→ invalidCredentials」，格式拒绝即 400 族，故按 status 判定不细究 code；code 参数保留在签名供未来细化 — 若未来 400 族出现非凭据类错误（如参数畸形），会误报为「账号或密码不对」，可接受（R7 统一文案方向）
 - 裁决: `queries.ts` 的 `raw.user.phoneNumber ?? ''` 归一（Task 7） — Better Auth 1.7 的 user 类型标注 phoneNumber 可空，而本产品注册路径恒有值；归一空串仅为满足 AuthSession 契约类型 — 若出现 phoneNumber 为空的真实会话，workbench 会显示空手机号（理论上不可达）
+- 裁决: 根布局加 `export const instant = false`（Task 8） — Next 16.4.6 `cacheComponents: true` 下 getMessages() 经 cookies() 使预渲染报「uncached or runtime data during prerendering」；cookie 语言协商是 ADR-0010 硬要求，豁免为 Next 官方迁移指南推荐手段（注释已注明回迁条件：语言协商迁至 proxy 后移除） — 全站路由标记 ƒ（Dynamic），失去静态预渲染；ADR-0010 终态（proxy 层协商）落地时须回迁
+- 裁决: 根布局 `lang="en"` 改 `lang="zh-CN"`（Task 8） — 与 ADR-0010 唯一目标语言 zh-CN 对齐 — 无
+- 裁决: `vitest.config.ts` 增 next-intl/next 的单测解析适配（Task 8） — 单测环境无 react-server 导出条件，`next-intl/server` 解析到 react-client 桩即抛错；适配为生产等价接线（react-server 构建 + config 别名 + next/headers 显式扩展名），仅影响单测解析不改产品构建 — 适配指向 next-intl 内部构建路径，升级 next-intl 大版本时可能需复核
