@@ -77,8 +77,15 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       # 原生 ssh 部署（ADR-0018）：不用第三方 SSH action（ADR-0022 供应链纪律）；
-      # 服务器端执行 repo 内 scripts/deploy.sh，compose 文件即部署文档
+      # 服务器端执行 repo 内 scripts/deploy.sh，compose 文件即部署文档。
+      # 代码交付：运行器 git archive 后经本 SSH 通道 tar 解包到部署目录——
+      # 境内服务器不再依赖 github.com 连通性（2026-11-14 git fetch 443 超时
+      # 即此因）；tar 只含 tracked 文件，服务器本地 .env 不受影响；
+      # 覆盖式解包不清理已删除文件，重命名/删除的旧文件可能残留（低影响）。
       - name: Deploy over SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -92,11 +99,11 @@ jobs:
           # 但少一条独立命令——keyscan 失败会因 bash -e 静默中止（5 秒超时 + stderr 屏蔽，
           # 2026-11-13 首次部署即因此零输出失败），ssh 直连失败则能看到真实错误。
           # ConnectTimeout：服务器 22 端口不可达时 15 秒内明确报错，而非挂满作业时限。
-          ssh -i ~/.ssh/deploy_key \
+          git archive --format=tar HEAD | ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=accept-new \
             -o ConnectTimeout=15 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd $DEPLOY_DIR && git fetch origin && git checkout $SHORT_SHA && ./scripts/deploy.sh $SHORT_SHA dev"
+            "mkdir -p $DEPLOY_DIR && tar -xf - -C $DEPLOY_DIR && cd $DEPLOY_DIR && ./scripts/deploy.sh $SHORT_SHA dev"
 
   deploy-test:
     name: Deploy test
@@ -107,6 +114,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: test
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # 代码交付方式说明见 deploy-dev 作业（git archive 经 SSH 传输，见
+      # 2026-11-14 服务器 git fetch 超时纪事）
       - name: Deploy over SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -118,8 +130,8 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           # SSH 首连方式说明见 deploy-dev 作业（accept-new + ConnectTimeout）
-          ssh -i ~/.ssh/deploy_key \
+          git archive --format=tar HEAD | ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=accept-new \
             -o ConnectTimeout=15 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd $DEPLOY_DIR && git fetch origin && git checkout $SHORT_SHA && ./scripts/deploy.sh $SHORT_SHA test"
+            "mkdir -p $DEPLOY_DIR && tar -xf - -C $DEPLOY_DIR && cd $DEPLOY_DIR && ./scripts/deploy.sh $SHORT_SHA test"
