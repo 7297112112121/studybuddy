@@ -139,7 +139,12 @@ export const auth = betterAuth({
 });
 ```
 
-`emailAndPassword.enabled: true` 是 phoneNumber 插件密码校验的基座；邮箱端点本身已被 hook 拦死。限流保持默认开启（全局规则 + 插件对手机号路径的 10 次/60 秒限制），防凭证填充。
+> **实现裁决注记**（spec-review 批次回写，对应 tasks.md Task 4 / Task 6 裁决）
+>
+> - `hooks.before` 实为**单个** `createAuthMiddleware` 返回的中间件函数：上方代码块中的数组形态是插件级 hook 形状，Better Auth 1.7 选项级 `hooks.before` 实测为单个 `AuthMiddleware`，实现以 `createAuthMiddleware` 落成等价语义（Task 4 实测）。
+> - 配置须加 `advanced.database.validateSchema: false`：Better Auth 1.7 运行时 schema 校验对 `registerWithPhone` 直写的 `agreementVersion`/`agreedAt` 列误报 `SchemaMismatchError`，而本设计不存在 Better Auth 自身可达的 user 插入路径，校验属误报故关闭（Task 6 裁决）。
+
+`emailAndPassword.enabled: true` 是 phoneNumber 插件密码校验的基座；邮箱端点本身已被 hook 拦死。限流保持默认开启：内置 specialRule 对登录路径 3 次/10 秒（实测覆盖 `/sign-in/phone-number`，见 tasks.md Task 12 裁决），防凭证填充；phoneNumber 插件的 10 次/60 秒 rateLimit 规则不覆盖顶层 sign-in 路径。
 
 ### src/lib/auth-client.ts（客户端 SDK）
 
