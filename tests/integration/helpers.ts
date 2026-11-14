@@ -9,10 +9,10 @@ let uniquePhoneSeq = 0;
 /**
  * 每次调用返回不重复的合法手机号（^1[3-9]\d{9}$）。
  *
- * Better Auth phoneNumber 插件默认限流 10 次/60 秒（以手机号为维度计数），
- * 且 user_phone_number 唯一索引跨测试运行持久化（compose 卷）——时间戳主干
- * 保证跨运行不重复，末位计数器保证同毫秒内并发/连续调用不重复，
- * 从源头防限流 429 与唯一冲突串扰。
+ * user_phone_number 唯一索引跨测试运行持久化（compose 卷）——时间戳主干
+ * 保证跨运行不重复，末位计数器保证同毫秒内并发/连续调用不重复，配合
+ * Playwright workers:1 与 throttleSignIn 节流，从源头防唯一冲突串扰
+ * 与内置登录限流（specialRule 3 次/10 秒，见 tasks.md Task 12 裁决）429。
  */
 /**
  * 直调 auth.handler 的 POST 基座（Task 6，design「Produces」directPost）。

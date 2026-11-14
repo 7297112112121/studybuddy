@@ -41,7 +41,9 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24,
   },
   // phoneNumber 插件密码校验的基座；邮箱端点本身已被下方 hook 拦死。
-  // 限流保持默认开启（全局规则 + 插件对手机号路径的 10 次/60 秒限制），防凭证填充。
+  // 限流保持默认开启：内置 specialRule 对登录路径 3 次/10 秒（实测覆盖
+  // /sign-in/phone-number，见 tasks.md Task 12 裁决），防凭证填充。
+  // （phoneNumber 插件的 10 次/60 秒 rateLimit 规则不覆盖顶层 sign-in 路径）
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
