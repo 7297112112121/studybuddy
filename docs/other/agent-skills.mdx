@@ -23,7 +23,7 @@ sidebar_position: 1
 一份技能定义,四款工具同时生效——新增技能、修订规则都只改一处,不存在"Claude 的规范和 Cursor 的规范各维护一份然后漂移"的问题。
 
 :::note Windows 注意事项
-Git symlink 在 Windows 下需要系统开启"开发者模式",并执行 `git config core.symlinks true`;否则 checkout 出来的 symlink 会退化成一个包含目标路径的普通文本文件,技能加载会静默失效。
+Git symlink 在 Windows 下需要系统开启"开发者模式"并执行 `git config core.symlinks true`，否则 symlink 会退化为普通文本文件、技能加载静默失效。本项目的前提与处置以 `.agents/skills/README.md` 的「Windows 注意事项」为准。
 :::
 
 ## 2. 技能目录解剖

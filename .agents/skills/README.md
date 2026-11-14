@@ -35,16 +35,16 @@
 
 ## 流程接力约定
 
-流程技能通过「引用上游已批准文档」串联，每个技能 frontmatter 的 `description` 都声明了自己的输入前提，以此强制执行流程顺序：
+流程技能通过「引用上游已批准文档」串联，每个技能 frontmatter 的 `description` 都声明了自己的输入前提，以此强制执行流程顺序。总流程图见 [docs/研发流程.mdx](../../docs/研发流程.mdx)（唯一一份，本文件不重复）。
 
-```
-模糊想法 → [product-design] → 用户故事
-         → [proposal-writing] → proposal（批准门 1）
-         → [architecture-design] → design（批准门 2）
-         → [plan-writing] → 实现计划
-         → TDD 实现（含集成 / E2E 测试）
-         → [spec-review] → 审查报告
-```
+**交接最小集**：下游技能默认只读下表「必读」列，不通读上游全文；需要细节时按各技能 SKILL.md 的条件句展开「按需」列——交接契约是子代理 prompt 自包含原则的原料，不是全文：
+
+| 下游技能 | 上游产物 | 必读 | 按需展开 |
+| --- | --- | --- | --- |
+| `proposal-writing/` | 用户故事 | 全文（故事很短）+「依赖与引用」一层 | 更深的引用物 |
+| `architecture-design/` | proposal | 头部表、需求条目、边界与约束、性能与质量要求、豁免项 | 目标背景等叙述节 |
+| `plan-writing/` | design + proposal | design 契约与需求承载对照、proposal 需求条目与边界与约束 | 数据模型细节、UI 小节 |
+| `spec-review/` | proposal + design + tasks | proposal 头部/需求条目/非目标/边界/豁免项，design 需求承载对照与契约总表，tasks Global Constraints 与裁决记录 | design 其余小节、任务卡细节 |
 
 ## 新增技能的规则
 
@@ -52,4 +52,5 @@
 - `SKILL.md` 保持精简（约 150 行以内），只做路由、门禁与决策；内容超限时拆 `references/` 按需加载（渐进披露），不往 SKILL.md 里堆细节。
 - `description` 必须写明触发条件与输入前提（引用哪个上游文档），防止相邻技能误触发。
 - 编写风格以 [obra/superpowers](https://github.com/obra/superpowers) 为学习榜样：何时使用/不使用、硬门禁（HARD-GATE）、步骤可检查、合理化对照表（Common Rationalizations）。
+- 涉及大量并行取证的技能应写明子代理委派指令，并遵守三原则：prompt 必须自包含、随到随验、主会话保留汇责与判定权；环境不支持子代理时内联执行并明说，不得假装已委派。
 - 通用第三方技能优先当外部依赖安装（登记 skills-lock.json），不手抄进本目录。
