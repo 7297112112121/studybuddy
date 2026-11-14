@@ -100,7 +100,10 @@ jobs:
 
   deploy-test:
     name: Deploy test
-    needs: deploy-dev
+    # needs 必须同时含 build：job outputs 只传给直接依赖者，
+    # 仅 needs deploy-dev 时 needs.build.outputs.short-sha 为空（SHA 错位传参
+    # 会被 deploy.sh 参数校验拦下，2026-11-14 首次 test 部署即此症状）
+    needs: [build, deploy-dev]
     runs-on: ubuntu-latest
     environment: test
     steps:
