@@ -3,8 +3,11 @@
 # 也可手工执行——GitHub Actions 故障时的逃生通道（runbook，ADR-0018 风险缓解）。
 #
 # 用法：./scripts/deploy.sh <短SHA> <dev|test>
-# 前提：当前目录为服务器上的仓库克隆（部署目录 /opt/studybuddy），
-#       已 git checkout 到目标提交；docker 已登录 TCR（拉取凭证留在服务器本地）；
+# 前提：当前目录为部署目录 /opt/studybuddy，代码已就位——流水线经
+#       git archive + SSH tar 解包交付（2026-11-14 起不再由服务器 git fetch，
+#       规避境内服务器到 github.com 的连通性问题；服务器上的 git 克隆保留，
+#       GitHub Actions 故障且服务器可达 GitHub 时可手工 fetch+checkout）；
+#       docker 已登录 TCR（拉取凭证留在服务器本地）；
 #       本地 .env 已提供 POSTGRES_PASSWORD / DATABASE_URL / REDIS_URL /
 #       BETTER_AUTH_SECRET（ADR-0022：应用机密只存服务器本地）。
 # 幂等：重复执行同一 tag 结果一致；失败即中止，旧容器继续运行。
