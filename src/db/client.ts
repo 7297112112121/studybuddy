@@ -27,7 +27,10 @@ const tables = {
 
 export const authRelations = defineRelations(tables);
 
-export const db: PostgresJsDatabase<typeof authRelations> = drizzle({
+export const db: PostgresJsDatabase<typeof authRelations> & {
+  /** 底层 postgres-js 连接（drizzle() 返回值实带 $client）；集成测试 teardown 用 */
+  $client: postgres.Sql;
+} = drizzle({
   client: postgres(
     process.env.DATABASE_URL ?? "postgresql://localhost:5432/studybuddy",
   ),
