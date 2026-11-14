@@ -30,6 +30,8 @@ vitest.config.ts
 knip.ts
 eslint.config.mjs
 scripts
+# 例外：容器内迁移执行件需进镜像（runner 阶段 COPY，见 scripts/db-migrate.mjs）
+!scripts/db-migrate.mjs
 
 # 部署编排自身（只被 compose 引用，不进镜像）
 compose.yaml
