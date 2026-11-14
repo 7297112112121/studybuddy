@@ -1,7 +1,9 @@
 # PR 校验流水线（ADR-0018 第一层触发晋升）
-# 范围：lint + type-check + Vitest 单测（ADR-0012）+ Playwright E2E 冒烟（ADR-0017）+ 生产构建。
-# 不推镜像、不部署、零机密接触（ADR-0022 分界）。
-# fork PR 同样可触发，本作业不引用任何 environment secret，机密接触面为零。
+# 范围：lint + type-check + Vitest 单测（ADR-0012）+ Vitest 集成测试（真实 PG/Redis）
+# + Playwright E2E 冒烟（ADR-0017）+ 生产构建。
+# 不推镜像、不部署、零机密接触（ADR-0022 分界）：services 凭据与 BETTER_AUTH_SECRET
+# 均为 CI 专用占位值（同 compose.dev.yaml 本地开发凭据），不引用任何 environment secret；
+# fork PR 同样可触发，机密接触面为零。
 name: CI
 
 on:
@@ -17,8 +19,42 @@ concurrency:
 
 jobs:
   verify:
-    name: Lint & Type-check & Build
+    name: Lint & Type-check & Test & Build
     runs-on: ubuntu-latest
+    # services 容器与 compose.dev.yaml 同镜像同凭据（Task 13）。
+    # VM runner 上 steps 直接跑在宿主，service 容器别名 DNS 不可从宿主解析，
+    # 按 GitHub 官方文档惯例以 localhost + 显式 ports 映射访问。
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: studybuddy
+          POSTGRES_PASSWORD: studybuddy
+          POSTGRES_DB: studybuddy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U studybuddy -d studybuddy"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    # CI 无 .env 上下文：env 在 job 级注入，Build / 单测 / 集成 / E2E 各步骤继承
+    # （Playwright webServer 的 build && start 同样读 job env）。
+    # BETTER_AUTH_SECRET 为 CI 专用随机串，非生产机密（ADR-0022 不破）。
+    env:
+      DATABASE_URL: postgresql://studybuddy:studybuddy@localhost:5432/studybuddy
+      REDIS_URL: redis://localhost:6379
+      BETTER_AUTH_SECRET: ci-only-a3f8e21c94b7d60518e2f4a9c3b1d7e8065f2c4a9b8d3e1f7a5c0b9d8e2f4a31
+      BETTER_AUTH_URL: http://localhost:3000
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,13 +86,21 @@ jobs:
       - name: Unit tests (Vitest)
         run: npm run test
 
+      # P2 测试层：Vitest 集成测试（真实 PG/Redis services），
+      # 迁移由其 globalSetup 自理（drizzle migrator 应用 src/db/migrations）
+      - name: Integration tests (Vitest)
+        run: npm run test:integration
+
       # E2E 需要 Chromium 二进制，runner 预装环境不含 Playwright 浏览器，需单独安装；
       # --with-deps 一并装系统依赖（ubuntu runner 具备 sudo），不引入浏览器缓存（ADR-0017 MVP 从简）
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
+      # E2E 前显式应用迁移（不依赖集成测试步骤已跑过 globalSetup 的隐式顺序）
+      - name: Database migrate
+        run: npm run db:migrate
+
       # P2 测试层：Playwright E2E 冒烟（ADR-0017），对生产构建产物跑（webServer 自动 build && start）
-      # Compose 栈（PG / Redis / SeaweedFS）待 ADR-0016 落地后再接入
       - name: Playwright E2E
         run: npm run test:e2e
 
