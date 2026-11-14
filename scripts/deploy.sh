@@ -2,9 +2,10 @@
 # 服务器端部署脚本（ADR-0018 第二层）：由 Deploy 流水线经原生 ssh 调用，
 # 也可手工执行——GitHub Actions 故障时的逃生通道（runbook，ADR-0018 风险缓解）。
 #
-# 用法：./scripts/deploy.sh <短SHA> <dev|test>
-# 前提：当前目录为服务器上的仓库克隆（部署目录 /opt/studybuddy），
-#       已 git checkout 到目标提交；docker 已登录 TCR（拉取凭证留在服务器本地）；
+# 用法：./scripts/deploy.sh <短SHA> <dev|test>（自带 git fetch/checkout，
+#       服务器直连 GitHub 的间歇抖动由内置重试吸收）
+# 前提：当前目录为服务器上的仓库克隆（部署目录 /opt/studybuddy）；
+#       docker 已登录 TCR（拉取凭证留在服务器本地）；
 #       本地 .env 已提供 POSTGRES_PASSWORD / DATABASE_URL / REDIS_URL /
 #       BETTER_AUTH_SECRET（ADR-0022：应用机密只存服务器本地）。
 # 幂等：重复执行同一 tag 结果一致；失败即中止，旧容器继续运行。
@@ -17,6 +18,23 @@ if [ "$env_name" != dev ] && [ "$env_name" != test ]; then
   echo "环境名必须是 dev 或 test，收到：$env_name" >&2
   exit 1
 fi
+
+# git fetch 内置重试：服务器（国内）直连 github.com 存在间歇性 TLS 中断
+# （GnuTLS -110），单次失败直接中止会让部署随机挂掉，退避重试吸收抖动
+fetch_ok=0
+for attempt in 1 2 3; do
+  if git fetch origin; then
+    fetch_ok=1
+    break
+  fi
+  echo "[第 ${attempt} 次失败] git fetch 失败，$((attempt * 10)) 秒后重试" >&2
+  sleep $((attempt * 10))
+done
+if [ "$fetch_ok" != 1 ]; then
+  echo "git fetch 三次均失败——服务器到 GitHub 的连接持续不可用" >&2
+  exit 1
+fi
+git checkout "$sha"
 
 registry="ccr.ccs.tencentyun.com"
 image="$registry/studybuddy/app:$sha"

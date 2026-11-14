@@ -96,7 +96,7 @@ jobs:
             -o StrictHostKeyChecking=accept-new \
             -o ConnectTimeout=15 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd $DEPLOY_DIR && git fetch origin && git checkout $SHORT_SHA && ./scripts/deploy.sh $SHORT_SHA dev"
+            "cd $DEPLOY_DIR && ./scripts/deploy.sh $SHORT_SHA dev"
 
   deploy-test:
     name: Deploy test
@@ -122,4 +122,4 @@ jobs:
             -o StrictHostKeyChecking=accept-new \
             -o ConnectTimeout=15 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd $DEPLOY_DIR && git fetch origin && git checkout $SHORT_SHA && ./scripts/deploy.sh $SHORT_SHA test"
+            "cd $DEPLOY_DIR && ./scripts/deploy.sh $SHORT_SHA test"
