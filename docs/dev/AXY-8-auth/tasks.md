@@ -568,3 +568,7 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: db client 类型为 `PostgresJsDatabase`，经 `defineRelations` + `drizzle({ client, relations })` 构造（Task 3） — 任务原文的 `NodePgDatabase` 与 postgres-js 驱动不匹配；RC 的 pg driver 配置 Omit 了 schema，表关系须单独经 relations 传入 — Task 4 的 drizzleAdapter 接 db 时注意此形态
 - 裁决: `src/db/schema.ts` barrel 内部用相对导入而非 `@/modules/auth/schema`（Task 3） — drizzle-kit 的 esbuild 不解析 tsconfig 路径别名，别名导入使 db:generate 失败 — 与「模块内相对导入」纪律方向一致，无代价
 - 裁决: 迁移目录布局为 `<timestamp>_<name>/migration.sql + snapshot.json`（Task 3） — drizzle-kit 1.0 RC 改目录式布局（0.x 为平铺单文件）；Task 5 集成基座的 migrator 应用路径须按此布局传 `migrationsFolder: 'src/db/migrations'` — 无
+- 裁决: drizzleAdapter 显式传 `schema: { user, account, session, verification }`（Task 4） — drizzle-orm 1.0 RC 移除 client 构造的 schema 运行时选项（`db._.fullSchema` 为 undefined），适配器 schema 回退实际查询会抛「Schema not found」；Task 3 裁决的 RC 变更延伸，不改表结构 — 无
+- 裁决: `hooks.before` 落成单个 `createAuthMiddleware` 函数而非 design 的数组形态（Task 4） — design 所写数组形态是插件级 hook 的形状，`@better-auth/core` 选项级 `hooks.before` 在 1.7 为单个 AuthMiddleware；语义等价（`createAuthMiddleware`/`APIError` 自 `better-auth/api` 导出） — design 代码示意与实现形态不一致，后续读 design 者需知此映射
+- 裁决: trustedOrigins 兜底 `[process.env.BETTER_AUTH_URL ?? 'http://localhost:3000']`（Task 4） — design 契约用 `!` 非空断言，无 .env 环境数组会混入 undefined；与无 .env 构建守卫一致 — 无
+- 裁决: `docker build --target runner` 本地验证跳过（Task 4） — Docker Desktop daemon 未运行；`npm run build`（无 .env）已同验通过 — docker 构建守卫延至 Task 13 本地核对时补验

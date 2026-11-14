@@ -391,5 +391,5 @@ SignOutButton (client：authClient.signOut() → router.replace(ROUTES.login))
 | # | 问题 | 不阻塞什么 |
 | - | ---- | ---- |
 | 1 | phoneNumber 插件 `/sign-in/phone-number` 对「用户不存在/密码错误」是否原生同文案（同族 username 插件源码已佐证统一 + 哈希时序缓解）；R7 集成测试实测。若有差异，兜底：登录改由 Server Action 包装 `auth.api.signInPhoneNumber` 统一返回——数据模型、组件树、注册路径均不变 | 其余设计定稿与实现启动；集成测试阶段闭合 |
-| 2 | `authClient.signIn.phoneNumber` 的确切方法名以 `phoneNumberClient` 生成类型为准（契约锚点是端点 `POST /sign-in/phone-number`，客户端方法仅是 SDK 语法糖） | 数据模型、service、守卫等全部其余设计；实现首日核对 |
+| 2 | `authClient.signIn.phoneNumber` 的确切方法名以 `phoneNumberClient` 生成类型为准（契约锚点是端点 `POST /sign-in/phone-number`，客户端方法仅是 SDK 语法糖）**已实测闭合（Task 4，2026-11-14）：方法名一致——`better-auth/dist/plugins/phone-number` 的 `signInPhoneNumber` 端点经客户端 path-to-object 生成为 `signIn.phoneNumber`；`tests/lib/auth-client.test.ts` 的存在性断言为常驻守护** | 数据模型、service、守卫等全部其余设计；实现首日核对 |
 | 3 | 工作台占位页形态（标题 + 手机号 + 退出按钮）由 AXY-12 正式设计替换 | 本特性验收（proposal 边界 #10 已确认占位承接） |
