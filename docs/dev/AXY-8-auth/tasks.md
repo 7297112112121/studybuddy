@@ -562,3 +562,4 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: redis 单测中 ioredis 类经动态 import 获取（Task 1） — 静态 import 会使 Step 2 先报 `Cannot find module 'ioredis'`，偏离任务预期的 `Cannot find module '@/lib/redis'` 失败形态；断言内容不变 — 测试代码略绕，无功能影响
 - 裁决: `.gitignore` 补 `!.env.example` 例外（Task 1） — 既有 `.env*` 通配会把任务要求入库的 `.env.example` 一并忽略 — 无
 - 裁决: compose.dev.yaml 的 redis 未配持久化卷（Task 1） — 任务原文仅要求 postgres 数据卷；redis 仅作会话缓存，重建即失效可接受 — dev 环境 Redis 数据不跨容器重建保留
+- 裁决: confirmPassword 一致性检查仅在 password 自身校验通过时执行（Task 2） — 任务用例「password '' → 仅返回 password 一项错误」与「confirmPassword 为空即不一致」的字面叠加互相矛盾（会同时返回 confirmPasswordMismatch）；密码本身不合法时不再叠加不一致错误，与任务注记「确认密码强度由与 password 一致间接保证」一致，且符合表单 UX — 若产品期望密码错误时同时提示确认框，需回改 validators 与测试
