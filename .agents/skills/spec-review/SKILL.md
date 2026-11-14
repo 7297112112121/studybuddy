@@ -43,7 +43,7 @@ description: 当一个特性的实现已全部完成(单元/集成/E2E 测试均
 
 ### 4. 产出审查报告
 
-报告写入 `docs/dev/AXY-<N>-<slug>/review.md`（与该特性的 proposal、design、tasks 同目录），结构：
+报告按 [templates/review.md](templates/review.md) 的结构写入 `docs/dev/AXY-<N>-<slug>/review.md`（与该特性的 proposal、design、tasks 同目录），各节要求：
 
 - **判定**：通过 / 不通过（一句话理由）；
 - **逐条核对表**：上表的完整结果；

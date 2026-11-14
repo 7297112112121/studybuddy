@@ -6,7 +6,7 @@ sidebar_position: 2
 
 # 研发流程
 
-研发流程分三大部分——产品设计、开发落地、测试提质——分别由 `.agents/skills/` 下的技能组承载，技能间靠「引用上游已批准文档」强制接力。本文件是流程总览，各技能细节见其 SKILL.md。
+研发流程分三大部分——产品设计、开发落地、测试提质——分别由 `.agents/skills/` 下的流程技能承载（product-design、proposal-writing、architecture-design、plan-writing、spec-review；另有 Better Auth 等外部技能不参与流程），技能间靠「引用上游已批准文档」强制接力。本文件是流程总览，各技能细节见其 SKILL.md。
 
 ## 总流程
 
@@ -19,13 +19,13 @@ sidebar_position: 2
          → [spec-review] → 审查报告（豁免项移交测试提质）
 ```
 
-## 产品技能组（product/）
+## 产品技能组
 
 - product-design 把未经结构化的想法经苏格拉底式提问澄清为落盘用户故事（docs/product 文档 + 交互原型 + 索引登记）。
 - 用户故事未经人工批准不得进入开发落地，这是产品与开发两组之间的硬门禁。
 - 纯技术决策不走本组，改走 ADR 流程。
 
-## 开发技能组（development/）
+## 开发技能组
 
 - proposal-writing 把已批准用户故事转写为需求规范，一个特性一份，含编号需求条目、非目标、性能指标与豁免清单。
 - proposal 未获人工批准，不得做架构设计、拆任务或写任何产品代码（批准门一）。

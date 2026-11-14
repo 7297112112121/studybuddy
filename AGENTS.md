@@ -39,6 +39,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **路径别名**:`@/*` 映射到 `./src/*`(见 `tsconfig.json`)。
 - 根目录的 `my-website/` 仅是开发服务器生成自签名证书时遗留的空目录,不属于项目,忽略即可。
 
+## 研发流程与 AI 技能
+
+特性研发遵循 [docs/研发流程.mdx](docs/研发流程.mdx) 的三阶段流程(产品设计 → 开发落地 → 测试提质),由 `.agents/skills/` 下的技能承载(`.claude/skills` 等工具目录是指向它的 symlink)。本节只做指针路由,详细规则一律见各技能 SKILL.md,不在此重复:
+
+- 接到新功能需求时,先读 `product-design` 技能——未经批准的用户故事不得进入开发落地。
+- 开发落地按 proposal → design → plan → TDD 实现 → spec-review 接力;两道批准门(proposal、design)未过,不得拆任务或写任何产品代码,对应技能:proposal-writing、architecture-design、plan-writing、spec-review。
+- 一切产品代码遵循 TDD 铁律:无先失败的测试,即无产品代码。
+- 技术选型与既有 ADR(docs/dev/adr/)冲突或无 ADR 覆盖时,先走 ADR 流程再继续设计。
+
 ## Git 与版本约定
 
 - **提交信息**:`Conventional Commits`(如 `feat:`、`fix:`、`chore:`;仓库现有提交使用中文描述)。
