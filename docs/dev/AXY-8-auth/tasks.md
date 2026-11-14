@@ -587,3 +587,7 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: 非 16 键的结构性布局文案（「手机号 / 邮箱」「注册并进入」「微信登录」等）硬编码中文于组件（Task 9） — auth.json 键清单（16 键）不含布局文案，与 Task 8 最小 i18n 设施一致 — 后续扩 i18n 键时改动点集中在各字段组件；多语言启动前需补齐
 - 裁决: `authClient.signIn.phoneNumber` 失败按 `{ data: null, error: { status, ... } }` 返回值处理而非 reject（Task 10） — better-auth 1.7 客户端经 @better-fetch 未设 `throw: true`，失败不 reject；实现取 `result.error` 喂 mapSignInError，try/catch 仅兜网络层异常归一 unknown（否则测试绿而真实链路坏） — Task 11/12 依赖此行为契约，不得假设 reject 形态
 - 裁决: R10「去登录」以整条文案渲染为单个可点按钮（Task 10） — 16 键文案被 messages.test.ts 逐字锁定（`该手机号已注册，去登录`），不拆分不增键；行为满足 R10（切视图+带入手机号） — accessible name 为全句；若产品要求仅「去登录」三字可点，需改文案结构并动 16 键清单
+- 裁决: 布局 Props 用 `LayoutProps<"/">` 而非文档示例的 `LayoutProps<'/login'>`（Task 11） — Next 16.4.6 实测 typegen 后 routes.d.ts 的 LayoutRoutes 只有 "/"（路由组布局按 LayoutConfig<"/"> 校验），文档示例与实际版本不符；测试调用布局须补 `params: Promise.resolve({})` — Next 升级若改变 LayoutRoutes 生成规则需复核
+- 裁决: `instant = false` 豁免扩至两个组布局与 workbench 页（Task 11） — getCurrentSession → headers() 必然无法静态预渲染，与根布局同类（Task 8 裁决的延伸），实现时即加并注释 — 全站四路由均为 Dynamic；ADR-0010 proxy 终态落地时统一回迁
+- 裁决: AuthRedirect 渲染 `role="status"` 占位（「正在进入…」）而非 null（Task 11） — 任务测试要求断言「AuthRedirect 在」，纯 null 组件无法从 DOM 断言存在 — 占位文案一闪而过，无验收影响
+- 裁决: workbench 页在布局守卫外再次 getCurrentSession + 未登录 redirect（Task 11） — 契约总表本就列 workbench 页为调用方；形成纵深防御且以 redirect(never) 做类型收窄（免非空断言） — 与 (app) 布局守卫双查一次会话，轻微冗余可接受
