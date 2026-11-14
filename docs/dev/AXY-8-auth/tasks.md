@@ -556,4 +556,9 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 
 ## 裁决记录
 
-执行中发现的计划缺陷记入此处，格式：`裁决: <决定了什么> — <为什么> — <错了的代价>`。初始为空。
+执行中发现的计划缺陷记入此处，格式：`裁决: <决定了什么> — <为什么> — <错了的代价>`。
+
+- 裁决: drizzle-orm 版本范围由 `^1` 改为 `^1.0.0-rc.1`（Task 1） — npm 上 1.x 仅有 rc/beta（stable latest 为 0.45.4），semver `^1` 不匹配 prerelease 导致安装失败；`^1.0.0-rc.1` 恰落在 better-auth 1.7.23 peerOptional 允许区间 `>=1.0.0-rc.1 <2.0.0`，stable 发布后可自动升级 — rc 版 API 稳定性风险，后续任务遇 rc 破坏性变更需回头调整
+- 裁决: redis 单测中 ioredis 类经动态 import 获取（Task 1） — 静态 import 会使 Step 2 先报 `Cannot find module 'ioredis'`，偏离任务预期的 `Cannot find module '@/lib/redis'` 失败形态；断言内容不变 — 测试代码略绕，无功能影响
+- 裁决: `.gitignore` 补 `!.env.example` 例外（Task 1） — 既有 `.env*` 通配会把任务要求入库的 `.env.example` 一并忽略 — 无
+- 裁决: compose.dev.yaml 的 redis 未配持久化卷（Task 1） — 任务原文仅要求 postgres 数据卷；redis 仅作会话缓存，重建即失效可接受 — dev 环境 Redis 数据不跨容器重建保留
