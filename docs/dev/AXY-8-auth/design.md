@@ -6,7 +6,7 @@ sidebar_position: 2
 
 # Design: AXY-8 登录注册
 
-| 对应 Proposal | [AXY-8 登录注册](./proposal) | 状态 | 已批准 |
+| 对应 Proposal | [AXY-8 登录注册](../../product/AXY-8-auth/proposal) | 状态 | 已批准 |
 | ---- | ---- | ---- | ---- |
 | 日期 | 2026-11-14 | 批准人 | 海渝（2026-11-14） |
 

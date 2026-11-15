@@ -6,7 +6,7 @@ sidebar_position: 4
 
 # Review: AXY-8 登录注册
 
-| 对应规范 | [proposal.md](./proposal.md) | 审查日期 | 2026-11-14 |
+| 对应规范 | [proposal.md](../../product/AXY-8-auth/proposal.md) | 审查日期 | 2026-11-14 |
 | ---- | ---- | ---- | ---- |
 | 审查基线 | feat/axy-8-auth，HEAD `4a7774c`（含终审修复批 `b6fdd6b` + `4a7774c`） | 判定 | **通过** |
 

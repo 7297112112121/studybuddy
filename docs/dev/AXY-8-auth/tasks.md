@@ -10,7 +10,7 @@ sidebar_position: 3
 
 **Date:** 2026-11-14
 
-**Spec:** docs/dev/AXY-8-auth/proposal.md（需求规范,权威）
+**Spec:** docs/product/AXY-8-auth/proposal.md（需求规范,权威）
 **Design:** docs/dev/AXY-8-auth/design.md（架构设计,契约来源）
 
 ## Global Constraints
