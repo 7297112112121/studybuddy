@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import auth from "@/locales/zh-CN/auth.json";
 
 /**
- * auth 命名空间 16 键文案与 design 文案表逐字对照
+ * auth 命名空间 14 键文案与 design 文案表逐字对照
  * （docs/dev/AXY-8-auth/design.mdx「文案」节；E2E 断言以渲染文案为准，
  *  本测试锁定 JSON 源值：全角标点、省略号「…」、破折号「—」、ICU 占位符不得漂移）。
  */
@@ -35,14 +35,6 @@ describe("auth.json 文案与 design 文案表逐字一致", () => {
     expect(auth.error.unknown).toBe("出了点问题，请稍后再试");
   });
 
-  it("forgotPassword：找回密码占位", () => {
-    expect(auth.forgotPassword.unavailable).toBe("找回密码功能暂未开通");
-  });
-
-  it("oauth：第三方登录占位", () => {
-    expect(auth.oauth.placeholder).toBe("本期不做，仅占位");
-  });
-
   it("summary：表单汇总（ICU，count 为占位符）", () => {
     expect(auth.summary.errors).toBe("有 {count} 项需要修改");
   });
@@ -52,14 +44,12 @@ describe("auth.json 文案与 design 文案表逐字一致", () => {
     expect(auth.submit.registering).toBe("注册中…");
   });
 
-  it("结构：共 16 个叶子键，命名空间齐全", () => {
+  it("结构：共 14 个叶子键，命名空间齐全", () => {
     expect(Object.keys(auth).sort()).toEqual(
       [
         "account",
         "agreement",
         "error",
-        "forgotPassword",
-        "oauth",
         "password",
         "register",
         "submit",
@@ -70,6 +60,6 @@ describe("auth.json 文案与 design 文案表逐字一致", () => {
       (sum, group) => sum + Object.keys(group as object).length,
       0,
     );
-    expect(leafCount).toBe(16);
+    expect(leafCount).toBe(14);
   });
 });

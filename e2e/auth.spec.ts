@@ -10,7 +10,7 @@ import {
 } from "./helpers/auth";
 
 /**
- * 登录注册全流程 E2E（Task 12，R1–R6、R8–R12、R16–R19 的浏览器级验证）。
+ * 登录注册全流程 E2E（Task 12，R1–R6、R8–R12、R16–R17 的浏览器级验证）。
  *
  * 限流约束（Task 12 实测）：生产构建下 Better Auth 限流默认开启，登录类
  * 请求的实际规则是 /sign-in/* 特殊规则「3 次/10 秒」。全 spec 的真实
@@ -109,27 +109,6 @@ test.describe("校验链（登录视图）", () => {
     await page.getByRole("button", { name: "登录", exact: true }).click();
     await expect(page.locator("#login-agreement-error")).toBeHidden();
     await expect(page.getByText("账号或密码不对")).toBeVisible();
-  });
-
-  test("R18: 第三方登录区为禁用占位（微信登录、手机号一键登录）", async ({
-    page,
-  }) => {
-    await page.goto("/login");
-    await expect(page.getByRole("button", { name: "微信登录" })).toBeDisabled();
-    await expect(
-      page.getByRole("button", { name: "手机号一键登录" }),
-    ).toBeDisabled();
-    await expect(page.getByText("本期不做，仅占位")).toBeVisible();
-    await expect(
-      page.getByRole("region", { name: "其他登录方式" }),
-    ).toBeVisible();
-  });
-
-  test("R19: 忘记密码为占位入口，点击提示暂未开通", async ({ page }) => {
-    await page.goto("/login");
-    await page.getByRole("link", { name: "忘记密码?" }).click();
-    await expect(page.getByText("找回密码功能暂未开通")).toBeVisible();
-    await expect(page).toHaveURL(/\/login$/); // 不进入找回密码流程
   });
 
   test("R17: 密码输入框提供显示/隐藏明文切换", async ({ page }) => {
