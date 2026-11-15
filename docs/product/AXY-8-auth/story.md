@@ -1,7 +1,7 @@
 ---
 title: AXY-8 登录注册
 description: 登录 / 注册与会话守卫
-sidebar_position: 90
+sidebar_position: 1
 ---
 
 # 用户故事
@@ -32,7 +32,7 @@ sidebar_position: 90
 
 ## 完成定义（DoD）
 
-通用 DoD（团队级，单一真源）见 [dod](./dod)，此处只登记本故事特有的工作项。
+通用 DoD（团队级，单一真源）见 [dod](../dod)，此处只登记本故事特有的工作项。
 
 | 阶段 | 完成状态 | 验证方式 | 状态 |
 | - | - | - | - |

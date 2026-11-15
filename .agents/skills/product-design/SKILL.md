@@ -24,14 +24,14 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 
 1. **用户故事未经人工批准，不得进入开发落地。** proposal-writing 以「已批准的用户故事」为输入前提；未批准的故事状态标记为「草案」。
 2. **原型一律不入库。** 澄清期的 spike 原型看完即弃；原型的入库资产是 proposal 的「原型契约」节（由 proposal-writing 维护）。
-3. **AXY 编号由项目管理平台生成。** 技能与 AI 不得自行分配、顺延或复用编号。新故事先产出名单（名称 + 一句话内容 + 依赖）向提出者申请编号，取号后回填文档与索引。
+3. **AXY 编号由项目管理平台生成。** 技能与 AI 不得自行分配、顺延或复用编号。新故事先产出名单（名称 + 一句话内容 + 依赖）向提出者申请编号，取号后在同一动作里迁入 `docs/product/AXY-<N>-<slug>/story.md`（目录由本技能创建）并回填编号与索引。
 4. **单故事迭代。** 一次只澄清与落盘一个故事；发现多个独立故事时先切割、逐个处理，禁止批量产出。
 
 ## 流程
 
 ### 1. 侦察
 
-读 docs/product/index.mdx 用户故事索引、相邻故事与 docs/intro.md，盘点既有领域实现。**不问项目与文档已回答的问题，不重开已决定的事项。** 证据收集可派子代理并行（prompt 必须自包含：写明查什么、返回什么格式），环境不支持时内联执行并明说；向提出者的提问与最终裁决永远由主会话完成，不委派。
+读 docs/product/index.md 用户故事总览、相邻故事与 docs/intro.md，盘点既有领域实现。**不问项目与文档已回答的问题，不重开已决定的事项。** 证据收集可派子代理并行（prompt 必须自包含：写明查什么、返回什么格式），环境不支持时内联执行并明说；向提出者的提问与最终裁决永远由主会话完成，不委派。
 
 ### 2. 澄清对话
 
@@ -60,7 +60,7 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 
 ### 5. 落盘故事
 
-按 [templates/user-story.md](templates/user-story.md) 写入 `docs/product/<feature>.mdx`，并在 `docs/product/index.mdx` 索引表登记一行。DoD 不复制样板：唯一真源是 `docs/product/dod.mdx`，故事只登记「工作项（本故事特有）」。编号未下发时以「待编号」暂存标题，取号后回填（见硬门禁 3）。
+落盘两段式：编号未下发时，按 [templates/user-story.md](templates/user-story.md) 以「待编号」平铺写入 `docs/product/<feature>.md`；**编号下发的同一动作里**迁入 `docs/product/AXY-<N>-<slug>/story.md`（目录由本技能在此步创建），回填编号并在 `docs/product/index.md` 总览表登记一行。DoD 不复制样板：唯一真源是 `docs/product/dod.md`，故事只登记「工作项（本故事特有）」（见硬门禁 3）。
 
 ### 6. DOR 自检与提请批准
 
@@ -82,6 +82,6 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 
 ## 产出物
 
-- `docs/product/<feature>.mdx` — 用户故事（五大组成部分）
-- `docs/product/index.mdx` — 用户故事索引表新增一行（编号来自项目管理平台）
+- `docs/product/<feature>.md` — 用户故事平铺暂存（待编号）；编号回填时迁入 `docs/product/AXY-<N>-<slug>/story.md`（目录由本技能创建）
+- `docs/product/index.md` — 用户故事总览表新增一行（编号来自项目管理平台）
 - （临时）spike 一次性 HTML — 不入库，看完即弃

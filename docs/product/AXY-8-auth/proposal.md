@@ -1,12 +1,12 @@
 ---
 title: 'Proposal: AXY-8 登录注册'
 description: 登录注册的需求规范(做什么/不做什么/性能要求/边界)
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 # Proposal: AXY-8 登录注册
 
-| 对应用户故事 | [AXY-8 登录注册](../auth) | 状态 | 已批准 |
+| 对应用户故事 | [AXY-8 登录注册](./story) | 状态 | 已批准 |
 | ---- | ---- | ---- | ---- |
 | 日期 | 2026-11-14 | 批准人 | 海渝（2026-11-14） |
 

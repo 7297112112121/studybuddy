@@ -1,6 +1,6 @@
 ---
 name: proposal-writing
-description: 当已批准的用户故事需要转化为需求规范(proposal)时使用。输入为 docs/product 下状态为"已批准"的用户故事;故事未获批准或不存在时不得触发。
+description: 当已批准的用户故事需要转化为需求规范(proposal)时使用。输入为 docs/product/AXY-<N>-<slug>/story.md 状态为"已批准"的用户故事;故事未获批准、或 AXY 目录不存在(编号未下发,故事未就绪)时不得触发。
 ---
 
 # 需求规范编写（proposal-writing）
@@ -21,7 +21,7 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 
 ### 0. 定位输入（按编号查索引）
 
-输入是特性编号（如 `AXY-12`）时，打开 `docs/product/index.mdx` 的「用户故事索引」表，按编号取得文档路径与状态。索引表未登记的编号视为故事不存在，不得触发本技能，也不得盲猜搜索文件。状态非「已批准」时同样不得触发。
+编号即路径：故事文档位于 `docs/product/AXY-<N>-<slug>/story.md`（目录已由 product-design 在编号回填时创建），可对照 `docs/product/index.md` 总览核对状态。**目录不存在 = 编号未下发 = 故事未就绪**，视为故事不存在，不得触发本技能，也不得盲猜搜索文件。状态非「已批准」时同样不得触发。
 
 ### 1. 读取用户故事（含引用物）
 
@@ -37,7 +37,7 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 
 ### 3. 转写为需求规范
 
-按 [templates/proposal.md](templates/proposal.md) 写入 `docs/product/AXY-<N>-<slug>/proposal.md`——目录按 proposal 划分，本文件是该特性需求规范的唯一落点；开发落地工件（design / tasks / review）落在 `docs/dev/AXY-<N>-<slug>/`。核心动作：
+按 [templates/proposal.md](templates/proposal.md) 写入 `docs/product/AXY-<N>-<slug>/proposal.md`——目录已由 product-design 在编号回填时创建（不存在即第 0 步的前置信号，不得自行建目录），本文件是该特性需求规范的唯一落点；开发落地工件（design / tasks / review）落在 `docs/dev/AXY-<N>-<slug>/`。核心动作：
 
 - **做什么**：把每条 AC 转化为编号的需求条目（R1、R2…），表述可测试——终审时每条要么有对应实现与测试证据，要么在豁免清单里；
 - **不做什么**：显式写出非目标（含第 2 步确认的项）；

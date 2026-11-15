@@ -55,7 +55,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 全部文档在 `docs/`(文档站 `website/` 的源目录)。格式约定:给 AI 的指令与规范一律 `.md`,面向人类的富媒体页(交互原型)一律 `.mdx`;线上每页均有纯文本 `.md` 端点,全站索引见 `https://7297112112121.github.io/studybuddy/llms.txt`。
 - `docs/intro.md` — 产品简介;`docs/研发流程.md` — 三阶段流程总览(门禁见上节,不重复)。
 - `docs/dev/` — 技术规范:代码目录约定(`代码目录.md`)、ADR 流程与决策日志(`docs/dev/adr/index.md`)、特性开发工件(`docs/dev/AXY-<N>-<slug>/`:design/tasks/review;proposal 在 docs/product/)。
-- `docs/product/` — 产品侧文档:用户故事(`<feature>.mdx`,五大组成部分,按编号定位走 `docs/product/index.mdx` 的「用户故事索引」表,禁止盲猜搜索)与需求规范(`AXY-<N>-<slug>/proposal.md`,含原型契约);通用 DoD 基线在 `docs/product/dod.mdx`。交互原型一律不入库,proposal 的「原型契约」节是原型唯一资产与 AI 唯一接口(演示态清单唯一源),需要演示时按契约现场生成一次性 HTML 看完即弃。AXY 编号由项目管理平台生成,禁止自行分配。
+- `docs/product/` — 产品侧文档:用户故事 `AXY-<N>-<slug>/story.md`(编号即路径,index.md 仅总览仪表盘,勿按文件名盲搜;五大组成部分)与需求规范(`AXY-<N>-<slug>/proposal.md`,含原型契约);通用 DoD 基线在 `docs/product/dod.md`。交互原型一律不入库,proposal 的「原型契约」节是原型唯一资产与 AI 唯一接口(演示态清单唯一源),需要演示时按契约现场生成一次性 HTML 看完即弃。AXY 编号由项目管理平台生成,禁止自行分配。
 - `docs/other/` — 调研存档:格式调研(`md-vs-mdx-research.mdx`)、技能管理标杆、特性开发流程调研;`docs/test/` — 测试文档索引。
 
 ## Git 与版本约定
