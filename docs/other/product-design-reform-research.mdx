@@ -1,0 +1,65 @@
+---
+title: 产品设计流程改革调研
+description: 原型形态与澄清流程的改革——现状量化证据、superpowers 与 lobehub 方法论借鉴、决策记录
+sidebar_position: 40
+---
+
+# 产品设计流程改革调研
+
+2026-11-15 完成。回答一个问题:为什么产品设计流程要从「React 线框组件入库」改为「一次性原型 + 原型契约」,以及新流程借鉴了什么。
+
+## 一、现状问题(改革前的量化证据)
+
+| # | 问题 | 证据 |
+| --- | --- | --- |
+| 1 | 原型先行整页化,故事反向切 AC | 7 个 React 线框组件共 6,065 行 tsx + 2,335 行 css(375KB),头注释全部自证「由旧 HTML 原型迁移,外观交互 1:1 保留」;workbench 一条故事 9 条 AC 覆盖 ≥6 个子系统,而 profile 仅 5 条 AC |
+| 2 | 占位在原型中全量实现 | workbench 声明「不做」的微课正文 / 题库 / 陪伴文案 / 周统计,在 tsx 中是完整硬编码实现(DEMO_DOC / QUIZ / MOOD_LINES / WEEK_CELLS)——原型代码量与故事范围脱钩 |
+| 3 | 同一占位信息四处登记且互不一致 | 范围界定表、原型契约表、DoD、CSS 伪元素各存一份;DoD 写 5 处实际挂 4 处;「占位」字样藏在 CSS 伪元素里,读 tsx 的 AI 看不见 |
+| 4 | AC ↔ 原型间接映射且不完整 | 只有「演示态 → AC 编号」多对多;calendar AC-7–AC-10 明文「不设独立演示态」= 不可走查区域 |
+| 5 | AI 上下文漂移的直接来源 | Us10 组件源码 27,951 字符;DoD 要求「逐屏对照原型」倒逼 AI 整读巨型组件;后补的「原型契约」文本层从未成为强制接口 |
+| 6 | 一次性批量产出 | 7 故事 + 7 原型 + 索引来自单提交 acca1f3(8,935 行插入),原型带 V4 等多轮整页重写痕迹 |
+| 7 | 技能层缺陷 | product-design 无提问协议、无边界确认机制(goals / non-goals / anti-goals 缺失)、原型体量零约束、`NEW` 标记机制全仓库零使用 |
+
+## 二、标杆调研结论
+
+### obra/superpowers(brainstorming 技能)
+
+- **双模式提问协议**:why 未明只用无示例的开放题(「Options steer. Ask them to describe it first.」);why 明确后才选项式收敛(具体草图 + 权衡 + 推荐)。
+- **每问必须改变产物**:「Ask a question only when the answer would change what gets built」;否则 AI 自己裁定并作为「可纠正的提案」留痕(「A default they never heard is one they couldn't reject」)。
+- **goals / non-goals / anti-goals 三元组**:anti-goal = 「what would make this a failure even if it technically works」。
+- **Builder Check**:设计文档完成后派无上下文子代理审计,只报「会改变方案的猜测点」,分三堆(已答 / AI 裁定留痕 / 必须人答),仅一轮,most important first。
+- **Play It Back 分段回放**:每聊透一段就 200–300 词回放 + 纠错;归属标注——用户说的 = theirs,AI 补的 = proposal + reason。
+- **Spike 逃生门**:一次性探索原型免流程,但「keeping what it produced is a new request that comes back through this gate」。
+- **MVP 切割标准**:「Each plan should produce working, testable software on its own」;spec 覆盖多个独立子系统 = 该拆。
+
+### lobehub(product-design 与 design-prototype 技能)
+
+- **原型是易耗品不是资产**:交互原型不入库,资产是文字契约;必须含非 happy-path 态(「A happy-path-only prototype under-specifies the design」)。
+- **三桶范围法**:✅ 已建模已暴露 / ⚠️ 已建模未暴露 / ❌ 业务尚无此概念;❌ 项必须点名 + cost drivers,禁止静默丢弃。
+- **Open decisions 只列「会改变答案形状」的决策**,每条带推荐。
+
+## 三、决策记录(2026-11-15,提出者拍板)
+
+| 决策点 | 结论 |
+| --- | --- |
+| 原型形态 | **纯一次性原型**:原型一律不入库,入库资产只有故事文档的「原型契约」节(+可选截图,按需);文档站不再内嵌交互演示 |
+| 存量处置 | **全量立即重构**:7 套故事 + 组件一次性出清,按 MVP 判据重切 |
+| 编号体系 | **AXY 单轨**:编号一律由项目管理平台生成(AI 不得自行分配);历史 Us〈N〉 编号随组件退役 |
+
+## 四、改革方案(已落地)
+
+- **单一持久资产**:故事文档 = 目标 / 非目标 / 反目标 + 三桶范围 + AC↔演示态双向映射(每条 AC 标〔走查:演示态 N / 行为说明 N〕)+ 可构建级原型契约(≤ 150 行)。
+- **新流程**:侦察 → 澄清对话(superpowers 协议,见 product-design `references/questioning.md`)→ 边界确认与 MVP 切割(演示态 ≤ 5、AC ≤ 6,6–8 豁免登记,> 8 必拆)→ (可选 spike)→ 落盘 → Builder Check(`references/builder-check.md`)→ 人工批准门。
+- **存量重切结果**:7 故事 → 7 保留段 + 5 个拆分新故事(名单见 `docs/product/index.mdx`「拆分故事」节,编号待平台下发)。
+- **删除**:`website/src/components/wireframe/` 整目录(14 文件,375KB)。
+
+## 五、改革前后对比
+
+| 维度 | 改革前 | 改革后 |
+| --- | --- | --- |
+| 单故事 AI 读取量 | 46KB 起(tsx + css),最大 103KB | ≤ 15KB(故事文档含契约) |
+| 原型接口 | 间接(契约是组件源码的摘要,双源) | 契约即唯一接口(单源) |
+| AC 覆盖 | 部分 AC「不设演示态」不可走查 | 每条 AC 必挂演示态或行为说明,无未覆盖区域 |
+| 占位语义 | 四处登记、原型里全量实现 | 三桶 ❌ 一处登记,实现为惰性标注 |
+| 粒度 | 2–5 故事点 / 5–14 AC 不等 | 单演示主线,AC ≤ 6(豁免须登记) |
+| 产出节奏 | 一次性批量(单提交 8,935 行) | 单故事迭代,逐个 Builder Check |
