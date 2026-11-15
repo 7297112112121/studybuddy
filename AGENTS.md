@@ -50,12 +50,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## 文档地图
 
+每类文档的完整全景(阶段 · 产物 · 路径模式 · 产出技能 · 真源说明)见 [docs/文档地图.md](docs/文档地图.md),本节只保留快速坐标。
+
 - 全部文档在 `docs/`(文档站 `website/` 的源目录)。格式约定:给 AI 的指令与规范一律 `.md`,面向人类的富媒体页(交互原型)一律 `.mdx`;线上每页均有纯文本 `.md` 端点,全站索引见 `https://7297112112121.github.io/studybuddy/llms.txt`。
 - `docs/intro.md` — 产品简介;`docs/研发流程.md` — 三阶段流程总览(门禁见上节,不重复)。
 - `docs/dev/` — 技术规范:代码目录约定(`代码目录.md`)、ADR 流程与决策日志(`docs/dev/adr/index.md`)、特性开发工件(`docs/dev/AXY-<N>-<slug>/`:proposal/design/tasks/review)。
-- `docs/product/` — 用户故事与线框图原型(线框图为 React 组件,读上下文时可只取验收标准表与 DoD 表);通用 DoD 基线在 `docs/product/dod.mdx`。
-- `docs/other/` — 调研存档:格式调研(`md-vs-mdx-research.mdx`)、技能管理标杆、特性开发流程调研。
-- `docs/test/` — 测试文档索引。
+- `docs/product/` — 用户故事(按编号定位走 `docs/product/index.mdx` 的「用户故事索引」表,禁止盲猜搜索);通用 DoD 基线在 `docs/product/dod.mdx`。线框原型是 React 组件,位于 `website/src/components/wireframe/Us<N>*.tsx`(不在 docs/ 下),组件头注释即演示态清单,已回填进各故事「原型契约」节。
+- `docs/other/` — 调研存档:格式调研(`md-vs-mdx-research.mdx`)、技能管理标杆、特性开发流程调研;`docs/test/` — 测试文档索引。
 
 ## Git 与版本约定
 
