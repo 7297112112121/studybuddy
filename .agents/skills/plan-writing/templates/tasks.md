@@ -4,7 +4,7 @@
 
 **Date:** <YYYY-MM-DD>
 
-**Spec:** docs/dev/AXY-<N>-<slug>/proposal.md（需求规范，权威）
+**Spec:** docs/product/AXY-<N>-<slug>/proposal.md（需求规范，权威）
 **Design:** docs/dev/AXY-<N>-<slug>/design.md（架构设计，契约来源）
 
 ## Global Constraints

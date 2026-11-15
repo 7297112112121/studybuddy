@@ -52,7 +52,7 @@ description: 当一个特性的实现已全部完成(单元/集成/E2E 测试均
 
 ### 4. 产出审查报告
 
-报告按 [templates/review.md](templates/review.md) 的结构与内联判据写入 `docs/dev/AXY-<N>-<slug>/review.md`（与该特性的 proposal、design、tasks 同目录）：判定、逐条核对表、发现清单（按严重度排序）、豁免待验清单、证据附录——各节的合格判据模板已内联，此处不重复。
+报告按 [templates/review.md](templates/review.md) 的结构与内联判据写入 `docs/dev/AXY-<N>-<slug>/review.md`（与该特性的 design、tasks 同目录；proposal 位于 `docs/product/AXY-<N>-<slug>/`）：判定、逐条核对表、发现清单（按严重度排序）、豁免待验清单、证据附录——各节的合格判据模板已内联，此处不重复。
 
 ### 5. 出口
 

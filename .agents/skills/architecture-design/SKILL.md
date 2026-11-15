@@ -19,7 +19,7 @@ description: 当 proposal 已获人工批准,需要产出架构设计(design)时
 
 ### 1. 读 proposal 并盘点约束
 
-proposal 不必通读：**默认读头部表、需求条目表、边界与约束表、性能与质量要求表、豁免项表**，摘出 Global Constraints 候选（性能指标、边界约束、豁免清单——豁免项**不进设计范围**，但要在设计的「与 ADR 的关系」中注明去向）；目标与背景等叙述节按需再读。
+proposal 不必通读：**默认读头部表、需求条目表、边界与约束表、性能与质量要求表、豁免项表、原型契约节**（UI 结构与演示态的唯一来源），摘出 Global Constraints 候选（性能指标、边界约束、豁免清单——豁免项**不进设计范围**，但要在设计的「与 ADR 的关系」中注明去向）；目标与背景等叙述节按需再读。proposal 位于 `docs/product/AXY-<N>-<slug>/proposal.md`。
 
 ### 2. 与既有 ADR、代码目录约定核对
 
@@ -33,7 +33,7 @@ ADR 核对与代码目录约定核对相互独立，可各派一个子代理并�
 
 ### 3. 产出设计
 
-按 [templates/design.md](templates/design.md) 写入 `docs/dev/AXY-<N>-<slug>/design.md`（与 proposal 同目录，目录已由 proposal-writing 创建）。**各节的合格判据已内联在模板中**（数据模型精确到可直接写 schema、契约精确到签名级且无「待定」、错误边界逐项对应 proposal、需求承载对照覆盖每条 R）——模板是该要求的单源，此处不重复。
+按 [templates/design.md](templates/design.md) 写入 `docs/dev/AXY-<N>-<slug>/design.md`（目录由本技能创建，编号与 slug 沿用 `docs/product/AXY-<N>-<slug>/proposal.md`）。**各节的合格判据已内联在模板中**（数据模型精确到可直接写 schema、契约精确到签名级且无「待定」、错误边界逐项对应 proposal、需求承载对照覆盖每条 R）——模板是该要求的单源，此处不重复。
 
 **裁决回写纪律**：design 是批准工件，契约代码块永远展示**最终形态**——实现期发现设计需修正时，裁决一律记入实现计划的「裁决记录」节，design 至多留一行指针；禁止「错误原貌 + 勘误注记」并存（照抄代码块即中招）。开放问题未决写「待定稿」；闭合后处置列写结论 + 证据指针，问题格保持短问题，不入内联结论。
 

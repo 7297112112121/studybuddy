@@ -17,7 +17,7 @@ description: 当 design(架构设计)已获人工批准,需要将其拆分为可
 
 ## 保存位置
 
-`docs/dev/AXY-<N>-<slug>/tasks.md`（与 proposal、design 同目录；目录名沿用 proposal 的编号与 slug，计划自身的日期写进头部 Date 行）
+`docs/dev/AXY-<N>-<slug>/tasks.md`（与 design 同目录；proposal 位于 `docs/product/AXY-<N>-<slug>/`，目录名沿用其编号与 slug，计划自身的日期写进头部 Date 行）
 
 ## 计划结构
 
