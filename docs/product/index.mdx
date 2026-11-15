@@ -8,15 +8,19 @@ sidebar_position: 10
 
 本目录沉淀产品侧的设计产出:用户故事(US)对应的**低保真交互线框图**。每篇文档内嵌一个可直接操作的原型:顶部工具条可切换各演示状态,表单、日历、拖拽等交互均可真实操作。
 
-## 线框图索引
+## 用户故事索引
 
-| 用户故事 | 文档 | 核心内容 |
-| --- | --- | --- |
-| AXY-11 | [用户信息录入](./profile) | 注册后的基础信息收集 |
-| AXY-9 | [课程池](./course-pool) | 课程库的新增与维护 |
-| AXY-13 | [课程规划](./course-planning) | 选课 → 统一分配 → 时间微调,冲突检测与错开 |
-| AXY-16 | [职业规划](./career-planning) | 目标岗位与学习路线映射 |
-| AXY-10 | [日历本](./calendar) | 月 / 日视图的日程呈现 |
-| AXY-8 | [登录注册](./auth) | 登录 / 注册 / 找回密码 |
-| AXY-12 | [执行工作台](./workbench) | 今日任务执行与打卡 |
+编号 → 文档的唯一登记表。proposal-writing 第 0 步按编号在本表定位文档，禁止盲猜搜索。
+
+| 编号 | 状态 | 文档 | 线框组件 | 依赖 | 一句话内容 |
+| --- | --- | --- | --- | --- | --- |
+| AXY-8 | 已批准 | [登录注册](./auth) | `Us09AuthWireframe` | 无 | 手机号注册登录、会话守卫与退出 |
+| AXY-9 | 已批准 | [课程池](./course-pool) | `Us04CoursePoolWireframe` | 无 | 课程筛选分组列表、详情与先修拦截 |
+| AXY-10 | 已批准 | [日历本](./calendar) | `Us08CalendarWireframe` | AXY-13 | 月 / 日视图任务呈现与拖拽改期 |
+| AXY-11 | 已批准 | [用户信息录入](./profile) | `Us01ProfileWireframe` | 无 | 学籍六项录入与确认 |
+| AXY-12 | 已批准 | [执行工作台](./workbench) | `Us10WorkbenchWireframe` | AXY-10、AXY-8 | 今日任务执行与打卡 |
+| AXY-13 | 已批准 | [课程规划](./course-planning) | `Us05CoursePlanningWireframe` | AXY-9、AXY-10 | 新学 / 复习选课、统一分配与时间微调 |
+| AXY-16 | 已批准 | [职业规划](./career-planning) | `Us06CareerPlanningWireframe` | AXY-9 | 目标岗位课程清单与课程池标记 |
+
+状态与依赖取自各故事文档头部状态行与「依赖与引用」表，以原文为准。
 

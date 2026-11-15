@@ -33,7 +33,7 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 1. **角色与场景**：谁在什么处境下需要它？现有方式是怎么做的、痛在哪？
 2. **目标与价值**：做成之后使用者得到什么？怎么判断它做成了？
 3. **边界**：哪些明显不做？最小可用版本包含什么？
-4. **依赖**：依赖哪些已有故事（参见 docs/product 线框图索引）？被谁依赖？
+4. **依赖**：依赖哪些已有故事（参见 docs/product 用户故事索引）？被谁依赖？
 5. **数据口径**：涉及哪些实体与字段？状态如何流转？
 
 **方向错误的成本远大于提问的成本。** 3000 token 的澄清对话能避免 500 行代码的方向性返工。
@@ -55,7 +55,7 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 
 ### 3. 落盘用户故事
 
-按 [templates/user-story.md](templates/user-story.md) 的结构与内联判据写入 `docs/product/<feature>.mdx`，**沿用 docs/product 既有文档的格式**，并在 `docs/product/index.mdx` 的线框图索引表登记一行。故事需要但未建模的概念、负空间结论（刻意不设的概念）落进「不纳入范围」；待定稿项与 `NEW` 标记字段登记进「开放问题」表。
+按 [templates/user-story.md](templates/user-story.md) 的结构与内联判据写入 `docs/product/<feature>.mdx`，**沿用 docs/product 既有文档的格式**，并在 `docs/product/index.mdx` 的用户故事索引表登记一行。故事需要但未建模的概念、负空间结论（刻意不设的概念）落进「范围界定」的「不纳入范围」；待定稿项与 `NEW` 标记字段登记进「开放问题」表。落盘时必须写「范围界定」与「原型契约」两节：占位与演示数据逐项显式登记（占位 = 无故事承接，禁止留白让下游猜）；演示态清单以线框组件头注释为源，逐态标注对应 AC。
 
 **DoD 不复制样板**：通用 DoD（团队 · 必须完成 / 可选完成）的唯一真源是 `docs/product/dod.mdx`，故事文档只登记「工作项（本故事特有）」——写通用阶段装不下的专属完成标准（数据一致性、安全底线、占位标记约定等）与适用的可选完成项，标注所属阶段。各阶段推进状态由对应工件（proposal / design / tasks / review）的头部状态行承载，不在故事文档重复。
 
@@ -78,4 +78,4 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 
 - `docs/product/<feature>.mdx` — 用户故事（含验收标准、开放问题）
 - `website/src/components/wireframe/Us<N><Feature>Wireframe.tsx` — 交互原型
-- `docs/product/index.mdx` — 线框图索引表新增一行
+- `docs/product/index.mdx` — 用户故事索引表新增一行
