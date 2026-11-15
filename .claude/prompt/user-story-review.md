@@ -9,7 +9,7 @@
 >   - `.agents/skills/product-design/references/prototype-contract.md`(原型契约规范)
 >   - `docs/product/dod.mdx`(DoD 唯一真源)
 >   - `docs/product/index.mdx`(用户故事索引,核对编号/状态/依赖)
-> - 范例参照:`docs/product/profile.mdx`。
+> - 范例参照:`docs/product/auth.mdx`。
 
 ---
 
