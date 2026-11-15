@@ -8,14 +8,13 @@ sidebar_position: 10
 
 - `adr/` — 架构决策记录（一决策一文档）；
 - `代码目录.md` — 代码目录约定；
-- `AXY-<N>-<slug>/` — **按 proposal 划分**的特性开发工件目录，每个特性一个，汇集开发落地阶段的全部产物：
+- `AXY-<N>-<slug>/` — 特性开发工件目录，每个特性一个，汇集开发落地阶段的产物（架构设计、实现计划、审查报告）：
 
 ```
 docs/dev/AXY-<N>-<slug>/
-├── proposal.md    # 需求规范（第一手工件，proposal-writing 落盘时建目录）
-├── design.md      # 架构设计（architecture-design 产出）
+├── design.md      # 架构设计（architecture-design 产出，落盘时建目录）
 ├── tasks.md       # 实现计划（plan-writing 产出）
 └── review.md      # 审查报告（spec-review 产出）
 ```
 
-上游用户故事在 `docs/product/`；编号 `AXY-<N>` 与 slug 沿用对应用户故事。
+上游用户故事与需求规范（proposal）在 `docs/product/`；编号 `AXY-<N>` 与 slug 沿用对应用户故事。
