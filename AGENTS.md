@@ -41,12 +41,21 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## 研发流程与 AI 技能
 
-特性研发遵循 [docs/研发流程.mdx](docs/研发流程.mdx) 的三阶段流程(产品设计 → 开发落地 → 测试提质),由 `.agents/skills/` 下的技能承载(`.claude/skills` 等工具目录是指向它的 symlink)。本节仅保留两道批准门与 TDD 铁律的门禁提醒(每次会话必载,作为第一触点),其余规则一律见各技能 SKILL.md,不在此重复:
+特性研发遵循 [docs/研发流程.md](docs/研发流程.md) 的三阶段流程(产品设计 → 开发落地 → 测试提质),由 `.agents/skills/` 下的技能承载(`.claude/skills` 等工具目录是指向它的 symlink)。本节仅保留两道批准门与 TDD 铁律的门禁提醒(每次会话必载,作为第一触点),其余规则一律见各技能 SKILL.md,不在此重复:
 
 - 接到新功能需求时,先读 `product-design` 技能——未经批准的用户故事不得进入开发落地。
 - 开发落地按 proposal → design → plan → TDD 实现 → spec-review 接力;两道批准门(proposal、design)未过,不得拆任务或写任何产品代码,对应技能:proposal-writing、architecture-design、plan-writing、spec-review。
 - 一切产品代码遵循 TDD 铁律:无先失败的测试,即无产品代码。
 - 技术选型与既有 ADR(docs/dev/adr/)冲突或无 ADR 覆盖时,先走 ADR 流程再继续设计。
+
+## 文档地图
+
+- 全部文档在 `docs/`(文档站 `website/` 的源目录)。格式约定:给 AI 的指令与规范一律 `.md`,面向人类的富媒体页(交互原型)一律 `.mdx`;线上每页均有纯文本 `.md` 端点,全站索引见 `https://7297112112121.github.io/studybuddy/llms.txt`。
+- `docs/intro.md` — 产品简介;`docs/研发流程.md` — 三阶段流程总览(门禁见上节,不重复)。
+- `docs/dev/` — 技术规范:代码目录约定(`代码目录.md`)、ADR 流程与决策日志(`docs/dev/adr/index.md`)、特性开发工件(`docs/dev/AXY-<N>-<slug>/`:proposal/design/tasks/review)。
+- `docs/product/` — 用户故事与线框图原型(线框图为 React 组件,读上下文时可只取验收标准表与 DoD 表);通用 DoD 基线在 `docs/product/dod.mdx`。
+- `docs/other/` — 调研存档:格式调研(`md-vs-mdx-research.mdx`)、技能管理标杆、特性开发流程调研。
+- `docs/test/` — 测试文档索引。
 
 ## Git 与版本约定
 

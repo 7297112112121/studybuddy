@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://7297112112121.github.io/studybuddy/sitemap.xml

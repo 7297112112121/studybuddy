@@ -25,7 +25,7 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 
 ### 2. 转写为需求规范
 
-按 [templates/proposal.md](templates/proposal.md) 写入 `docs/dev/AXY-<N>-<slug>/proposal.mdx`——目录按 proposal 划分，本文件是该特性开发落地阶段的**第一手工件**，目录由此创建，后续的 design、tasks、review 都落在同一目录。核心动作：
+按 [templates/proposal.md](templates/proposal.md) 写入 `docs/dev/AXY-<N>-<slug>/proposal.md`——目录按 proposal 划分，本文件是该特性开发落地阶段的**第一手工件**，目录由此创建，后续的 design、tasks、review 都落在同一目录。核心动作：
 
 - **做什么**：把每条 AC 转化为编号的需求条目（R1、R2…），表述可测试——终审时每条要么有对应实现与测试证据，要么在豁免清单里；
 - **不做什么**：显式写出非目标。用户故事没说不做的，由本技能向提出者确认后落进「非目标」，不得留白；
@@ -63,4 +63,4 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 
 ## 产出物
 
-- `docs/dev/AXY-<N>-<slug>/proposal.mdx` — 需求规范（状态：草案 → 已批准；同目录后续汇集 design / tasks / review）
+- `docs/dev/AXY-<N>-<slug>/proposal.md` — 需求规范（状态：草案 → 已批准；同目录后续汇集 design / tasks / review）
