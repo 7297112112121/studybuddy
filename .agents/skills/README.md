@@ -42,9 +42,9 @@
 | 下游技能 | 上游产物 | 必读 | 按需展开 |
 | --- | --- | --- | --- |
 | `proposal-writing/` | 用户故事 | 全文（故事很短，五大组成部分）+「依赖」一层 | 更深的引用物 |
-| `architecture-design/` | proposal | 头部表、需求条目、边界与约束、性能与质量要求、豁免项、原型契约 | 目标背景等叙述节 |
+| `architecture-design/` | proposal | 头部表、需求条目、边界与约束、性能与质量要求、原型契约 | 目标背景等叙述节 |
 | `plan-writing/` | design + proposal | design 契约与需求承载对照、proposal 需求条目与边界与约束 | 数据模型细节、UI 小节 |
-| `spec-review/` | proposal + design + tasks | proposal 头部/需求条目/非目标/边界/豁免项，design 需求承载对照与契约总表，tasks Global Constraints 与裁决记录 | design 其余小节、任务卡细节 |
+| `spec-review/` | proposal + design + tasks | proposal 头部/需求条目/非目标/边界（Q 条目不在终审范围），design 需求承载对照与契约总表，tasks Global Constraints 与裁决记录 | design 其余小节、任务卡细节 |
 
 ## 新增技能的规则
 
