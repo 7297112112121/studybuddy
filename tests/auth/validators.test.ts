@@ -1,49 +1,35 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  EMAIL_RE,
   PASSWORD_RE,
-  PHONE_RE,
+  USERNAME_RE,
   validateAccount,
   validatePassword,
   validateRegisterForm,
 } from "../../src/modules/auth/validators";
 
-describe("PHONE_RE", () => {
-  it("接受合法 11 位手机号", () => {
-    expect(PHONE_RE.test("13800138000")).toBe(true);
-    expect(PHONE_RE.test("19912345678")).toBe(true);
+describe("USERNAME_RE", () => {
+  it("接受中文、字母、数字、下划线组合的 1-16 位账户名", () => {
+    expect(USERNAME_RE.test("zhang_san")).toBe(true);
+    expect(USERNAME_RE.test("张三")).toBe(true);
+    expect(USERNAME_RE.test("Alice")).toBe(true);
+    expect(USERNAME_RE.test("a1_")).toBe(true);
   });
 
-  it("拒绝 10 位号码", () => {
-    expect(PHONE_RE.test("1380013800")).toBe(false);
+  it("拒绝含空格或特殊字符的账户名", () => {
+    expect(USERNAME_RE.test("zhang san!")).toBe(false);
   });
 
-  it("拒绝首位为 2 的号码", () => {
-    expect(PHONE_RE.test("23800138000")).toBe(false);
+  it("拒绝超过 16 位的账户名", () => {
+    expect(USERNAME_RE.test("abcdefghijklmnopq")).toBe(false);
   });
 
-  it("拒绝 1x 号段之外的号段", () => {
-    expect(PHONE_RE.test("12345678901")).toBe(false);
+  it("拒绝含 @ 的账户名", () => {
+    expect(USERNAME_RE.test("name@mail.com")).toBe(false);
   });
 
-  it("拒绝含空格的号码", () => {
-    expect(PHONE_RE.test("138 0013 8000")).toBe(false);
-    expect(PHONE_RE.test("1380013800 ")).toBe(false);
-  });
-});
-
-describe("EMAIL_RE", () => {
-  it("接受合法邮箱", () => {
-    expect(EMAIL_RE.test("name@mail.com")).toBe(true);
-  });
-
-  it("拒绝无后缀的邮箱", () => {
-    expect(EMAIL_RE.test("abc@mail")).toBe(false);
-  });
-
-  it("拒绝含空格的邮箱", () => {
-    expect(EMAIL_RE.test("a b@mail.com")).toBe(false);
+  it("拒绝空字符串", () => {
+    expect(USERNAME_RE.test("")).toBe(false);
   });
 });
 
@@ -78,32 +64,30 @@ describe("validateAccount", () => {
     });
   });
 
-  it("格式错误的手机号返回 auth.account.invalid", () => {
-    expect(validateAccount("1380013800")).toEqual({
+  it("含空格或特殊字符的账户名返回 auth.account.invalid", () => {
+    expect(validateAccount("zhang san!")).toEqual({
       ok: false,
       messageKey: "auth.account.invalid",
     });
   });
 
-  it("格式错误的邮箱返回 auth.account.invalid", () => {
-    expect(validateAccount("abc@mail")).toEqual({
+  it("超过 16 位的账户名返回 auth.account.invalid", () => {
+    expect(validateAccount("abcdefghijklmnopq")).toEqual({
       ok: false,
       messageKey: "auth.account.invalid",
     });
   });
 
-  it("合法手机号返回 kind: phone", () => {
-    expect(validateAccount("13800138000")).toEqual({
-      ok: true,
-      kind: "phone",
-    });
-  });
-
-  it("合法邮箱返回 kind: email", () => {
+  it("含 @ 的账户名返回 auth.account.invalid", () => {
     expect(validateAccount("name@mail.com")).toEqual({
-      ok: true,
-      kind: "email",
+      ok: false,
+      messageKey: "auth.account.invalid",
     });
+  });
+
+  it("合法账户名返回 ok: true 且无 kind 字段", () => {
+    const result = validateAccount("zhang_san");
+    expect(result).toEqual({ ok: true });
   });
 });
 
@@ -128,21 +112,21 @@ describe("validatePassword", () => {
 });
 
 describe("validateRegisterForm", () => {
-  it("手机号格式错误返回 phoneInvalid", () => {
+  it("账户名格式错误返回 auth.account.invalid", () => {
     expect(
       validateRegisterForm({
-        phone: "1380013800",
+        username: "zhang san!",
         password: "abcd1234",
         confirmPassword: "abcd1234",
         agreementAccepted: true,
       }),
-    ).toEqual({ phone: "auth.register.phoneInvalid" });
+    ).toEqual({ username: "auth.account.invalid" });
   });
 
   it("密码为空返回 auth.password.required", () => {
     expect(
       validateRegisterForm({
-        phone: "13800138000",
+        username: "zhang_san",
         password: "",
         confirmPassword: "",
         agreementAccepted: true,
@@ -153,7 +137,7 @@ describe("validateRegisterForm", () => {
   it("密码强度不足返回 auth.password.invalid", () => {
     expect(
       validateRegisterForm({
-        phone: "13800138000",
+        username: "zhang_san",
         password: "12345678",
         confirmPassword: "12345678",
         agreementAccepted: true,
@@ -164,7 +148,7 @@ describe("validateRegisterForm", () => {
   it("确认密码为空视为不一致（R8）", () => {
     expect(
       validateRegisterForm({
-        phone: "13800138000",
+        username: "zhang_san",
         password: "abcd1234",
         confirmPassword: "",
         agreementAccepted: true,
@@ -175,7 +159,7 @@ describe("validateRegisterForm", () => {
   it("确认密码与密码不一致返回 passwordMismatch", () => {
     expect(
       validateRegisterForm({
-        phone: "13800138000",
+        username: "zhang_san",
         password: "abcd1234",
         confirmPassword: "abcd1235",
         agreementAccepted: true,
@@ -186,7 +170,7 @@ describe("validateRegisterForm", () => {
   it("未勾选协议返回 auth.agreement.required", () => {
     expect(
       validateRegisterForm({
-        phone: "13800138000",
+        username: "zhang_san",
         password: "abcd1234",
         confirmPassword: "abcd1234",
         agreementAccepted: false,
@@ -197,13 +181,13 @@ describe("validateRegisterForm", () => {
   it("多字段同时错误合并返回同一对象", () => {
     expect(
       validateRegisterForm({
-        phone: "1380013800",
+        username: "zhang san!",
         password: "abcd1234",
         confirmPassword: "xyz",
         agreementAccepted: false,
       }),
     ).toEqual({
-      phone: "auth.register.phoneInvalid",
+      username: "auth.account.invalid",
       confirmPassword: "auth.register.passwordMismatch",
       agreement: "auth.agreement.required",
     });
@@ -212,7 +196,7 @@ describe("validateRegisterForm", () => {
   it("全合法返回 null", () => {
     expect(
       validateRegisterForm({
-        phone: "13800138000",
+        username: "xue_sheng01",
         password: "abcd1234",
         confirmPassword: "abcd1234",
         agreementAccepted: true,
