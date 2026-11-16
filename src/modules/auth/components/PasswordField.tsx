@@ -1,8 +1,14 @@
 /**
  * 密码输入框（R17 显隐切换）。登录密码、注册密码、确认密码三处同构复用；
  * 显隐为视图局部态（wireframe 同构），不进 AuthScreen 全局状态。纯受控。
+ * 视觉：shadcn Label + Input + ghost icon Button（lucide Eye/EyeOff，
+ * 显隐图标按钮的可访问名经 aria-label 保持「显示密码/隐藏密码」不变）。
  */
 import { useState } from "react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type PasswordFieldProps = {
   id: string;
@@ -28,16 +34,9 @@ export default function PasswordField(props: PasswordFieldProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <label
-          htmlFor={props.id}
-          className="block text-sm font-medium text-slate-700"
-        >
-          {props.label}
-        </label>
-      </div>
+      <Label htmlFor={props.id}>{props.label}</Label>
       <div className="relative mt-1">
-        <input
+        <Input
           id={props.id}
           type={visible ? "text" : "password"}
           autoComplete={props.autoComplete}
@@ -46,26 +45,26 @@ export default function PasswordField(props: PasswordFieldProps) {
           onChange={(event) => props.onChange(event.target.value)}
           aria-invalid={props.error !== undefined ? true : undefined}
           aria-describedby={describedBy === "" ? undefined : describedBy}
-          className={`w-full rounded-md border px-3 py-2 pr-16 text-sm outline-none focus:ring-2 focus:ring-slate-300 ${
-            props.error !== undefined ? "border-red-500" : "border-slate-300"
-          }`}
+          className="h-10 pr-11"
         />
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           aria-label={visible ? "隐藏密码" : "显示密码"}
           onClick={() => setVisible(!visible)}
-          className="absolute inset-y-0 right-2 my-auto h-fit text-sm text-slate-500"
+          className="absolute inset-y-0 right-1 my-auto text-muted-foreground"
         >
-          {visible ? "隐藏" : "显示"}
-        </button>
+          {visible ? <EyeOffIcon /> : <EyeIcon />}
+        </Button>
       </div>
       {props.hint !== undefined && (
-        <p id={hintId} className="mt-1 text-xs text-slate-400">
+        <p id={hintId} className="mt-1 text-xs text-muted-foreground">
           {props.hint}
         </p>
       )}
       {props.error !== undefined && (
-        <p id={errorId} className="mt-1 text-sm text-red-600">
+        <p id={errorId} className="mt-1 text-sm text-destructive">
           {props.error}
         </p>
       )}

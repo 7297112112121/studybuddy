@@ -1,6 +1,7 @@
 /**
  * 顶部错误汇总（R1）。按传入 errors 的键数计数（协议勾选错误不进此计数，
  * 单独呈现在 AgreementCheckbox），文案经 ICU {count} 插值；无错误不渲染。
+ * 视觉：warning 语义 token（globals.css --warning 系，shadcn 默认集外补充）。
  */
 import { useTranslations } from "next-intl";
 
@@ -19,7 +20,7 @@ export default function FormSummary(props: FormSummaryProps) {
   return (
     <div
       role="alert"
-      className="mb-4 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
+      className="mb-4 flex items-start gap-2 rounded-lg border border-warning bg-warning/10 p-3 text-sm text-warning-foreground"
     >
       <span aria-hidden="true" className="font-bold">
         !

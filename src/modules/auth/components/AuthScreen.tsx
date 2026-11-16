@@ -24,6 +24,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ROUTES } from "@/lib/routes";
 import { authClient } from "@/lib/auth-client";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { registerAction } from "../actions";
 import type { RegisterInput } from "../schema";
 import { mapSignInError } from "../errors";
@@ -241,44 +243,42 @@ export default function AuthScreen(props: AuthScreenProps) {
     errors.agreement !== undefined ? errorText(errors.agreement) : undefined;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
+    <main className="flex min-h-screen items-center justify-center bg-muted p-4">
       <div className="grid w-full max-w-4xl gap-8 md:grid-cols-[1fr_1.2fr]">
         {/* 品牌区（线框图左侧，静态文案） */}
         <aside className="hidden md:block">
-          <p className="text-2xl font-bold text-slate-800">AI 学业陪伴</p>
-          <h2 className="mt-4 text-xl font-semibold text-slate-700">
+          <p className="text-2xl font-bold text-foreground">AI 学业陪伴</p>
+          <h2 className="mt-4 text-xl font-semibold text-foreground">
             你的规划、任务和情绪
             <br />
             都在一个账号里
           </h2>
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-sm text-muted-foreground">
             登录后接着上次的进度继续，换设备也一样。
           </p>
         </aside>
 
         {/* 表单卡片 */}
-        <section className="rounded-xl bg-white p-6 shadow-md">
+        <section className="rounded-xl border bg-card p-6 shadow-sm">
           <AuthTabs active={activeView} onSwitch={switchView} />
 
           {/* 顶部错误（R7/R10）：服务端/客户端提交失败统一置顶呈现；
               撞号文案整体可点，切回登录视图并带入账户名（R10）。 */}
           {topError === null ? null : (
-            <div
-              role="alert"
-              className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
-            >
+            <Alert variant="destructive" className="mb-4">
               {topError === "auth.error.usernameRegistered" ? (
-                <button
+                <Button
                   type="button"
+                  variant="link"
                   onClick={() => switchView("login")}
-                  className="font-medium underline"
+                  className="h-auto p-0 text-destructive"
                 >
                   {errorText(topError)}
-                </button>
+                </Button>
               ) : (
                 errorText(topError)
               )}
-            </div>
+            </Alert>
           )}
 
           {activeView === "login" ? (

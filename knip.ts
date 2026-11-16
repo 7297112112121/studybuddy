@@ -30,6 +30,11 @@ const config: KnipConfig = {
       // 匹配由 knip 内置的 vitest/playwright 插件识别，无需在此重复声明。
       entry: [
         "src/app/**/*.{ts,tsx}",
+        // shadcn/ui 组件（ADR-0004）：CLI 复制进仓库的库式文件，导出是组件
+        // 公共 API（如 AlertTitle/TabsContent），未在本仓库消费不算死代码；
+        // 以 entry 声明免 unused-export 检查，同时保留其依赖（radix-ui/
+        // class-variance-authority/lucide-react）的 usage 探测。
+        "src/components/ui/**/*.tsx",
         "tests/**/*.test.{ts,tsx}",
         "e2e/**/*.spec.ts",
       ],

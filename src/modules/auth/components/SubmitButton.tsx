@@ -1,9 +1,10 @@
 /**
- * 提交按钮（R5）。受 submitting 驱动禁用与文案键切换；本任务 submitting
- * 恒为 false（不接网络），真实提交由 Task 10 接入。
+ * 提交按钮（R5）。受 submitting 驱动禁用与文案键切换。
+ * 视觉：shadcn Button（default variant = bg-primary）。
  */
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 
 type SubmitButtonProps = {
   submitting: boolean;
@@ -15,12 +16,12 @@ type SubmitButtonProps = {
 export default function SubmitButton(props: SubmitButtonProps) {
   const t = useTranslations("auth");
   return (
-    <button
+    <Button
       type="submit"
       disabled={props.submitting}
-      className="w-full rounded-md bg-slate-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+      className="h-10 w-full"
     >
       {props.submitting ? t(props.pendingKey) : props.children}
-    </button>
+    </Button>
   );
 }
