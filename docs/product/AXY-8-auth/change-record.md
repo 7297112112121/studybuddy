@@ -61,7 +61,7 @@ sidebar_position: 5
 | - | - | - | - |
 | story | docs/product/AXY-8-auth/story.md | 不加墓碑——B 级修订后仍有效，按修订纪律更新（状态行注记修订依据 CR-20261116-1） | 是 |
 | proposal | docs/product/AXY-8-auth/proposal.md | 不加墓碑——修订升版 v4（frontmatter status: approved），Changelog 终条登记本次处置 | 是 |
-| design | docs/dev/AXY-8-auth/design.md | 不加墓碑——待 design 重走时按 architecture-design 修订纪律更新（头部注记 CR-20261116-1 与新实现基线，正文按 v4 重写受影响节） | 否（随重走下游客） |
+| design | docs/dev/AXY-8-auth/design.md | 不加墓碑——已按 architecture-design 修订纪律重走（头部注记 CR-20261116-1 与实现基线，正文按 v4 重写为最终形态），2026-11-16 获批 | 是 |
 | tasks | docs/dev/AXY-8-auth/tasks.md | 不加墓碑——待 plan 重走时按 plan-writing 修订纪律更新（既有裁决记录保持历史原貌，新增修订裁决节） | 否（随重走下游客） |
 | review | docs/dev/AXY-8-auth/review.md | 头部加历史报告注记（判定结论不改，不得作为新 review 依据）+ 实现基线 Git 引用 `baa88ea` | 是 |
 
@@ -69,7 +69,7 @@ sidebar_position: 5
 
 | 阶段 | 状态 | 备注 |
 | - | - | - |
-| design | 待重走 | 经 architecture-design 技能（proposal v4 已批准）。**保留部分（既有资产）兼容性核对**：会话双写与守卫（R11 / R12）、协议落库（R15）、密码摘要（R13）、视图切换 / 显隐（R16 / R17）、路由常量、i18n 设施——须逐项核对其与新数据模型（username 列）及凭据形态的兼容性，结论落新 design 对应节；开放问题 #1（账号表结构）随新 design 重新定稿 |
+| design | 已完成（2026-11-16 获批，批准人海渝） | 经 architecture-design 技能修订重走。**保留资产兼容性核对结论已落 design**（会话双写与守卫 R11/R12、协议落库 R15、密码摘要 R13、视图切换/显隐 R16/R17、路由常量、i18n 设施——逐项凭据无关，证据在 design 各对应节）；账号表结构随 design 定稿：user.username + user_username 唯一索引（区分大小写），新增迁移承载；开放问题 #4 声明空表迁移假设 |
 | plan | 待重走 | 经 plan-writing 技能（design 获批后） |
 | review | 待重走 | 经 spec-review 技能（实现完成后）；旧 review 已加墓碑，不参与新终审，新 review 只审新实现 |
 
