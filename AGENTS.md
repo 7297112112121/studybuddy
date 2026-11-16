@@ -46,7 +46,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 接到新功能需求时,先读 `product-design` 技能——未经批准的用户故事不得进入开发落地。
 - 产品设计按用户故事 → proposal 接力(product-design、proposal-writing,proposal 属产品侧文档);开发落地按 design → plan → TDD 实现 → spec-review 接力;两道批准门(proposal、design)未过,不得拆任务或写任何产品代码,对应技能:proposal-writing、architecture-design、plan-writing、spec-review。
 - 一切产品代码遵循 TDD 铁律:无先失败的测试,即无产品代码。
-- 一切 UI/前端代码遵循 [docs/dev/前端设计规范.md](docs/dev/前端设计规范.md)——组件从 `src/components/ui/`(shadcn,ADR-0004)选型,颜色/圆角/阴影一律语义 token,禁裸色值与手写平行组件;组件与主题基础见 ADR-0004/0003。
+- 一切 UI/前端代码遵循 [docs/dev/前端设计规范.md](docs/dev/前端设计规范.md)——组件从 `src/components/ui/`(shadcn,ADR-0004)选型,颜色/圆角/阴影一律语义 token,禁裸色值与手写平行组件;组件与主题基础见 ADR-0004/0003;视觉实现手法(美学方向、排版)参考外部技能 `frontend-design`(skills-lock.json 管理),与规范冲突时以规范为准。
 - 技术选型与既有 ADR(docs/dev/adr/)冲突或无 ADR 覆盖时,先走 ADR 流程再继续设计。
 
 ## 文档地图
