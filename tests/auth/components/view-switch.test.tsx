@@ -6,6 +6,10 @@
  *
  * Task 10 适配：AuthScreen 接入提交流程后渲染期调用 useRouter，
  * 测试侧 mock next/navigation（本文件不触达提交，无网络边界）。
+ *
+ * Task 8 适配：标签/文案换装账户名（E-01 新文案）。注册视图的 account
+ * 值接线依赖 AuthScreen（T9 卡仍传旧 phone props），其间注册侧保值
+ * 断言若红，归属 T9 待修红，本文件不改 AuthScreen。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -40,7 +44,7 @@ describe("R16 视图切换", () => {
     const replaceState = vi.spyOn(window.history, "replaceState");
     renderAuthScreen();
 
-    fireEvent.change(screen.getByLabelText("手机号 / 邮箱"), {
+    fireEvent.change(screen.getByLabelText("账户名"), {
       target: { value: "13800138000" },
     });
     fireEvent.change(screen.getByLabelText("密码"), {
@@ -49,7 +53,7 @@ describe("R16 视图切换", () => {
     fireEvent.click(screen.getByRole("tab", { name: "注册" }));
 
     expect(
-      (screen.getByLabelText("手机号") as HTMLInputElement).value,
+      (screen.getByLabelText("账户名") as HTMLInputElement).value,
     ).toBe("13800138000");
     expect(
       (screen.getByLabelText("设置密码") as HTMLInputElement).value,
@@ -66,12 +70,12 @@ describe("R16 视图切换", () => {
     }
 
     fireEvent.submit(form);
-    expect(screen.getByText("请输入手机号或邮箱")).toBeDefined();
+    expect(screen.getByText("请输入账户名")).toBeDefined();
     expect(screen.getByText("有 2 项需要修改")).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: "注册一个" }));
 
-    expect(screen.queryByText("请输入手机号或邮箱")).toBeNull();
+    expect(screen.queryByText("请输入账户名")).toBeNull();
     expect(screen.queryByText(/项需要修改/)).toBeNull();
     expect(replaceState).toHaveBeenCalledWith(null, "", "/register");
   });
@@ -82,7 +86,7 @@ describe("R16 视图切换", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "去登录" }));
 
-    expect(screen.getByLabelText("手机号 / 邮箱")).toBeDefined();
+    expect(screen.getByLabelText("账户名")).toBeDefined();
     expect(replaceState).toHaveBeenCalledWith(null, "", "/login");
   });
 });
