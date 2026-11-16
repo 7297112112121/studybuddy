@@ -3,8 +3,8 @@
  *
  * client-safe：仅纯函数 + 类型，可被客户端组件直接 import。
  * 映射表依据 design 开放问题 #1 闭合记录（Task 6 实测）：
- * - 三失败情形（未注册/错密码/空密码直连）均为 401 + INVALID_PHONE_NUMBER_OR_PASSWORD
- *   → invalidCredentials（同族 username 插件行为一致）；
+ * - 三失败情形（未注册/错密码/空密码直连）均为 401 + INVALID_USERNAME_OR_PASSWORD
+ *   （/sign-in/username 原生码族）→ invalidCredentials；
  * - 400 为入参格式拒绝（格式拒绝同属「账号或密码不对」文案域，不泄露探测面）
  *   → invalidCredentials；
  * - 429 限流 → tooManyAttempts；

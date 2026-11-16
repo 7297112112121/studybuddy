@@ -13,7 +13,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 
 export type AuthSession = {
-  user: { id: string; name: string; phoneNumber: string };
+  user: { id: string; name: string; username: string };
   session: { id: string; userId: string; expiresAt: Date };
 };
 
@@ -29,8 +29,8 @@ export async function getCurrentSession(): Promise<AuthSession | null> {
       user: {
         id: raw.user.id,
         name: raw.user.name,
-        // Better Auth 的 user.phoneNumber 类型标注可空，注册路径恒有值
-        phoneNumber: raw.user.phoneNumber ?? "",
+        // Better Auth 的 user.username 类型标注可空，注册路径恒有值
+        username: raw.user.username ?? "",
       },
       session: {
         id: raw.session.id,

@@ -53,11 +53,11 @@ export async function directPost(
  * 忽略，不影响会话识别。
  */
 export async function signInAndGetCookie(
-  phone: string,
+  username: string,
   password: string,
 ): Promise<string> {
-  const res = await directPost("/sign-in/phone-number", {
-    phoneNumber: phone,
+  const res = await directPost("/sign-in/username", {
+    username,
     password,
   });
   if (!res.ok) {
