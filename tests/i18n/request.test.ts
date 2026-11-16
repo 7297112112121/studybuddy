@@ -16,6 +16,6 @@ describe("getRequestConfig（ADR-0010 无前缀策略）", () => {
     expect(config.locale).toBe("zh-CN");
     expect(config.messages).toBeDefined();
     expect(config.messages?.auth).toBeDefined();
-    expect(config.messages?.auth.account.required).toBe("请输入手机号或邮箱");
+    expect(config.messages?.auth.account.required).toBe("请输入账户名");
   });
 });

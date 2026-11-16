@@ -5,7 +5,7 @@
  * re-export 此处全部产物。列属性名使用 Better Auth 字段名（camelCase），
  * DB 列名经 `snakeCase.table`（drizzle-orm 1.0 RC 将 casing 从运行时 client
  * 选项改为表定义时烘焙）转换为 snake_case。唯一索引显式命名
- * `user_phone_number`：后续 service 层以 23505 错误码判定手机号冲突时
+ * `user_username`：后续 service 层以 23505 错误码判定账户名冲突时
  * 依赖该稳定名称（R14）。
  */
 import {
@@ -17,13 +17,14 @@ import {
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
-import { PASSWORD_RE, PHONE_RE } from "./validators";
+import { PASSWORD_RE, USERNAME_RE } from "./validators";
 
 const pgTable = snakeCase.table;
 
 /**
- * user 表。email 为 Better Auth 核心必填列，本产品无邮箱账号，
- * 存确定性占位邮箱（`phoneToPlaceholderEmail`，Task 4 service 产出），UI 永不展示。
+ * user 表。username 为登录凭据（CR-20261116-1：手机号→账户名+密码）。
+ * email 为 Better Auth 核心必填列，本产品无邮箱账号，
+ * 存确定性占位邮箱（Task 4 service 产出），UI 永不展示。
  * agreementVersion/agreedAt 对应 R15 协议同意留痕。
  */
 export const user = pgTable(
@@ -34,14 +35,13 @@ export const user = pgTable(
     email: text().notNull().unique(),
     emailVerified: boolean().notNull().default(false),
     image: text(),
-    phoneNumber: text().notNull(),
-    phoneNumberVerified: boolean().notNull().default(false),
+    username: text().notNull(),
     agreementVersion: text().notNull(),
     agreedAt: timestamp({ withTimezone: true }).notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("user_phone_number").on(t.phoneNumber)],
+  (t) => [uniqueIndex("user_username").on(t.username)],
 );
 
 /**
@@ -93,11 +93,11 @@ export const verification = pgTable("verification", {
 
 /**
  * 注册入参校验（边界 #1 后端半边，design 代码原样）。
- * PHONE_RE/PASSWORD_RE 为全仓单一来源（Task 2 validators）。
+ * USERNAME_RE/PASSWORD_RE 为全仓单一来源（Task 2 validators）。
  */
 export const registerInputSchema = z
   .object({
-    phone: z.string().regex(PHONE_RE),
+    username: z.string().regex(USERNAME_RE),
     password: z.string().regex(PASSWORD_RE),
     confirmPassword: z.string(),
     agreementAccepted: z.literal(true),

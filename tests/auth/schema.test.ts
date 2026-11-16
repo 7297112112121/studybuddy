@@ -17,7 +17,7 @@ function columnMap(table: Parameters<typeof getTableConfig>[0]) {
 
 describe("registerInputSchema", () => {
   const validInput = {
-    phone: "13800138000",
+    username: "xue_sheng01",
     password: "abcd1234",
     confirmPassword: "abcd1234",
     agreementAccepted: true,
@@ -27,10 +27,19 @@ describe("registerInputSchema", () => {
     expect(registerInputSchema.safeParse(validInput).success).toBe(true);
   });
 
-  it("phone '1380013800'（10 位）拒绝", () => {
+  it("username 'zhang san!'（含空格等非法字符）拒绝", () => {
     expect(
-      registerInputSchema.safeParse({ ...validInput, phone: "1380013800" })
+      registerInputSchema.safeParse({ ...validInput, username: "zhang san!" })
         .success,
+    ).toBe(false);
+  });
+
+  it("username 'abcdefghijklmnopq'（17 位，超长）拒绝", () => {
+    expect(
+      registerInputSchema.safeParse({
+        ...validInput,
+        username: "abcdefghijklmnopq",
+      }).success,
     ).toBe(false);
   });
 
@@ -80,19 +89,17 @@ describe("user 表", () => {
     expect(cols["email"]?.isUnique).toBe(true);
   });
 
-  it("phoneNumber 列 notNull", () => {
-    expect(cols["phone_number"]?.notNull).toBe(true);
+  it("username 列 notNull", () => {
+    expect(cols["username"]?.notNull).toBe(true);
   });
 
-  it("唯一索引显式命名 user_phone_number 且落在 phoneNumber 列", () => {
-    const idx = config.indexes.find(
-      (i) => i.config.name === "user_phone_number",
-    );
+  it("唯一索引显式命名 user_username 且落在 username 列", () => {
+    const idx = config.indexes.find((i) => i.config.name === "user_username");
     expect(idx).toBeDefined();
     expect(idx?.config.unique).toBe(true);
     expect(
       (idx?.config.columns[0] as { name?: string } | undefined)?.name,
-    ).toBe("phone_number");
+    ).toBe("username");
   });
 
   it("agreementVersion 列 notNull（R15）", () => {
@@ -103,11 +110,9 @@ describe("user 表", () => {
     expect(cols["agreed_at"]?.notNull).toBe(true);
   });
 
-  it("emailVerified / phoneNumberVerified 为 notNull 默认 false 的 boolean", () => {
+  it("emailVerified 为 notNull 默认 false 的 boolean", () => {
     expect(cols["email_verified"]?.notNull).toBe(true);
-    expect(cols["phone_number_verified"]?.notNull).toBe(true);
     expect(cols["email_verified"]?.columnType).toBe("PgBoolean");
-    expect(cols["phone_number_verified"]?.columnType).toBe("PgBoolean");
   });
 
   it("image 列 nullable", () => {

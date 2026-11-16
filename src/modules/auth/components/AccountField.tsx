@@ -1,5 +1,6 @@
 /**
- * 登录账号输入框（手机号/邮箱，R2/R3 错误文案呈现）。纯受控。
+ * 账户名输入框（登录/注册单一实现，R2/R8 错误文案呈现）。纯受控。
+ * D-12：无 maxLength、无字符过滤逻辑——非法输入原样保留，文案交由校验链呈现。
  */
 type AccountFieldProps = {
   id: string;
@@ -16,14 +17,13 @@ export default function AccountField(props: AccountFieldProps) {
         htmlFor={props.id}
         className="block text-sm font-medium text-slate-700"
       >
-        手机号 / 邮箱
+        账户名
       </label>
       <input
         id={props.id}
         type="text"
-        inputMode="text"
         autoComplete="username"
-        placeholder="13800138000 或 name@mail.com"
+        placeholder="如 zhang_san"
         value={props.value}
         onChange={(event) => props.onChange(event.target.value)}
         aria-invalid={props.error !== undefined ? true : undefined}

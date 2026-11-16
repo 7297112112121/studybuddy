@@ -1,23 +1,31 @@
 /**
- * Task 9 Step 1：AuthScreen 登录/注册校验链渲染测试。
+ * Task 8：登录/注册表单渲染层校验链测试（CR-20261116-1：凭据手机号→账户名+密码）。
  *
  * 覆盖：R1（顶部汇总）/ R2 / R3（validateAccount·validatePassword 映射）、
- * R4（协议勾选错误态）、R8（注册校验）、R17（密码显隐）。「不触发提交」
- * 以提交边界（signIn/registerAction）未被调用断言。
+ * D-13（登录表单无协议勾选行，Review Focus #5）、R8（注册校验）、
+ * R17（密码显隐）。文案断言以 useTranslations('auth') 渲染的真实
+ * auth.json（13 键新版）为准。
  *
- * Task 10 适配：AuthScreen 移除 onSubmit spy prop、校验通过即真实提交，
- * 测试侧 mock next/navigation、../actions 与 @/lib/auth-client；
- * 「校验通过触发提交」改为断言对应提交边界被调用一次。
+ * 「不触发提交」以提交边界（authClient.signIn.username）未被调用断言；
+ * 合法值改填用例以提交边界被调用一次作正向对照，防桩键漂移后的空转绿
+ * （spec-review 终审修复批，2026-11-16：原桩键残留 phoneNumber，致
+ * not.toHaveBeenCalled 恒真、改填用例走异常分支仍绿）。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import AuthScreen from "../../../src/modules/auth/components/AuthScreen";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
-import { authClient } from "../../../src/lib/auth-client";
 import { registerAction } from "../../../src/modules/auth/actions";
 
 const routerReplace = vi.hoisted(() => vi.fn());
+// authClient.signIn.username 经 hoisted 桩注入拦截，默认 resolve
+// better-auth 客户端真实形态 { data, error }（@better-fetch 默认不 throw，
+// 错误在 error 字段）；不走 vi.mocked(authClient.signIn.username)——
+// 与真实 auth-client 类型面解耦。
+const signInMock = vi.hoisted(() =>
+  vi.fn(async () => ({ data: null, error: null })),
+);
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: routerReplace }),
@@ -27,13 +35,12 @@ vi.mock("../../../src/modules/auth/actions", () => ({
 }));
 vi.mock("../../../src/lib/auth-client", () => ({
   authClient: {
-    signIn: { phoneNumber: vi.fn() },
+    signIn: { username: signInMock },
     signOut: vi.fn(),
   },
 }));
 
 const registerMock = vi.mocked(registerAction);
-const signInMock = vi.mocked(authClient.signIn.phoneNumber);
 
 afterEach(cleanup);
 
@@ -59,8 +66,8 @@ function submitActiveForm(container: HTMLElement): void {
   fireEvent.submit(form);
 }
 
-describe("登录校验链（R1/R2/R3/R4）", () => {
-  it("账号留空+密码 a1234567 提交 → 账号必填文案 + 顶部「有 1 项需要修改」，不触发提交", () => {
+describe("登录校验链（R1/R2/R3）", () => {
+  it("账号留空+密码 a1234567 提交 → 「请输入账户名」+ 顶部「有 1 项需要修改」，不触发提交", () => {
     const { container } = renderAuthScreen();
 
     fireEvent.change(screen.getByLabelText("密码"), {
@@ -68,7 +75,7 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
     });
     submitActiveForm(container);
 
-    expect(screen.getByText("请输入手机号或邮箱")).toBeDefined();
+    expect(screen.getByText("请输入账户名")).toBeDefined();
     expect(screen.getByText("有 1 项需要修改")).toBeDefined();
     expect(signInMock).not.toHaveBeenCalled();
   });
@@ -78,45 +85,49 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
 
     submitActiveForm(container);
 
-    expect(screen.getByText("请输入手机号或邮箱")).toBeDefined();
+    expect(screen.getByText("请输入账户名")).toBeDefined();
     expect(screen.getByText("请输入密码")).toBeDefined();
     expect(screen.getByText("有 2 项需要修改")).toBeDefined();
   });
 
-  it("账号 1380013800/密码 abc@mail → 账号格式文案；改填合法并勾选协议后提示消失且触发提交", async () => {
-    signInMock.mockResolvedValue({ data: null, error: null });
+  it("账号 zhang san! → 格式文案，输入无过滤原样保留；17 位同文案且完整保留；改填 zhang_san 后提示消失", () => {
     const { container } = renderAuthScreen();
-    const account = screen.getByLabelText(
-      "手机号 / 邮箱",
-    ) as HTMLInputElement;
-    const password = screen.getByLabelText("密码") as HTMLInputElement;
+    const account = screen.getByLabelText("账户名") as HTMLInputElement;
 
-    fireEvent.change(account, { target: { value: "1380013800" } });
-    fireEvent.change(password, { target: { value: "abc@mail" } });
+    fireEvent.change(account, { target: { value: "zhang san!" } });
+    // D-12：无字符过滤逻辑，非法值原样进输入框
+    expect(account.value).toBe("zhang san!");
+    fireEvent.change(screen.getByLabelText("密码"), {
+      target: { value: "a1234567" },
+    });
     submitActiveForm(container);
-
     expect(
-      screen.getByText("格式不对：手机号 11 位，或 name@mail.com"),
+      screen.getByText("格式不对：1—16 位中文、字母、数字或下划线"),
     ).toBeDefined();
-    expect(signInMock).not.toHaveBeenCalled();
 
-    fireEvent.change(account, { target: { value: "13800138000" } });
-    fireEvent.change(password, { target: { value: "study2026" } });
-    fireEvent.click(screen.getByLabelText(/我已阅读并同意/));
+    fireEvent.change(account, { target: { value: "abcdefghijklmnopq" } });
+    // D-12：无 maxLength，17 位完整保留
+    expect(account.value).toBe("abcdefghijklmnopq");
     submitActiveForm(container);
-
     expect(
-      screen.queryByText("格式不对：手机号 11 位，或 name@mail.com"),
+      screen.getByText("格式不对：1—16 位中文、字母、数字或下划线"),
+    ).toBeDefined();
+
+    fireEvent.change(account, { target: { value: "zhang_san" } });
+    submitActiveForm(container);
+    expect(
+      screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
     ).toBeNull();
     expect(screen.queryByText(/项需要修改/)).toBeNull();
-    await vi.waitFor(() => expect(signInMock).toHaveBeenCalledTimes(1));
+    // 正向对照：合法值提交确实到达提交边界（防 mock 键漂移后的空转绿）。
+    expect(signInMock).toHaveBeenCalledTimes(1);
   });
 
   it("账号 12345678/密码 21 位 → 密码规则文案", () => {
     const { container } = renderAuthScreen();
     const password21 = "a12345678901234567890";
 
-    fireEvent.change(screen.getByLabelText("手机号 / 邮箱"), {
+    fireEvent.change(screen.getByLabelText("账户名"), {
       target: { value: "12345678" },
     });
     fireEvent.change(screen.getByLabelText("密码"), {
@@ -128,61 +139,34 @@ describe("登录校验链（R1/R2/R3/R4）", () => {
     expect(signInMock).not.toHaveBeenCalled();
   });
 
-  it("合法账号密码未勾选协议提交 → 勾选框 aria-invalid 错误态，不触发提交", () => {
-    const { container } = renderAuthScreen();
-    const checkbox = screen.getByLabelText(
-      /我已阅读并同意/,
-    ) as HTMLInputElement;
+  it("登录表单无协议行（D-13）：协议勾选框与协议文案均不存在于文档", () => {
+    renderAuthScreen();
 
-    fireEvent.change(screen.getByLabelText("手机号 / 邮箱"), {
-      target: { value: "13800138000" },
-    });
-    fireEvent.change(screen.getByLabelText("密码"), {
-      target: { value: "study2026" },
-    });
-    submitActiveForm(container);
-
-    expect(checkbox.getAttribute("aria-invalid")).toBe("true");
-    expect(screen.getByText("请阅读并勾选《用户协议》与《隐私政策》")).toBeDefined();
-    expect(signInMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByText(/用户协议/)).toBeNull();
   });
 });
 
 describe("注册校验链（R8）", () => {
-  it("手机号 1380013800 → 「请输入 11 位有效手机号」；改填合法后提示消失且触发提交", async () => {
-    registerMock.mockResolvedValue({ ok: true });
-    signInMock.mockResolvedValue({ data: null, error: null });
+  it("账号 zhang san! → E-02 格式文案，不触发注册", () => {
     renderAuthScreen({ initialView: "register" });
 
-    fireEvent.change(screen.getByLabelText("手机号"), {
-      target: { value: "1380013800" },
+    fireEvent.change(screen.getByLabelText("账户名"), {
+      target: { value: "zhang san!" },
     });
-    fireEvent.change(screen.getByLabelText("设置密码"), {
-      target: { value: "study2026" },
-    });
-    fireEvent.change(screen.getByLabelText("确认密码"), {
-      target: { value: "study2026" },
-    });
-    fireEvent.click(screen.getByLabelText(/我已阅读并同意/));
     fireEvent.click(screen.getByRole("button", { name: "注册并进入" }));
 
-    expect(screen.getByText("请输入 11 位有效手机号")).toBeDefined();
+    expect(
+      screen.getByText("格式不对：1—16 位中文、字母、数字或下划线"),
+    ).toBeDefined();
     expect(registerMock).not.toHaveBeenCalled();
-
-    fireEvent.change(screen.getByLabelText("手机号"), {
-      target: { value: "13800138000" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "注册并进入" }));
-
-    expect(screen.queryByText("请输入 11 位有效手机号")).toBeNull();
-    await vi.waitFor(() => expect(registerMock).toHaveBeenCalledTimes(1));
   });
 
   it("确认密码为空或不一致 → 「两次输入的密码不一致」", () => {
     const { container } = renderAuthScreen({ initialView: "register" });
 
-    fireEvent.change(screen.getByLabelText("手机号"), {
-      target: { value: "13800138000" },
+    fireEvent.change(screen.getByLabelText("账户名"), {
+      target: { value: "zhang_san" },
     });
     fireEvent.change(screen.getByLabelText("设置密码"), {
       target: { value: "study2026" },
@@ -207,14 +191,14 @@ describe("注册校验链（R8）", () => {
     expect(screen.getByText("两次输入的密码不一致")).toBeDefined();
   });
 
-  it("合法手机号密码但未勾选协议 → 勾选框 aria-invalid 错误态", () => {
+  it("合法账户名密码但未勾选协议 → 勾选框 aria-invalid 错误态", () => {
     const { container } = renderAuthScreen({ initialView: "register" });
     const checkbox = screen.getByLabelText(
       /我已阅读并同意/,
     ) as HTMLInputElement;
 
-    fireEvent.change(screen.getByLabelText("手机号"), {
-      target: { value: "13800138000" },
+    fireEvent.change(screen.getByLabelText("账户名"), {
+      target: { value: "zhang_san" },
     });
     fireEvent.change(screen.getByLabelText("设置密码"), {
       target: { value: "study2026" },

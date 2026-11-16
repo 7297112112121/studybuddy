@@ -54,7 +54,7 @@ vi.mock("@/lib/auth-client", () => ({
 }));
 
 const session: AuthSession = {
-  user: { id: "user-1", name: "13800138000", phoneNumber: "13800138000" },
+  user: { id: "user-1", name: "studybuddy_u1", username: "studybuddy_u1" },
   session: { id: "session-1", userId: "user-1", expiresAt: new Date("2026-12-31T00:00:00Z") },
 };
 

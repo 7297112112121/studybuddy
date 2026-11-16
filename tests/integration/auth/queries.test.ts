@@ -1,5 +1,5 @@
 /**
- * getCurrentSession 集成测试（Task 7，design「modules/auth/queries.ts」契约）。
+ * getCurrentSession 集成测试（Task 6 换装，design「modules/auth/queries.ts」契约）。
  *
  * 真实会话链路（PG + Redis secondaryStorage）+ vi.mock('next/headers')：
  * queries.ts 的唯一外部依赖 headers() 来自 next/headers，RSC 运行时才有值，
@@ -7,7 +7,7 @@
  * Redis/PG）全部走真实实现。
  *
  * 覆盖：无 cookie → null；登录后携该 cookie → AuthSession 形状
- * （user.id/name=手机号/phoneNumber、session.id/userId/expiresAt instanceof Date）。
+ * （user.id/name=账户名/username、session.id/userId/expiresAt instanceof Date）。
  */
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -21,8 +21,8 @@ vi.mock("next/headers", () => ({
   headers: async () => headerStore.current,
 }));
 
-import { signInAndGetCookie, uniquePhone } from "../helpers";
-import { registerWithPhone } from "../../../src/modules/auth/service";
+import { signInAndGetCookie, uniqueUsername } from "../helpers";
+import { registerWithUsername } from "../../../src/modules/auth/service";
 import { getCurrentSession } from "../../../src/modules/auth/queries";
 
 const PASSWORD = "abcdefg1"; // 与 service.test.ts 一致（PASSWORD_RE：字母+数字，8..20）
@@ -43,13 +43,13 @@ describe("getCurrentSession（tests/integration/auth/queries）", () => {
     expect(await getCurrentSession()).toBeNull();
   });
 
-  it("登录后携该 cookie → AuthSession 形状（user.name=手机号，expiresAt 为 Date）", async () => {
-    const phone = uniquePhone();
-    const registered = await registerWithPhone({ phone, password: PASSWORD });
+  it("登录后携该 cookie → AuthSession 形状（user.name=账户名，expiresAt 为 Date）", async () => {
+    const username = uniqueUsername();
+    const registered = await registerWithUsername({ username, password: PASSWORD });
     if (!registered.ok) {
       throw new Error("unreachable: 注册应成功");
     }
-    const cookie = await signInAndGetCookie(phone, PASSWORD);
+    const cookie = await signInAndGetCookie(username, PASSWORD);
     headerStore.current = new Headers({ cookie });
 
     const result = await getCurrentSession();
@@ -57,8 +57,8 @@ describe("getCurrentSession（tests/integration/auth/queries）", () => {
     expect(result).not.toBeNull();
     const s = result!;
     expect(s.user.id).toBe(registered.userId);
-    expect(s.user.name).toBe(phone);
-    expect(s.user.phoneNumber).toBe(phone);
+    expect(s.user.name).toBe(username);
+    expect(s.user.username).toBe(username);
     expect(s.session.id).toEqual(expect.any(String));
     expect(s.session.userId).toBe(registered.userId);
     expect(s.session.expiresAt).toBeInstanceOf(Date);

@@ -1,9 +1,9 @@
 /**
- * 注册表单（受控，Task 9 渲染层）。手机号复用 AuthScreen 的 account 值
- * （R16 跨视图保留、R10 切回登录带入手机号）。校验链在 AuthScreen。
+ * 注册表单（受控）。账户名复用 AuthScreen 的 account 值（R16 跨视图保留）。
+ * 校验链在 AuthScreen。协议勾选行保留——同意留痕（R15）仅注册侧收集。
  */
 import type { FormEvent } from "react";
-import PhoneField from "./PhoneField";
+import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
 import FormSummary from "./FormSummary";
@@ -12,21 +12,21 @@ import ViewSwitchLink from "./ViewSwitchLink";
 import type { AuthView } from "./AuthTabs";
 
 type RegisterFormProps = {
-  phone: string;
+  account: string;
   password: string;
   confirmPassword: string;
   agreementAccepted: boolean;
-  phoneError?: string;
+  accountError?: string;
   passwordError?: string;
   confirmPasswordError?: string;
   agreementError?: string;
-  /** R1：字段错误（不含协议勾选），FormSummary 按键数计数。 */
+  /** R8：字段错误（不含协议勾选），FormSummary 按键数计数。 */
   fieldErrors: Partial<
-    Record<"phone" | "password" | "confirmPassword", string>
+    Record<"username" | "password" | "confirmPassword", string>
   >;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onPhoneChange: (value: string) => void;
+  onAccountChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onConfirmPasswordChange: (value: string) => void;
   onAgreementChange: (accepted: boolean) => void;
@@ -40,11 +40,11 @@ export default function RegisterForm(props: RegisterFormProps) {
       <FormSummary errors={props.fieldErrors} />
 
       <div className="space-y-4">
-        <PhoneField
-          id="register-phone"
-          value={props.phone}
-          error={props.phoneError}
-          onChange={props.onPhoneChange}
+        <AccountField
+          id="register-account"
+          value={props.account}
+          error={props.accountError}
+          onChange={props.onAccountChange}
         />
 
         <PasswordField
