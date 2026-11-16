@@ -31,11 +31,13 @@
   --color-destructive: var(--destructive);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-aurora-ink: var(--aurora-ink);
   --color-aurora-aqua: var(--aurora-aqua);
-  --color-aurora-aqua-deep: var(--aurora-aqua-deep);
+  --color-aurora-aqua-bright: var(--aurora-aqua-bright);
   --color-aurora-magenta: var(--aurora-magenta);
   --color-aurora-magenta-deep: var(--aurora-magenta-deep);
   --color-aurora-indigo: var(--aurora-indigo);
+  --color-aurora-indigo-deep: var(--aurora-indigo-deep);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -77,14 +79,16 @@
      取 Tailwind amber-600/800 的 oklch 近似值;暗色未校准。 */
   --warning: oklch(0.666 0.179 58);
   --warning-foreground: oklch(0.476 0.114 61);
-  /* aurora 装饰色:auth 页「aurora glass」视觉方向引入的辅助强调组,只作点缀
-     (光斑 / 渐变面 / 焦点环),不进入组件默认态。取 Tailwind teal / fuchsia /
-     indigo 的 oklch 近似值;deep 端供渐变浓墨面使用(白字对比达标),暗色未校准。 */
-  --aurora-aqua: oklch(0.6 0.106 184.7);
-  --aurora-aqua-deep: oklch(0.437 0.078 188.2);
-  --aurora-magenta: oklch(0.591 0.272 327.6);
-  --aurora-magenta-deep: oklch(0.518 0.253 323.9);
-  --aurora-indigo: oklch(0.511 0.262 276.97);
+  /* aurora 装饰色:auth 页「aurora glass」暗色视觉方向的 token 组,仅 auth 页
+     消费(.aurora-theme 局部作用域,见下方说明)。取值为设计规格色 hex 直书,
+     与视觉规格一一对应;deep 端供光斑浓墨层,不进入组件默认态。 */
+  --aurora-ink: #0b0f14;
+  --aurora-aqua: #2dd4bf;
+  --aurora-aqua-bright: #5eead4;
+  --aurora-magenta: #e879f9;
+  --aurora-magenta-deep: #a21caf;
+  --aurora-indigo: #6366f1;
+  --aurora-indigo-deep: #312e81;
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -137,6 +141,74 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* auth 页「aurora glass」局部暗色取景:.aurora-theme 只挂在 auth 屏根节点,
+   在其子树内重定义语义 token(本页专用的暗色校准值),全局亮色主题与其余
+   页面不受影响——这不是全局暗色策略,不改变 ADR-0003 的既有条款。 */
+.aurora-theme {
+  --background: var(--aurora-ink);
+  --foreground: oklch(0.968 0.006 247);
+  --card: oklch(1 0 0 / 8%);
+  --card-foreground: oklch(0.968 0.006 247);
+  --popover: oklch(0.205 0.02 250);
+  --popover-foreground: oklch(0.968 0.006 247);
+  --primary: var(--aurora-aqua);
+  --primary-foreground: var(--aurora-ink);
+  --secondary: oklch(1 0 0 / 6%);
+  --secondary-foreground: oklch(0.968 0.006 247);
+  --muted: oklch(1 0 0 / 7%);
+  --muted-foreground: oklch(0.705 0.022 261);
+  --accent: oklch(1 0 0 / 8%);
+  --accent-foreground: oklch(0.968 0.006 247);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: var(--aurora-aqua);
+}
+
+/* auth 页玻璃卡面(仅 .aurora-theme 内使用):155° 白色半透明渐变 +
+   顶部内描边高光 + 深投影,配合 backdrop-blur 构成玻璃质感。 */
+.aurora-theme .glass-card {
+  background-image: linear-gradient(
+    155deg,
+    oklch(1 0 0 / 9%),
+    oklch(1 0 0 / 3%)
+  );
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 18%),
+    0 30px 80px -20px oklch(0 0 0 / 75%);
+}
+
+/* auth 页 aurora 纱幕(仅 .aurora-theme 内使用,纯装饰):aqua/magenta 双色
+   细网格 + 前景细颗粒点阵,椭圆 mask 自中心向边缘衰减。 */
+.aurora-theme .aurora-veil {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--aurora-aqua) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--aurora-magenta) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    radial-gradient(
+      color-mix(in oklab, oklch(1 0 0) 8%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 64px 64px, 64px 64px, 3px 3px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 70% 60% at 50% 45%,
+    black,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 70% 60% at 50% 45%,
+    black,
+    transparent 78%
+  );
 }
 
 @layer base {

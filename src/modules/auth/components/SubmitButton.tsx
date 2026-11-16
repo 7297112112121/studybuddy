@@ -1,7 +1,8 @@
 /**
  * 提交按钮（R5）。受 submitting 驱动禁用与文案键切换。
- * 视觉：shadcn Button（default variant）+ aurora 渐变面（aqua-deep→magenta,
- * 白字对比达标），主 CTA 的签名观感。
+ * 视觉：shadcn Button（default variant）+ aurora 渐变面（aqua→aqua-bright→
+ * magenta,规格 100deg/38% via）；文字色取 .aurora-theme 作用域内的
+ * --primary-foreground（墨色，亮渐变面上对比达标），主 CTA 的签名观感。
  */
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -20,7 +21,7 @@ export default function SubmitButton(props: SubmitButtonProps) {
     <Button
       type="submit"
       disabled={props.submitting}
-      className="h-11 w-full rounded-xl bg-linear-[110deg] from-aurora-aqua-deep to-aurora-magenta shadow-md shadow-aurora-aqua/30"
+      className="h-11 w-full rounded-xl bg-linear-[100deg] from-aurora-aqua from-0% via-aurora-aqua-bright via-38% to-aurora-magenta shadow-lg shadow-aurora-aqua/30"
     >
       {props.submitting ? t(props.pendingKey) : props.children}
     </Button>

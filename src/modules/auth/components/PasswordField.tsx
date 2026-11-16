@@ -40,7 +40,7 @@ export default function PasswordField(props: PasswordFieldProps) {
           onChange={(event) => props.onChange(event.target.value)}
           aria-invalid={props.invalid ? true : undefined}
           aria-describedby={props.hint !== undefined ? hintId : undefined}
-          className="h-11 rounded-xl bg-muted/40 pr-11 focus-visible:border-aurora-aqua focus-visible:ring-aurora-aqua/30"
+          className="h-11 rounded-xl bg-muted/60 pr-11 focus-visible:border-aurora-aqua focus-visible:ring-aurora-aqua/30"
         />
         <Button
           type="button"

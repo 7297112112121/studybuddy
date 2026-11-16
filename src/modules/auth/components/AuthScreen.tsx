@@ -228,159 +228,172 @@ export default function AuthScreen(props: AuthScreenProps) {
   const agreementInvalid = errors.agreement !== undefined;
 
   return (
-    <main className="relative isolate grid min-h-dvh overflow-hidden bg-background lg:grid-cols-[1.05fr_1fr]">
-      {/* aurora 光斑装饰层（aria-hidden）：aqua/magenta/indigo 柔光斑，
-          压在纸面底色上、垫在内容之后，右列玻璃卡片隔其取景。 */}
+    <main className="aurora-theme relative isolate min-h-dvh overflow-hidden bg-background text-foreground">
+      {/* aurora 背景层（aria-hidden，-z-10）：墨底上散布柔光斑 → aurora 纱幕
+          （网格 + 颗粒）→ 双重压暗（中央保持可读、边缘沉入墨底）。
+          整页一张背景，卡片与宣传列同景，不再有分区边界。 */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-24 right-1/5 size-80 rounded-full bg-aurora-aqua/20 blur-3xl" />
-        <div className="absolute -bottom-28 -right-20 size-96 rounded-full bg-aurora-magenta/15 blur-3xl" />
-        <div className="absolute top-1/3 left-1/2 size-80 rounded-full bg-aurora-indigo/10 blur-3xl" />
+        <div className="absolute -top-40 -left-32 size-[28rem] rounded-full bg-aurora-aqua/30 blur-3xl" />
+        <div className="absolute top-1/4 right-1/3 size-96 rounded-full bg-aurora-indigo/30 blur-3xl" />
+        <div className="absolute -bottom-44 -right-24 size-[30rem] rounded-full bg-aurora-magenta/25 blur-3xl" />
+        <div className="absolute bottom-1/4 left-1/4 size-72 rounded-full bg-aurora-indigo-deep/40 blur-3xl" />
+        <div className="absolute top-1/2 -left-16 size-80 rounded-full bg-aurora-magenta-deep/20 blur-3xl" />
+        <div className="aurora-veil absolute inset-0" />
+        <div className="absolute inset-0 bg-aurora-ink/30" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,var(--aurora-ink)_100%)]" />
       </div>
 
-      {/* 品牌面板（lg+）：整页唯一的浓墨处——aurora 深端渐变（aqua-deep→
-          magenta-deep）反白，今日时间线给产品语境。
-          静态装饰内容（aria-hidden），沿用线框图左侧静态文案约定（文案测试依赖）。 */}
-      <aside className="hidden flex-col justify-between bg-linear-[155deg] from-aurora-aqua-deep to-aurora-magenta-deep p-10 text-primary-foreground lg:flex">
-        <p className="flex items-center gap-2 text-lg font-semibold">
-          <CalendarCheck2Icon aria-hidden="true" className="size-5" />
-          AI 学业陪伴
-        </p>
-        <div className="animate-in fade-in slide-in-from-bottom-4 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
-          <p className="text-3xl font-semibold leading-snug xl:text-4xl">
-            你的规划、任务和情绪
-            <br />
-            都在一个账号里
-          </p>
-          <p className="mt-3 text-sm text-primary-foreground/70">
-            登录后接着上次的进度继续，换设备也一样。
-          </p>
-          {/* 今日时间线：产品语境的「实物」示意，非真实数据；三个状态
-              （已完成/进行中/待开始）以图标表达，不加编号。 */}
-          <ul
+      {/* 主内容：lg 双列（宣传列左 / 玻璃卡右），移动端单列且卡片在前。
+          max-w-7xl 居中，所有内容直接压在共享 aurora 背景上。 */}
+      <div className="mx-auto grid min-h-dvh w-full max-w-7xl items-center gap-14 px-6 py-12 lg:grid-cols-2 lg:gap-10">
+        {/* 玻璃签名卡（移动端在前）：.glass-card 提供卡面渐变、内描边高光与
+            深投影，backdrop-blur 隔角落「吻光」取景；加载入场一次淡入上滑，
+            prefers-reduced-motion 下关闭。 */}
+        <section className="relative order-1 lg:order-2 lg:justify-self-end">
+          {/* 角落 aurora 吻光（aria-hidden）：垫在玻璃卡后，隔毛玻璃透出柔光。 */}
+          <div
             aria-hidden="true"
-            className="mt-10 space-y-1 border-l border-primary-foreground/25 pl-5"
-          >
-            <li className="flex items-center gap-3 py-1.5 text-sm">
-              <span className="w-12 shrink-0 text-primary-foreground/60">
-                08:00
-              </span>
-              <span className="flex-1 text-primary-foreground/80">
-                晨读 30 分钟
-              </span>
-              <CheckIcon
-                aria-hidden="true"
-                className="size-4 text-primary-foreground/60"
-              />
-            </li>
-            <li className="mx-[-1.25rem] flex items-center gap-3 rounded-lg bg-primary-foreground/10 px-2.5 py-1.5 text-sm font-medium">
-              <span className="w-12 shrink-0 text-primary-foreground/70">
-                14:00
-              </span>
-              <span className="flex-1">微积分习题集</span>
-              <span
-                aria-hidden="true"
-                className="size-1.5 rounded-full bg-primary-foreground"
-              />
-            </li>
-            <li className="flex items-center gap-3 py-1.5 text-sm">
-              <span className="w-12 shrink-0 text-primary-foreground/60">
-                21:30
-              </span>
-              <span className="flex-1 text-primary-foreground/80">今日复盘</span>
-              <span
-                aria-hidden="true"
-                className="size-1.5 rounded-full border border-primary-foreground/50"
-              />
-            </li>
-          </ul>
-        </div>
-      </aside>
+            className="absolute -top-10 -right-10 -z-10 size-40 rounded-full bg-aurora-magenta/30 blur-2xl"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute -bottom-10 -left-10 -z-10 size-40 rounded-full bg-aurora-aqua/25 blur-2xl"
+          />
+          <div className="glass-card mx-auto w-full max-w-md rounded-4xl border border-border p-8 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-3 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
+            {/* 视图级大标题（auth-2 视觉重做）：随 activeView 切换文案。 */}
+            <h1 className="mb-5 text-3xl font-bold tracking-tight text-foreground">
+              {activeView === "login" ? "欢迎回来" : "创建你的账号"}
+            </h1>
 
-      {/* 表单列：玻璃质感卡片（半透明 card + backdrop-blur）浮在 aurora 光斑上，
-          签名观感来自卡片后透出的柔光；加载入场一次淡入上滑（auth-2 视觉
-          重做），prefers-reduced-motion 下关闭。 */}
-      <section className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card/75 p-8 shadow-lg backdrop-blur-md animate-in fade-in slide-in-from-bottom-3 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
-          {/* 移动端品牌条（lg 以下品牌面板隐藏） */}
-          <div className="mb-8 lg:hidden">
-            <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
-              <CalendarCheck2Icon aria-hidden="true" className="size-5" />
+            <AuthTabs active={activeView} onSwitch={switchView} />
+
+            {/* 顶部错误（R7/R10）：服务端/客户端提交失败统一置顶呈现；
+                撞号文案整体可点，切回登录视图并带入账户名（R10）。 */}
+            {topError === null ? null : (
+              <Alert variant="destructive" className="mb-4">
+                {topError === "auth.error.usernameRegistered" ? (
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => switchView("login")}
+                    className="h-auto p-0 text-destructive"
+                  >
+                    {errorText(topError)}
+                  </Button>
+                ) : (
+                  errorText(topError)
+                )}
+              </Alert>
+            )}
+
+            {/* 表单区：key 驱动切视图时 300ms 淡入上滑（动作回应），reduced-motion 关。 */}
+            <div
+              key={activeView}
+              className="animate-in fade-in slide-in-from-bottom-2 [animation-duration:300ms] [animation-fill-mode:both] motion-reduce:animate-none"
+            >
+              {activeView === "login" ? (
+                <LoginForm
+                  account={values.account}
+                  password={values.password}
+                  accountInvalid={isInvalid("account")}
+                  passwordInvalid={isInvalid("password")}
+                  submitting={submitting}
+                  onSubmit={handleLoginSubmit}
+                  onAccountChange={(value) => updateValue("account", value)}
+                  onPasswordChange={(value) => updateValue("password", value)}
+                  onSwitchView={switchView}
+                />
+              ) : (
+                <RegisterForm
+                  account={values.account}
+                  password={values.password}
+                  confirmPassword={values.confirmPassword}
+                  agreementAccepted={values.agreementAccepted}
+                  accountInvalid={isInvalid("username")}
+                  passwordInvalid={isInvalid("password")}
+                  confirmPasswordInvalid={isInvalid("confirmPassword")}
+                  agreementInvalid={agreementInvalid}
+                  submitting={submitting}
+                  onSubmit={handleRegisterSubmit}
+                  onAccountChange={(value) => updateValue("account", value)}
+                  onPasswordChange={(value) => updateValue("password", value)}
+                  onConfirmPasswordChange={(value) =>
+                    updateValue("confirmPassword", value)
+                  }
+                  onAgreementChange={(accepted) =>
+                    updateValue("agreementAccepted", accepted)
+                  }
+                  onSwitchView={switchView}
+                />
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 宣传列（移动端垫在卡片后）：与卡片同景直接压在 aurora 背景上——
+            无面板底色，分区边界不再存在。品牌语 + 渐变强调标题 + 今日时间线
+            （静态示意，aria-hidden），沿用线框图静态文案约定。 */}
+        <aside className="order-2 flex flex-col justify-center lg:order-1">
+          <div className="animate-in fade-in slide-in-from-bottom-4 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
+            <p className="flex items-center gap-2 text-lg font-semibold">
+              <CalendarCheck2Icon
+                aria-hidden="true"
+                className="size-5 text-aurora-aqua"
+              />
               AI 学业陪伴
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              你的规划、任务和情绪，都在一个账号里。
+            <p className="mt-6 max-w-lg text-4xl leading-snug font-semibold tracking-tight xl:text-5xl">
+              你的规划、任务和情绪
+              <br />
+              都在
+              <span className="bg-linear-[100deg] from-aurora-aqua-bright to-aurora-magenta bg-clip-text text-transparent">
+                一个账号
+              </span>
+              里
             </p>
+            <p className="mt-4 max-w-md text-sm text-muted-foreground">
+              登录后接着上次的进度继续，换设备也一样。
+            </p>
+            {/* 今日时间线：产品语境的「实物」示意，非真实数据；三个状态
+                （已完成/进行中/待开始）以图标表达，不加编号。 */}
+            <ul
+              aria-hidden="true"
+              className="mt-10 max-w-md space-y-1 border-l border-border pl-5"
+            >
+              <li className="flex items-center gap-3 py-1.5 text-sm">
+                <span className="w-12 shrink-0 text-muted-foreground">
+                  08:00
+                </span>
+                <span className="flex-1 text-foreground/80">晨读 30 分钟</span>
+                <CheckIcon
+                  aria-hidden="true"
+                  className="size-4 text-aurora-aqua"
+                />
+              </li>
+              <li className="mx-[-1.25rem] flex items-center gap-3 rounded-lg bg-muted px-2.5 py-1.5 text-sm font-medium">
+                <span className="w-12 shrink-0 text-muted-foreground">
+                  14:00
+                </span>
+                <span className="flex-1">微积分习题集</span>
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full bg-aurora-aqua"
+                />
+              </li>
+              <li className="flex items-center gap-3 py-1.5 text-sm">
+                <span className="w-12 shrink-0 text-muted-foreground">
+                  21:30
+                </span>
+                <span className="flex-1 text-foreground/80">今日复盘</span>
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full border border-muted-foreground/50"
+                />
+              </li>
+            </ul>
           </div>
-
-          {/* 视图级大标题（auth-2 视觉重做）：随 activeView 切换文案。 */}
-          <h1 className="mb-5 text-3xl font-bold tracking-tight text-foreground">
-            {activeView === "login" ? "欢迎回来" : "创建你的账号"}
-          </h1>
-
-          <AuthTabs active={activeView} onSwitch={switchView} />
-
-          {/* 顶部错误（R7/R10）：服务端/客户端提交失败统一置顶呈现；
-              撞号文案整体可点，切回登录视图并带入账户名（R10）。 */}
-          {topError === null ? null : (
-            <Alert variant="destructive" className="mb-4">
-              {topError === "auth.error.usernameRegistered" ? (
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => switchView("login")}
-                  className="h-auto p-0 text-destructive"
-                >
-                  {errorText(topError)}
-                </Button>
-              ) : (
-                errorText(topError)
-              )}
-            </Alert>
-          )}
-
-          {/* 表单区：key 驱动切视图时 300ms 淡入上滑（动作回应），reduced-motion 关。 */}
-          <div
-            key={activeView}
-            className="animate-in fade-in slide-in-from-bottom-2 [animation-duration:300ms] [animation-fill-mode:both] motion-reduce:animate-none"
-          >
-            {activeView === "login" ? (
-              <LoginForm
-                account={values.account}
-                password={values.password}
-                accountInvalid={isInvalid("account")}
-                passwordInvalid={isInvalid("password")}
-                submitting={submitting}
-                onSubmit={handleLoginSubmit}
-                onAccountChange={(value) => updateValue("account", value)}
-                onPasswordChange={(value) => updateValue("password", value)}
-                onSwitchView={switchView}
-              />
-            ) : (
-              <RegisterForm
-                account={values.account}
-                password={values.password}
-                confirmPassword={values.confirmPassword}
-                agreementAccepted={values.agreementAccepted}
-                accountInvalid={isInvalid("username")}
-                passwordInvalid={isInvalid("password")}
-                confirmPasswordInvalid={isInvalid("confirmPassword")}
-                agreementInvalid={agreementInvalid}
-                submitting={submitting}
-                onSubmit={handleRegisterSubmit}
-                onAccountChange={(value) => updateValue("account", value)}
-                onPasswordChange={(value) => updateValue("password", value)}
-                onConfirmPasswordChange={(value) =>
-                  updateValue("confirmPassword", value)
-                }
-                onAgreementChange={(accepted) =>
-                  updateValue("agreementAccepted", accepted)
-                }
-                onSwitchView={switchView}
-              />
-            )}
-          </div>
-        </div>
-      </section>
+        </aside>
+      </div>
     </main>
   );
 }

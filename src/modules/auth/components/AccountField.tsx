@@ -26,7 +26,7 @@ export default function AccountField(props: AccountFieldProps) {
         value={props.value}
         onChange={(event) => props.onChange(event.target.value)}
         aria-invalid={props.invalid ? true : undefined}
-        className="mt-1 h-11 rounded-xl bg-muted/40 focus-visible:border-aurora-aqua focus-visible:ring-aurora-aqua/30"
+        className="mt-1 h-11 rounded-xl bg-muted/60 focus-visible:border-aurora-aqua focus-visible:ring-aurora-aqua/30"
       />
     </div>
   );
