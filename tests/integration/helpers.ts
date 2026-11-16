@@ -1,19 +1,10 @@
 /**
- * 集成测试共享 helper（Task 5 起步，Task 6 增端点辅助）。
+ * 集成测试共享 helper（Task 5 起步，Task 6 增端点辅助，Task 7 删手机号
+ * 造号 helper——手机号换装账户名后最后一个消费者消失）。
  */
 
 import { auth } from "@/lib/auth";
 
-let uniquePhoneSeq = 0;
-
-/**
- * 每次调用返回不重复的合法手机号（^1[3-9]\d{9}$）。
- *
- * user_phone_number 唯一索引跨测试运行持久化（compose 卷）——时间戳主干
- * 保证跨运行不重复，末位计数器保证同毫秒内并发/连续调用不重复，配合
- * Playwright workers:1 与 throttleSignIn 节流，从源头防唯一冲突串扰
- * 与内置登录限流（specialRule 3 次/10 秒，见 tasks.md Task 12 裁决）429。
- */
 /**
  * 直调 auth.handler 的 POST 基座（Task 6，design「Produces」directPost）。
  *
@@ -53,11 +44,11 @@ export async function directPost(
  * 忽略，不影响会话识别。
  */
 export async function signInAndGetCookie(
-  phone: string,
+  username: string,
   password: string,
 ): Promise<string> {
-  const res = await directPost("/sign-in/phone-number", {
-    phoneNumber: phone,
+  const res = await directPost("/sign-in/username", {
+    username,
     password,
   });
   if (!res.ok) {
@@ -70,9 +61,20 @@ export async function signInAndGetCookie(
   return cookie;
 }
 
-export function uniquePhone(): string {
-  uniquePhoneSeq = (uniquePhoneSeq + 1) % 10;
-  const stem = String(Date.now()).slice(-8).padStart(8, "0");
-  const head = 3 + (uniquePhoneSeq % 7); // 3..9，落在 PHONE_RE 合法域
-  return `1${head}${stem}${uniquePhoneSeq}`;
+let uniqueUsernameSeq = 0;
+
+/**
+ * 每次调用返回不重复且 F-01 合法（/^[一-龥A-Za-z0-9_]{1,16}$/）的账户名
+ * （14 位 ≤ 16）。
+ *
+ * user_username 唯一索引跨测试运行持久化（compose 卷）——时间戳主干（36
+ * 进制）保证跨运行不重复，模内计数器保证同毫秒内连续调用不重复，随机尾
+ * 进一步防并行 worker 同毫秒同计数器碰撞，从源头防唯一冲突串扰。全字符
+ * 落在 [0-9a-z]，uppercase() 后仍是 F-01 合法变体（大小写测试用）。
+ */
+export function uniqueUsername(): string {
+  uniqueUsernameSeq = (uniqueUsernameSeq + 1) % 10;
+  const stem = Date.now().toString(36).slice(-8).padStart(8, "0");
+  const tail = crypto.randomUUID().replace(/-/g, "").slice(0, 4);
+  return `u${stem}${tail}${uniqueUsernameSeq}`;
 }

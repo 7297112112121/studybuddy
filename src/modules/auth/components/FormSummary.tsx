@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 type FormSummaryProps = {
   errors: Partial<
-    Record<"account" | "phone" | "password" | "confirmPassword", string>
+    Record<"account" | "username" | "password" | "confirmPassword", string>
   >;
 };
 

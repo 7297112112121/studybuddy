@@ -1,7 +1,8 @@
 /**
  * Better Auth 全部认证端点挂载（design「路由层薄壳」）：
- * 含 /sign-in/phone-number、/sign-out 等；/sign-up/email 与 /sign-in/email
- * 被 lib/auth.ts 的 before-hook 以 403 拦死（非目标 #4）。
+ * 含 /sign-in/username、/sign-out 等；/sign-up/email、/sign-in/email 与
+ * /is-username-available 被 lib/auth.ts 的 before-hook 以 403 拦死
+ * （边界 #2 无邮箱凭据形态；R7 不开放账户名存在性探测面）。
  *
  * Route Handler 约定（Next.js 16.4.6，node_modules/next/dist/docs/
  * 01-app/01-getting-started/15-route-handlers.md）：GET/POST 等命名导出，

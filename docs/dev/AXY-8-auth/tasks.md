@@ -6,569 +6,322 @@ sidebar_position: 3
 
 # AXY-8 登录注册 实现计划
 
-**Goal:** 以 Better Auth 1.7 为底座交付手机号注册、手机号/邮箱格式登录、会话与路由守卫的完整闭环。
+**Goal:** 按修订版 design（CR-20261116-1）将登录注册凭据由手机号改造为账户名+密码：删被替换行为与旧迁移列，TDD 重建注册事务与登录端点链路，协议勾选收窄至注册表单。
 
-**Date:** 2026-11-14
+**Date:** 2026-11-16
 
-**Spec:** docs/product/AXY-8-auth/proposal.md（需求规范,权威）
-**Design:** docs/dev/AXY-8-auth/design.md（架构设计,契约来源）
+**Spec:** docs/product/AXY-8-auth/proposal.md（需求规范,权威，v4）
+**Design:** docs/dev/AXY-8-auth/design.md（架构设计,契约来源，2026-11-16 修订获批）
 
-**回溯:** 2026-11-16 对齐 tasks 模板榜样基线——增「不安排任务」节、清 D-08 残留（R18/R19 占位入口实现已删除，见 88988d1）；任务卡保持执行期原形态。
+**修订:** CR-20261116-1（2026-11-16）——本版为账户名凭据改造计划，替换原手机号版任务卡；已建成且凭据无关的基建（routes/redis、db 底座、集成测试基座、i18n 设施、CI、路由壳与守卫组件）不重跑。**旧版 13 任务的执行期形态与全部实现裁决保持历史原貌存于 git 与本文「裁决记录」节**；变更管理依据见 [change-record](../../product/AXY-8-auth/change-record)。实现基线：merge commit `baa88ea`。
 
 ## Global Constraints
 
-- 依赖版本：`better-auth@^1.7`、`@better-auth/redis-storage@^1.7`、`ioredis@^5`、`drizzle-orm@^1`、`postgres`、`next-intl@^4`；dev：`drizzle-kit`（与 drizzle-orm 配套版本）。
-- 校验正则单一来源：`PHONE_RE = /^1[3-9]\d{9}$/`、`PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,20}$/`、`EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/`；`src/lib/auth.ts` 内联副本与 validators 的同步性由单测守护。
-- 文案精确值：14 个 next-intl 键（design 文案表）中文文案逐字照抄；E2E 断言以页面渲染文案为准。
-- R7 纪律：任何失败情形不得出现可探测账号存在性的差异文案。
-- R13 纪律：service/action 及调用链不记录入参；密码只存 `hashPassword` 摘要（`盐:哈希`）。
-- 会话：`storeSessionInDatabase: true`（Redis 首查 + PG 兜底）、7 天有效期；退出须同时失效 Redis 键与 PG 行。
+- 依赖零新增：username 插件属 `better-auth@^1.7`（1.7.23）包内能力，`package.json` 不动。
+- 校验正则单一来源：`USERNAME_RE = /^[一-龥A-Za-z0-9_]{1,16}$/`（F-01/F-03，区分大小写）、`PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,20}$/`（不变）；`src/lib/auth.ts` 内联副本与 validators 的同步性由单测守护。
+- 文案精确值：13 个 next-intl 键（design 文案表）中文文案逐字照抄；E-01「请输入账户名」、E-02「格式不对：1—16 位中文、字母、数字或下划线」、E-07「该账户已注册，去登录」；E-03/E-05/E-06 及其余保留键文案逐字不变；废弃键 `register.phoneInvalid`、`error.phoneRegistered` 删除。E2E 断言以页面渲染文案为准。
+- D-12：账户输入框**不做字符过滤**——无 `maxLength`、无受控过滤逻辑，提交时校验。
+- D-13：协议勾选仅存在于注册表单；登录表单无协议勾选行、无对应 props。协议错误在勾选框旁呈现、不进顶部汇总计数（D-01）。
+- username 插件配置四要件（server 与 client 两端一致）：`usernameValidator`（USERNAME_RE）、`minUsernameLength: 1`、`maxUsernameLength: 16`、`usernameNormalization: false`、`displayUsername: false`、`immutableUsername: true`。
+- hook 403 三路径：`/sign-up/email`、`/sign-in/email`、`/is-username-available`；唯一索引显式名 `user_username`，service 层 23505 按约束名映射为 `USERNAME_ALREADY_REGISTERED`。
+- R7 纪律：任何失败情形不得出现可探测账号存在性的差异文案。R13 纪律：service/action 及调用链不记录入参；密码只存 `hashPassword` 摘要（`盐:哈希`）。
+- 会话配置不动：`storeSessionInDatabase: true`（Redis 首查 + PG 兜底）、7 天有效期、退出同步失效 Redis 键与 PG 行。
+- 迁移纪律（CR §5）：**新增迁移承载删列增列，不改旧迁移** `20261114052112_perpetual_songbird`。空表假设（design 开放问题 #4）：迁移执行前核对 user 表行数，存量行环境先人工处置。
+- 旧测试处置（CR §5）：被替换行为的测试**删除**（不 skip）；保留行为的测试断言按 v4 更新；删除清单随改造 commit 回填 change-record §8。
 - 类型禁推断：`modules/`、`components/` 内导出函数显式返回类型；模块内部一律相对导入（禁自引用顶入口）。
 - TDD 铁律：一切产品代码先写失败的测试再实现；每任务收尾跑 `npm test`（及至该任务为止已建的 `npm run test:integration`）。
 - 测试命令经 `scripts/run-vitest.mjs` 包装（Windows 盘符问题，勿直接调 vitest CLI）。
 - Next 16 与训练数据有破坏性差异：写 App Router 代码前先读 `node_modules/next/dist/docs/` 相应指南。
-- 执行环境：集成/E2E 需本地 PG/Redis（Task 1 的 `compose.dev.yaml`）；`npm run build` 与 `docker build` 在**无 .env** 的环境必须仍成功（模块作用域不得抛错、不得发起连接）。
+- 执行环境：集成/E2E 需本地 PG/Redis（`compose.dev.yaml`）；`npm run build` 在**无 .env** 的环境必须仍成功。
 - 提交：Conventional Commits，中文描述。
-- Q1/Q2 由测试提质阶段验收（D-09：豁免机制废除，Q 条目验收后置，proposal Q 表）：**不安排任何性能验证任务**。
+- Q1/Q2 由测试提质阶段验收（D-09）：**不安排任何性能验证任务**。
 
 ## 不安排任务
 
 | design 非目标 # | 刻意不做 | 理由 |
 | ---- | ---- | ---- |
-| 1 | 短信验证码的发送与校验 | 验证码通道延迟（DOR）；`sendOTP` 置 no-op 守卫（边界 #4） |
-| 2 | 找回密码 | 依赖短信通道做身份核验；入口已随 D-08 删除 |
-| 3 | 第三方登录（微信/一键） | 无对接方；入口已随 D-08 删除 |
-| 4 | 邮箱注册 | D-06 / D-07：仅手机号注册；邮箱端点 hook 403（非目标 #4） |
+| 1 | 短信验证码的发送与校验 | D-12 凭据改版废止，无恢复场景；无 OTP 插件、无 sendOTP；verification 表去留归后续清理迁移（不属本 CR） |
+| 2 | 找回密码 | 账户名+密码体系下本期未定义；入口已随 D-08 删除 |
+| 3 | 第三方登录（微信等） | 无对接方；入口已随 D-08 删除 |
+| 4 | 邮箱注册与邮箱登录 | D-12：唯一凭据为账户名；邮箱端点与查重端点 hook 403（封闭守卫测试归 Task 7，不属覆盖非目标） |
 | 5 | 协议正文与法务审阅 | 仅落库协议版本与同意时间；协议名纯文本无链接（D-08） |
-| 6 | 2FA、魔术链接、组织等插件能力 | ADR-0013 按需启用，本期不开 |
+| 6 | 2FA、魔术链接、组织等插件能力 | ADR-0013 按需启用，本期 plugins 仅 username |
 | 7 | 「记住我」、多端会话管理界面 | 用户故事未涉及 |
 | 8 | 企业/高校账号对接 | 品牌区已标注本期不支持 |
-| 9 | 新用户信息录入引导与「跳过」 | D-05：建档与登录注册分离，录入入口归 AXY-11 / AXY-12 |
+| 9 | 新用户信息录入引导与「跳过」 | D-05：建档与登录注册分离，录入入口归后续业务故事 |
 
 ## Review Focus
 
-1. **账号探测差异文案（R7）**：API 直连「用户不存在/密码错误/空密码」三情形若返回不同状态或文案，账号存在性即被探测 → Task 6 集成测试三情形同状态同文案断言 + Task 10 邮箱账号不发起请求直接统一文案的单测。
-2. **退出后旧会话残留（R11/B5）**：Redis 键或 PG 行未删，旧 cookie 仍可访问受保护内容 → Task 6 集成：sign-out 后旧 cookie getSession 为空 + Redis 会话键已删。
-3. **并发同号双注册（R14）**：唯一索引缺失或事务映射错误导致双账号 → Task 5 集成：同号并发两次恰一次成功。
-4. **视图切换丢值/残留错误（R16）**：用户填一半切 tab 后表单清空或旧错误常驻 → Task 9 单测（值保留 + 错误清空 + URL 同步）+ Task 12 E2E 复验。
-5. **守卫绕过（B6/R12）**：未登录响应携带受保护内容，或已登录访问 /login 仍渲染表单 → Task 11 布局守卫渲染测试 + Task 12 E2E 断言响应文本不含表单/受保护内容。
+1. **大小写区分失效（F-01/R14）**：`usernameNormalization` 未关或唯一索引折叠，Alice/alie 变体被合并或登录查找折叠 → Task 4 配置断言（normalization:false 同步守护）+ Task 5 并发大小写变体恰两账号 + 大小写错配登录失败。
+2. **登录三情形差异文案（R7）**：端点换 `/sign-in/username` 后「未注册/错密码/空密码」若返回不同状态/文案即暴露账号存在性 → Task 7 三情形状态码+code+message 集合长度 = 1（design 开放问题 #1 闭合点）。
+3. **已登录直连改名（负空间无改名语义）**：`immutableUsername` 失效则 `/update-user` 可改凭据 → Task 7 已登录 POST /update-user 改 username 被拒且 user 行不变。
+4. **账户名枚举面（R7 延伸）**：`/is-username-available` 未拦则可无会话探测账户名存在性 → Task 7 三路径 403 断言。
+5. **登录表单协议行残留（D-13）**：LoginForm 遗留 AgreementCheckbox 或 props → Task 8「登录表单无协议行」断言 + Task 11 E2E R1。
+6. **输入过滤回归（D-12）**：maxLength/受控过滤混入使「zhang san!」/17 位无法完整输入 → Task 8 输入完整保留断言（input.value 回读）+ Task 11 E2E。
+7. **占位邮箱探测面（B2）**：`/sign-in/email` 403 失效则占位邮箱成凭据 → Task 7 覆盖。
+8. **换插件破坏会话双写（R11/B5）**：插件换装后 Redis 键/PG 行增删回归 → Task 7 双写与退出三处失效重验。
+9. **workbench testid 残留（B10）**：`session-phone` 未改名则 E2E 锚点失效 → Task 10 改名 + Task 11 断言 `session-account`。
 
----
+## 执行纪律（全局声明一次，任务卡不重复）
 
-### Task 1: 底座——依赖、环境与 lib 常量（routes/redis）
+每个任务默认按 TDD 六步执行：
 
-**Files:**
-- Create: `.env.example`、`compose.dev.yaml`、`src/lib/routes.ts`、`src/lib/redis.ts`
-- Modify: `package.json`（依赖 + `dev:infra` 脚本）
-- Test: `tests/lib/routes.test.ts`、`tests/lib/redis.test.ts`
+1. **写失败测试**（测试名与断言见任务卡「失败测试」行，spec 的精确值写在测试里）；
+2. **运行测试，确认以「预期失败」所述方式失败**；
+3. **在「实现」落点完成最小实现**；
+4. **运行测试，确认通过**；
+5. **运行全量测试套件，确认全绿**；
+6. **按「提交」信息提交**。
 
-**Interfaces:**
-- Consumes: 无（首个任务）。
-- Produces:
-  - `ROUTES: { readonly login: '/login'; readonly register: '/register'; readonly workbench: '/workbench' }`（`as const`，边界 #7 唯一来源，后续所有任务引用）。
-  - `redis: Redis`（`src/lib/redis.ts` 单例，`REDIS_URL` 连接，**`lazyConnect: true`**——无 Redis 服务的上下文（build/docker/单测）import 不连接不抛错；首次命令时自动连接，生产行为不变）。
+被替换行为的既有测试随所在任务**同任务删除**（CR §5：删，不 skip）；保留行为的测试改断言后再跑绿。
 
-- [ ] **Step 1: 写失败测试**
+## 任务
 
-`tests/lib/routes.test.ts`：
+### Task 1: validators.ts 换装（纯函数校验）
 
-```ts
-import { describe, expect, it } from "vitest";
-import { ROUTES } from "@/lib/routes";
-
-describe("ROUTES 路由常量（边界 #7）", () => {
-  it("三个路径与 design 契约一致", () => {
-    expect(ROUTES).toEqual({ login: "/login", register: "/register", workbench: "/workbench" });
-  });
-});
-```
-
-`tests/lib/redis.test.ts`：`vi.stubEnv("REDIS_URL", "redis://test:6379")` 后动态 `import("@/lib/redis")`，断言 `redis instanceof Redis`、`redis.options.lazyConnect === true`、`redis.status === "wait"`（未连接）。
-
-- [ ] **Step 2: 运行测试，确认以预期方式失败**
-
-Run: `npm test -- tests/lib`
-Expected: FAIL——`Cannot find module '@/lib/routes'` / `'@/lib/redis'`。
-
-- [ ] **Step 3: 安装依赖并实现**
-
-安装：`npm install better-auth@^1.7 @better-auth/redis-storage@^1.7 ioredis@^5 drizzle-orm@^1 postgres next-intl@^4 && npm install -D drizzle-kit`。
-
-`src/lib/routes.ts`、`src/lib/redis.ts` 按 Interfaces 签名实现（redis 显式返回类型注解）。
-
-`.env.example`（design 契约原样）：
-
-```
-BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=http://localhost:3000
-DATABASE_URL=postgresql://studybuddy:studybuddy@localhost:5432/studybuddy
-REDIS_URL=redis://localhost:6379
-```
-
-`compose.dev.yaml`：本地开发专用（不属 ADR-0016 部署拓扑，文件头注释说明）——`pgvector/pgvector:pg17`（ADR-0005：PostgreSQL 17；端口 5432；`POSTGRES_USER/PASSWORD=studybuddy`、`POSTGRES_DB=studybuddy`；healthcheck `pg_isready`；数据卷）+ `redis:7-alpine`（端口 6379；healthcheck `redis-cli ping`）。`package.json` 增 `"dev:infra": "docker compose -f compose.dev.yaml up -d"`。确认 `.env` 在 `.gitignore`（不在则补）。
-
-- [ ] **Step 4: 运行测试，确认通过**
-
-Run: `npm test -- tests/lib`
-Expected: PASS。
-
-- [ ] **Step 5: 运行全量测试套件，确认全绿**
-
-Run: `npm test`
-Expected: PASS（含既有 smoke/render）。
-
-- [ ] **Step 6: 提交**（`chore: 安装认证与数据层依赖,落路由常量与 redis 单例`）
-
----
-
-### Task 2: modules/auth/validators.ts（纯函数校验）
-
-**Files:**
-- Create: `src/modules/auth/validators.ts`
-- Test: `tests/auth/validators.test.ts`
+**Files:** Modify `src/modules/auth/validators.ts` · Test `tests/auth/validators.test.ts`
 
 **Interfaces:**
-- Consumes: 无。
-- Produces（design 契约原样，签名级）:
-  - `PHONE_RE` / `EMAIL_RE` / `PASSWORD_RE`（RegExp 常量，值见 Global Constraints）
-  - `type AccountKind = 'phone' | 'email'`；`type AccountCheck = { ok: true; kind: AccountKind } | { ok: false; messageKey: 'auth.account.required' | 'auth.account.invalid' }`
+- Consumes: 无（纯函数，无依赖）。
+- Produces（design 契约原样）:
+  - `USERNAME_RE`（Global Constraints 值）、`PASSWORD_RE`（不变）；**删除** `PHONE_RE`、`EMAIL_RE`、`AccountKind`
+  - `type AccountCheck = { ok: true } | { ok: false; messageKey: 'auth.account.required' | 'auth.account.invalid' }`（无 kind 分支）
   - `validateAccount(raw: string): AccountCheck`
-  - `validatePassword(raw: string): { ok: true } | { ok: false; messageKey: 'auth.password.required' | 'auth.password.invalid' }`
-  - `type RegisterFormErrors = Partial<{ phone: 'auth.register.phoneInvalid'; password: 'auth.password.required' | 'auth.password.invalid'; confirmPassword: 'auth.register.passwordMismatch'; agreement: 'auth.agreement.required' }>`
-  - `validateRegisterForm(v: { phone: string; password: string; confirmPassword: string; agreementAccepted: boolean }): RegisterFormErrors | null`
+  - `validatePassword`（签名不变）
+  - `type RegisterFormErrors = Partial<{ username: 'auth.account.invalid'; password: 'auth.password.required' | 'auth.password.invalid'; confirmPassword: 'auth.register.passwordMismatch'; agreement: 'auth.agreement.required' }>`
+  - `validateRegisterForm(v: { username: string; password: string; confirmPassword: string; agreementAccepted: boolean }): RegisterFormErrors | null`
 
-- [ ] **Step 1: 写失败测试**（用例值取自 R2/R3/R8 与 AC-5）
+**失败测试:** 重写 `tests/auth/validators.test.ts`——USERNAME_RE 组（接受 `zhang_san`/`张三`/`Alice`/`a1_`；拒绝 `zhang san!`（含空格）、17 位 `abcdefghijklmnopq`、含 `@`、空串）；PASSWORD_RE 组（原 5 例不动）；validateAccount（''→required；`zhang san!`→invalid；17 位→invalid；`name@mail.com`→invalid；`zhang_san`→`{ok:true}`——**无 kind 字段**）；validateRegisterForm（username `zhang san!` → `{ username: 'auth.account.invalid' }`；password/confirmPassword/agreement 各例保留改字段名；多字段合并；全合法 → null）。**删除**：PHONE_RE 组 5 例、EMAIL_RE 组 3 例、kind 分类 2 例。
 
-```
-PHONE_RE：接受 13800138000、19912345678；拒绝 1380013800(10位)、23800138000(首位 2)、12345678901(1x 号段外)、含空格。
-EMAIL_RE：接受 name@mail.com；拒绝 abc@mail(无后缀)、a b@mail.com。
-PASSWORD_RE：接受 abcd1234、a1234567；拒绝 12345678(纯数字)、abcdefgh(纯字母)、1234567(7 位)、abcd12345678901234567(21 位)。
-validateAccount：''→required；'1380013800'→invalid；'abc@mail'→invalid；
-  '13800138000'→{ok:true,kind:'phone'}；'name@mail.com'→{ok:true,kind:'email'}。
-validatePassword：''→required；'12345678'→invalid；'abcd1234'→{ok:true}。
-validateRegisterForm：
-  phone '1380013800' → { phone: 'auth.register.phoneInvalid' }
-  password '' → { password: 'auth.password.required' }；'12345678' → invalid
-  confirmPassword ''（R8：为空即不一致）→ { confirmPassword: 'auth.register.passwordMismatch' }
-  confirmPassword ≠ password → passwordMismatch
-  agreementAccepted false → { agreement: 'auth.agreement.required' }
-  多字段同时错 → 合并返回同一对象
-  全合法 → null
-```
+**预期失败:** FAIL——USERNAME_RE 导出不存在、AccountCheck 无 kind 断言形态不匹配。
 
-- [ ] **Step 2: 运行测试，确认以预期方式失败**
+**实现:** `USERNAME_RE` 常量 + `validateAccount` 重写为单一规则（空→required，正则→ok，否则 invalid）；`validateRegisterForm` phone 分支改 username（同一正则与 messageKey）；confirmPassword/agreement 分支逐字保留。
 
-Run: `npm test -- tests/auth`
-Expected: FAIL——模块不存在。
-
-- [ ] **Step 3: 实现 `src/modules/auth/validators.ts`**
-
-纯函数、零 IO、显式返回类型。confirmPassword 为空与不一致同归 `passwordMismatch`（R8 文案「两次输入的密码不一致」）；确认密码框的强度规则由「与 password 一致」间接保证（password 自身守 R3）。
-
-- [ ] **Step 4: 运行测试，确认通过**（`npm test -- tests/auth`）
-- [ ] **Step 5: 全量 `npm test` 全绿**
-- [ ] **Step 6: 提交**（`feat(auth): 表单校验纯函数 validators`）
+**提交:** `feat(auth): 账户名校验纯函数换装,删手机号邮箱规则`
 
 ---
 
-### Task 3: modules/auth/schema.ts 与 db 底座、迁移
+### Task 2: i18n auth.json 13 键修订
 
-**Files:**
-- Create: `src/modules/auth/schema.ts`、`src/db/schema.ts`、`src/db/client.ts`、`drizzle.config.ts`、`src/db/migrations/`（生成物）
-- Modify: `package.json`（`db:generate` / `db:migrate` 脚本）
-- Test: `tests/auth/schema.test.ts`
+**Files:** Modify `src/locales/zh-CN/auth.json` · Test `tests/i18n/messages.test.ts`、`tests/i18n/request.test.ts`
 
 **Interfaces:**
-- Consumes: `PHONE_RE`、`PASSWORD_RE`（Task 2，模块内相对导入 `./validators`）。
+- Consumes: 无（文案值来自 design 文案表）。
+- Produces: `useTranslations('auth')` 命名空间 13 个叶子键——`account.required='请输入账户名'`、`account.invalid='格式不对：1—16 位中文、字母、数字或下划线'`、`error.usernameRegistered='该账户已注册，去登录'`；**删除** `register.phoneInvalid`、`error.phoneRegistered`；其余键文案逐字不变。
+
+**失败测试:** messages.test.ts 重写键值断言（13 键逐字，含删键后的结构断言：`register` 命名空间仅剩 `passwordMismatch`）；request.test.ts 逐字断言改 `auth.account.required === '请输入账户名'`。
+
+**预期失败:** FAIL——auth.json 仍为 14 键旧文案。
+
+**实现:** 改 3 键值、删 2 键；设施（request.ts/next.config/layout）零改动。
+
+**提交:** `feat(i18n): auth 文案换装账户名凭据,删手机号键`
+
+---
+
+### Task 3: schema.ts user 表改造与新增迁移
+
+**Files:** Modify `src/modules/auth/schema.ts`（user 表 + registerInputSchema） · Create `src/db/migrations/<timestamp>_axy8_username_credential/`（`npm run db:generate` 生成） · Test `tests/auth/schema.test.ts`、`tests/integration/auth/migration.test.ts`（新建查库断言）
+
+**Interfaces:**
+- Consumes: `USERNAME_RE`、`PASSWORD_RE`（Task 1，模块内相对导入）。
 - Produces:
-  - drizzle pgTable `user` / `account` / `session` / `verification`（列属性名 camelCase——即 Better Auth 字段名，DB 列名经 client 的 `casing: 'snake_case'` 转换；字段清单精确照 design 数据模型表：user 含 `phoneNumber` 唯一（显式索引名 `user_phone_number`）、`agreementVersion`、`agreedAt` 等；account 含 `providerId`、`accountId`、`password` nullable、`userId` FK CASCADE；session 含 `token` 唯一、`expiresAt`）
-  - `registerInputSchema` + `type RegisterInput = z.infer<typeof registerInputSchema>`（design 代码原样）
-  - `db`（`src/db/client.ts`：`drizzle(postgres(process.env.DATABASE_URL ?? 'postgresql://localhost:5432/studybuddy'), { schema, casing: 'snake_case' })`——**env 缺省时不得抛错**，postgres-js 惰性连接）
-  - `src/db/schema.ts`：`export * from '@/modules/auth/schema'`（公共契约 barrel）
+  - drizzle `user` 表：`username: text().notNull()` + `uniqueIndex('user_username').on(t.username)`；**删除** `phoneNumber`、`phoneNumberVerified` 列与 `user_phone_number` 索引；`email/name/agreementVersion/agreedAt` 等其余列不变；`account/session/verification` 表不动
+  - `registerInputSchema`：`username: z.string().regex(USERNAME_RE)` + `password/confirmPassword/agreementAccepted`（refine 不变）+ `type RegisterInput`
+  - 新增迁移 SQL：`ADD COLUMN "username" text NOT NULL` + `CREATE UNIQUE INDEX "user_username"` + `DROP COLUMN "phone_number"` + `DROP COLUMN "phone_number_verified"`；旧迁移目录零改动
 
-- [ ] **Step 1: 写失败测试**
+**失败测试:** schema.test.ts 更新——user 表组：`username 列 notNull`、`唯一索引显式命名 user_username`（新增）；**删除** `phoneNumber 列 notNull`、`user_phone_number 索引` 2 例；`emailVerified/phoneNumberVerified` 例改 `emailVerified` 单列；registerInputSchema 组改 username 入参（新增 >16 位/非法字符/17 位拒绝；**删除** 10 位手机号例）。migration.test.ts（集成，真实 PG）——`pg_indexes` 含 `user_username`、`information_schema.columns` 含 username 不含 phone_number/phone_number_verified。
 
-```
-registerInputSchema（zod）：合法入参通过；phone '1380013800' 拒绝；password '12345678' 拒绝；
-  confirmPassword 不一致拒绝；agreementAccepted: false 拒绝（z.literal(true)）。
-getTableConfig(user)：phoneNumber 列 notNull；唯一索引含 'user_phone_number'；email notNull 且唯一；
-  agreementVersion notNull；agreedAt notNull；id 主键。
-getTableConfig(account)：userId 外键指向 user.id 且 onDelete cascade；password 列 nullable；providerId 列存在。
-getTableConfig(session)：token 唯一；userId 外键 cascade。
-```
+**预期失败:** FAIL——schema.ts 尚无 username 列（单测）；查库无 username 列/索引（集成）。
 
-- [ ] **Step 2: 确认失败**（`npm test -- tests/auth` → FAIL 模块不存在）
+**实现:** 先改 schema.ts 跑绿单测；再跑集成查库断言（红）→ 前置核对 `SELECT count(*) FROM "user"` 为 0（Global Constraints 空表假设）→ `npm run db:generate` 生成新迁移并人工核对 SQL 逐条一致（不改旧迁移目录）→ 集成跑绿（globalSetup 自动应用迁移链）。
 
-- [ ] **Step 3: 实现 schema 与 db 底座**
-
-按 Interfaces 与 design 数据模型表建四张表；`src/db/client.ts` 构造单例 `db`（显式类型 `NodePgDatabase<typeof schema>`）；`drizzle.config.ts`：dialect `postgresql`、schema `./src/db/schema.ts`、out `./src/db/migrations`、dbCredentials 从 `process.env.DATABASE_URL` 读。`package.json` 增 `"db:generate": "drizzle-kit generate"`、`"db:migrate": "drizzle-kit migrate"`。
-
-- [ ] **Step 4: 确认通过**（`npm test -- tests/auth`）
-
-- [ ] **Step 5: 生成迁移并核对 SQL**
-
-Run: `npm run db:generate`
-Expected: `src/db/migrations/` 产出 SQL，含 `CREATE UNIQUE INDEX "user_phone_number"` 与四张表（snake_case 列名）。人工核对 SQL 与 design 数据模型表逐列一致。
-
-- [ ] **Step 6: 全量 `npm test` 全绿；无 .env 跑 `npm run build` 仍成功**（db client 模块作用域守卫）
-- [ ] **Step 7: 提交**（`feat(auth): 用户/会话/凭据表 schema 与迁移`）
+**提交:** `feat(auth): user 表 username 唯一列与新增迁移,删手机号列`
 
 ---
 
-### Task 4: lib/auth.ts（Better Auth 实例）与 auth-client、API 挂载
+### Task 4: lib/auth.ts 插件换装与 auth-client.ts
 
-**Files:**
-- Create: `src/lib/auth.ts`、`src/lib/auth-client.ts`、`src/app/api/auth/[...all]/route.ts`
-- Test: `tests/lib/auth.test.ts`、`tests/lib/auth-client.test.ts`
+**Files:** Modify `src/lib/auth.ts`、`src/lib/auth-client.ts`、`src/app/api/auth/[...all]/route.ts`（仅注释） · Test `tests/lib/auth.test.ts`、`tests/lib/auth-client.test.ts`
 
 **Interfaces:**
-- Consumes: `db`（Task 3）、`redis`（Task 1）、validators 的 `PHONE_RE`（源码同步守护）。
+- Consumes: `db`、`redis`、schema 表、`USERNAME_RE`（Task 1/3）。
 - Produces:
-  - `auth`（betterAuth 实例，配置照 design 契约逐项：drizzleAdapter/pg、redisStorage、`storeSessionInDatabase: true`、`emailAndPassword` 8–20、phoneNumber 插件（`phoneNumberValidator` + no-op `sendOTP`）、before-hook 403 禁 `/sign-up/email` 与 `/sign-in/email`、`trustedOrigins`）
-  - `auth.handler`（供 Task 6 集成测试直调）
-  - `authClient`（`createAuthClient` + `phoneNumberClient()`；`authClient.signIn.phoneNumber({ phoneNumber, password })`、`authClient.signOut()`）
+  - `auth`（betterAuth 实例）：plugins 仅 `username({...})`（Global Constraints 六配置项）；hooks.before 403 三路径；`emailAndPassword` 块与 session/secondaryStorage/validateSchema:false/trustedOrigins 配置逐字保留；内联 `USERNAME_RE` 副本替换 PHONE_RE
+  - `auth.handler`（不变）；`authClient`：`usernameClient({ displayUsername: false })`，`authClient.signIn.username({ username, password })`、`authClient.signOut()`
 
-- [ ] **Step 1: 写失败测试**
+**失败测试:** auth.test.ts——源码同步守护改 `USERNAME_RE`（读 auth.ts 提取正则字面量断言 source 相等）；`betterAuth()` 初始化成功断言保留。auth-client.test.ts——`typeof authClient.signIn.username === 'function'`（**design 开放问题 #2 闭合点**：方法名不一致则停下记裁决并回写 design 开放问题表再继续）、`signOut` 保留；**删除** `signIn.phoneNumber` 例。
 
-`tests/lib/auth.test.ts`：
-1. **源码同步守护**：`readFileSync('src/lib/auth.ts', 'utf8')`，提取 `const PHONE_RE = /(.+)/` 的正则字面量，断言其 source 与 `validators.PHONE_RE.source` 相等（design：内联副本同步性由单测守护）。
-2. `vi.stubEnv('BETTER_AUTH_SECRET', 'x'.repeat(32))`、`BETTER_AUTH_URL` 后动态 import → `typeof auth.handler === 'function'`。
+**预期失败:** FAIL——auth.ts 仍 import phoneNumber 插件（模块求值差异）；auth-client 无 username 方法。
 
-`tests/lib/auth-client.test.ts`：`typeof authClient.signIn.phoneNumber === 'function'`、`typeof authClient.signOut === 'function'`——**此处闭合开放问题 #2**：若方法名不一致（SDK 类型为准），停下记裁决并回写 design 开放问题表，再继续。
+**实现:** 插件换装照 design 契约代码块逐项（含注释取舍依据）；route.ts 仅更新文件头端点注释（`/sign-in/username` + 三条 403 路径）；限流注释随裁决语义改写（`/sign-in` 前缀 specialRule 3 次/10 秒覆盖 `/sign-in/username`）。
 
-- [ ] **Step 2: 确认失败**（`npm test -- tests/lib` → FAIL 模块不存在）
-
-- [ ] **Step 3: 实现三个文件**
-
-`lib/auth.ts` 照 design 契约代码逐项落（含注释里的取舍依据）；`lib/auth-client.ts` 与 `api/auth/[...all]/route.ts`（`toNextJsHandler(auth.handler)`）照 design。user 表的额外字段（phoneNumber/agreementVersion 等）若 betterAuth 类型需要 `user.additionalFields` 声明，按官方类型提示补上（不改表结构）。
-
-- [ ] **Step 4: 确认通过**（`npm test -- tests/lib`）
-- [ ] **Step 5: 全量 `npm test` 全绿；无 .env 跑 `npm run build` 仍成功**（betterAuth 初始化不得在模块作用域抛错；`docker build --target runner` 本地跑一次同验）
-
-- [ ] **Step 6: 提交**（`feat(auth): Better Auth 实例与端点挂载,禁用邮箱端点`）
+**提交:** `feat(auth): username 插件换装与端点注释更新,禁账户名枚举端点`
 
 ---
 
-### Task 5: modules/auth/service.ts（注册事务）+ 集成测试基座
+### Task 5: service.ts 注册事务换装 + 集成重写
 
-**Files:**
-- Create: `src/modules/auth/service.ts`、`vitest.config.integration.ts`、`tests/integration/global-setup.ts`、`tests/integration/helpers.ts`、`tests/integration/auth/service.test.ts`
-- Modify: `vitest.config.ts`（exclude `tests/integration/**`）、`package.json`（`test:integration` 脚本）
+**Files:** Modify `src/modules/auth/service.ts`、`tests/integration/helpers.ts`（`uniquePhone` → `uniqueUsername`） · Test `tests/integration/auth/service.test.ts`
 
 **Interfaces:**
-- Consumes: `db`、schema 表、validators 正则。
+- Consumes: schema `user` 表（Task 3）、`hashPassword`（better-auth/crypto）。
 - Produces:
-  - `AGREEMENT_VERSION = 'v1' as const`
-  - `phoneToPlaceholderEmail(phone: string): string`（返回 `` `${phone}@phone.styb.invalid` ``）
-  - `type RegisterOutcome = { ok: true; userId: string } | { ok: false; error: 'PHONE_ALREADY_REGISTERED' }`
-  - `registerWithPhone(input: { phone: string; password: string }): Promise<RegisterOutcome>`（单事务插 user + credential account；PG 23505 且 `constraint === 'user_phone_number'` → PHONE_ALREADY_REGISTERED；全链路不记录入参）
-  - 测试基座：`npm run test:integration`（node 环境、env 默认指向 compose.dev 的 DATABASE_URL/REDIS_URL、globalSetup 以 drizzle migrator 应用 `src/db/migrations`）；helper `uniquePhone(): string`（每次调用返回不重复合法手机号，防限流与唯一冲突串扰）
-  - `npm test` 不再包含 `tests/integration/**`（CI 无库上下文，Task 13 才接入服务）
+  - `AGREEMENT_VERSION = 'v1' as const`（不变）
+  - `usernameToPlaceholderEmail(username: string): string`（`` `${username}@user.styb.invalid` ``）
+  - `type RegisterOutcome = { ok: true; userId: string } | { ok: false; error: 'USERNAME_ALREADY_REGISTERED' }`
+  - `registerWithUsername(input: { username: string; password: string }): Promise<RegisterOutcome>`（单事务插 user + credential account；PG 23505 且约束 `user_username` → USERNAME_ALREADY_REGISTERED；全链路不记录入参）——错误情形：同名已注册返回 error 判别分支，不抛
+  - helper `uniqueUsername(): string`（替换 `uniquePhone`，返回不重复合法账户名）
 
-- [ ] **Step 1: 写失败测试**
+**失败测试:** 重写 service.test.ts——①注册成功（R9/R13/R15）：user 行 `name=username`、`email=${username}@user.styb.invalid`、`username=username`、`agreement_version='v1'`、`agreed_at>用例开始时间`；account 行 `provider_id='credential'`、`account_id=user.id`、password 摘要 `^\S+:\S+$` 且不含明文、verifyPassword 回验 true；②同名再注册（R10）：error 判别分支 + user 表恰 1 行；③并发同名（R14）：`Promise.allSettled` 两次同名 → 恰一 ok 一 USERNAME_ALREADY_REGISTERED；④**并发大小写变体（R14/F-01）**：`Alice` 与 `alice` 并发注册 → 两账号均成功、两行共存。**删除**：原手机号 3 例。
 
-`tests/integration/auth/service.test.ts`（真实 PG，`docker compose -f compose.dev.yaml up -d` 前置）：
+**预期失败:** FAIL——registerWithUsername/usernameToPlaceholderEmail 不存在，uniquePhone 断言失败。
 
-```
-1. 注册成功（R9/R13/R15）：ok:true；查库 user 行 name=手机号、email=`${phone}@phone.styb.invalid`、
-   phone_number=手机号、agreement_version='v1'、agreed_at>用例开始时间；account 行 provider_id='credential'、
-   account_id=user.id、password 匹配 /^\S+:\S+$/ 且不含明文，verifyPassword(摘要, 明文)===true。
-2. 同号再注册（R10）：{ok:false,error:'PHONE_ALREADY_REGISTERED'}；user 表该手机号仍恰 1 行。
-3. 并发同号（R14）：Promise.allSettled 两次 registerWithPhone 同号 → 恰一 ok 一 PHONE_ALREADY_REGISTERED。
-```
+**实现:** `registerWithPhone` 改名重写：插 user 半边字段替换（username/name/占位邮箱），account 半边与 agreement 写入逐字保留；`isPhoneUniqueViolation` → `isUsernameUniqueViolation`（cause 链探测 23505 + 约束名 `user_username`；email 冲突不再映射——占位邮箱派生注入式唯一，不可碰撞）。
 
-- [ ] **Step 2: 确认失败**
-
-Run: `npm run dev:infra && npm run test:integration`
-Expected: FAIL——`service` 模块不存在（集成配置先落，失败原因必须是模块缺失而非配置错误）。
-
-- [ ] **Step 3: 实现 service 与集成基座**
-
-`registerWithPhone`：`db.transaction` 内先插 user（含 agreement 字段）再插 account（密码经 `hashPassword`，import 自 `better-auth/crypto`）；catch 23505 按约束名映射。`vitest.config.integration.ts`（environment node、include `tests/integration/**/*.test.ts`、env 兜底值、globalSetup 调 `migrate(db, { migrationsFolder: 'src/db/migrations' })`）；`vitest.config.ts` 的 include 增加 exclude `["tests/integration/**", "**/node_modules/**"]`；`package.json` 增 `"test:integration": "node scripts/run-vitest.mjs run --config vitest.config.integration.ts"`。
-
-- [ ] **Step 4: 确认通过**（`npm run test:integration`）
-- [ ] **Step 5: 全量：`npm test`（单测不受集成分轨影响）全绿**
-- [ ] **Step 6: 提交**（`feat(auth): 手机号注册事务与集成测试基座`）
+**提交:** `feat(auth): 账户名注册事务与大小写变体并发集成验证`
 
 ---
 
-### Task 6: Better Auth 端点集成——R7 统一文案、hook 403、会话双写与退出
+### Task 6: actions / queries / errors 换装
 
-**Files:**
-- Create: `tests/integration/auth/endpoints.test.ts`
-- Modify: `tests/integration/helpers.ts`（增端点辅助）
-- Test: 即上述 endpoints 文件（本任务纯测试任务 + 兜底裁决，无新增产品代码；若触发兜底则增 `src/modules/auth/actions.ts` 的登录包装——见 Step 3 注）
+**Files:** Modify `src/modules/auth/actions.ts`、`src/modules/auth/queries.ts`、`tests/integration/helpers.ts`（`signInAndGetCookie` 端点改 `/sign-in/username`） · Test `tests/auth/errors.test.ts`、`tests/integration/auth/actions.test.ts`、`tests/integration/auth/queries.test.ts`、`tests/auth/route-guards.test.tsx`（会话桩同步）
 
 **Interfaces:**
-- Consumes: `auth.handler`（Task 4）、`registerWithPhone`（Task 5）。
-- Produces（供 Task 7 测试复用的 helpers）:
-  - `directPost(path: string, body: unknown, cookie?: string): Promise<Response>`（构造 `Request` 直调 `auth.handler`，body JSON）
-  - `signInAndGetCookie(phone: string, password: string): Promise<string>`（正确密码登录，返回 set-cookie 头值）
-
-- [ ] **Step 1: 写失败测试**
-
-`tests/integration/auth/endpoints.test.ts`（各用例独立 `uniquePhone()`，防插件 10 次/60 秒限流串扰；偶发 429 先查限流再查业务）：
-
-```
-1. R7 三情形同文案：先经 registerWithPhone 造一个真实账号；对 /api/auth/sign-in/phone-number 三次 directPost：
-   ①未注册号+任意密码 ②已注册号+错密码 ③已注册号+空密码（模拟绕过前端）——
-   断言三者 HTTP 状态码相同、响应体错误标识（code 与 message 字段）完全一致，
-   且不出现「未注册」「密码错误」类差异字样。
-2. hook 403：directPost /api/auth/sign-up/email 与 /sign-in/email（任意 body）→ 403。
-3. 登录成功双写（B5）：正确密码 → 200 + set-cookie；PG session 行存在（user_id/expires_at）；
-   redis.keys('better-auth:*') 存在以 keyPrefix 起头的会话键（键名格式以 Better Auth 1.7 实际为准，断言存在即可）。
-4. 退出失效（R11 服务端半边）：携 cookie directPost /api/auth/sign-out → 200；
-   随后旧 cookie directPost /api/auth/get-session → 响应不含用户；该会话的 Redis 键已删；PG session 行已删。
-```
-
-- [ ] **Step 2: 确认失败**（`npm run test:integration` → FAIL：helpers 的 directPost 未实现）
-
-- [ ] **Step 3: 补胶水至通过**
-
-实现 helpers。**开放问题 #1 闭合点**：若用例 1 发现插件原生三情形不同状态/不同文案 → 触发 design 兜底：登录改由 Server Action 包装 `auth.api.signInPhoneNumber` 统一返回（数据模型/组件树不变），记入下方裁决记录并回写 design 开放问题表；若原生一致（同族源码佐证的预期结果）→ 在 design 开放问题表补「已实测闭合」结论。
-
-- [ ] **Step 4: 确认通过**（`npm run test:integration` 全绿）
-- [ ] **Step 5: 全量 `npm test` 全绿**
-- [ ] **Step 6: 提交**（`test(auth): 端点级 R7 统一文案与退出失效集成验证`）
-
----
-
-### Task 7: modules/auth 的 queries / actions / errors 与模块顶入口
-
-**Files:**
-- Create: `src/modules/auth/errors.ts`、`src/modules/auth/queries.ts`、`src/modules/auth/actions.ts`、`src/modules/auth/index.ts`
-- Test: `tests/auth/errors.test.ts`、`tests/integration/auth/actions.test.ts`、`tests/integration/auth/queries.test.ts`
-
-**Interfaces:**
-- Consumes: `registerWithPhone`、`registerInputSchema`（Task 5/3）；helpers `signInAndGetCookie`（Task 6）。
+- Consumes: `registerWithUsername`、`registerInputSchema`（Task 5/3）；helpers `uniqueUsername`（Task 5）。
+- Produces: `signInAndGetCookie(username, password)`（端点已指向 `/sign-in/username`，Task 7 复用）。
 - Produces:
-  - `type SignInErrorKey = 'auth.error.invalidCredentials' | 'auth.error.tooManyAttempts' | 'auth.error.unknown'`
-  - `mapSignInError(err: { status?: number; code?: string } | null | undefined): SignInErrorKey`
-  - `type AuthSession = { user: { id: string; name: string; phoneNumber: string }; session: { id: string; userId: string; expiresAt: Date } }`
-  - `getCurrentSession(): Promise<AuthSession | null>`（封装 `auth.api.getSession({ headers: await headers() })`）
-  - `type RegisterActionResult = { ok: true } | { ok: false; error: 'INVALID_INPUT'; fieldErrors: RegisterFormErrors } | { ok: false; error: 'PHONE_ALREADY_REGISTERED' }`
-  - `registerAction(input: RegisterInput): Promise<RegisterActionResult>`（`'use server'`）
-  - `src/modules/auth/index.ts`：`export { getCurrentSession, registerAction }` + `export type { AuthSession, RegisterActionResult, RegisterInput }`（后续任务扩展）
+  - `type RegisterActionResult = ... | { ok: false; error: 'USERNAME_ALREADY_REGISTERED' }`
+  - `registerAction`（`'use server'`，zod 复验 → registerWithUsername）
+  - `type AuthSession = { user: { id: string; name: string; username: string }; session: {...} }`（phoneNumber → username）
+  - `mapSignInError`（逻辑不变）
 
-- [ ] **Step 1: 写失败测试**
+**失败测试:** errors.test.ts——`{status:400, code:'INVALID_USERNAME_OR_PASSWORD'}` → invalidCredentials（旧 `INVALID_PHONE_NUMBER` 字面量替换）；其余 5 例不动。actions.test.ts——合法入参（账户名形态）→ ok:true 且库有行；`username 'zhang san!'` → INVALID_INPUT + `fieldErrors.username`；同名重复 → USERNAME_ALREADY_REGISTERED（**删除** 10 位手机号例）。queries.test.ts——AuthSession 形状断言 `user.username`（name=账户名）。route-guards.test.tsx——会话桩 `AuthSession` 字段同步（行为断言不动）。
 
-```
-tests/auth/errors.test.ts（单测）：
-  mapSignInError({status:401}) → 'auth.error.invalidCredentials'；
-  {status:400, code:'INVALID_PHONE_NUMBER'} → invalidCredentials；{status:429} → tooManyAttempts；
-  null / undefined / {status:500} → 'auth.error.unknown'。
-tests/integration/auth/actions.test.ts（真实 PG）：
-  合法入参 → {ok:true} 且库有 user/account 行；
-  phone '1380013800' → {ok:false,error:'INVALID_INPUT',fieldErrors:{phone:'auth.register.phoneInvalid'}}；
-  同号重复 → PHONE_ALREADY_REGISTERED。
-tests/integration/auth/queries.test.ts（真实会话 + vi.mock('next/headers')）：
-  无 cookie（headers 空）→ null；
-  signInAndGetCookie 后 headers 带该 cookie → AuthSession 形状
-  （user.id/name=手机号/phoneNumber、session.id/userId/expiresAt instanceof Date）。
-```
+**预期失败:** FAIL——actions 错误字面量与字段名仍为 phone 族；queries 桩无 username。
 
-- [ ] **Step 2: 确认失败**（三个文件分别模块不存在）
-- [ ] **Step 3: 实现三个文件 + index.ts**（签名照 Interfaces；actions 内 zod 复验失败时以 `registerInputSchema` 的字段路径组装 fieldErrors；`getCurrentSession` 内部 try/catch 归一为 null）
-- [ ] **Step 4: 确认通过**（`npm test -- tests/auth` + `npm run test:integration`）
-- [ ] **Step 5: 全量 `npm test` 全绿**
-- [ ] **Step 6: 提交**（`feat(auth): 会话查询/注册 action/错误映射与模块出口`）
+**实现:** actions `issueToFieldErrors` phone 分支改 username；错误字面量替换；queries `raw.user.username ?? ''` 归一（沿用原裁决形态，注释同步）；`getCurrentSession` try/catch 归一不动。
+
+**提交:** `feat(auth): 注册 action 与会话查询换装账户名字段`
 
 ---
 
-### Task 8: next-intl 最小设施与文案
+### Task 7: 端点集成——R7 三情形、hook 403 三路径、immutable 与会话双写
 
-**Files:**
-- Create: `src/i18n/request.ts`、`src/locales/zh-CN/auth.json`
-- Modify: `next.config.ts`（`createNextIntlPlugin`）、`src/app/layout.tsx`（挂 `NextIntlClientProvider` + `getMessages()`）
-- Test: `tests/i18n/messages.test.ts`、`tests/i18n/request.test.ts`
+**Files:** Test `tests/integration/auth/endpoints.test.ts`（helpers `directPost`/`signInAndGetCookie` 已由 Task 5/6 就位，本任务复用）
 
 **Interfaces:**
-- Consumes: 无（文案表来自 design）。
-- Produces: `useTranslations('auth')` 命名空间可用（auth.json 嵌套结构：`{ account: { required, invalid }, password: {...}, register: {...}, agreement, error: {...}, summary, submit }`，共 14 键）；`getRequestConfig`（cookie 协议、缺省兜底 `zh-CN`，ADR-0010 无前缀策略）。
+- Consumes: `auth.handler`（Task 4）、`registerWithUsername`（Task 5）、helpers `directPost`/`signInAndGetCookie`/`uniqueUsername`（Task 5/6）。
 
-- [ ] **Step 1: 写失败测试**
+**AC / 演示态:** 无（集成层，R7/R11 服务端半边 + 守卫断言）
 
-```
-tests/i18n/messages.test.ts：import auth.json，逐键断言与 design 文案表逐字一致，共 14 条。样例：
-  account.required = '请输入手机号或邮箱'
-  account.invalid = '格式不对：手机号 11 位，或 name@mail.com'
-  password.invalid = '密码为 8—20 位，需含字母与数字'
-  register.phoneInvalid = '请输入 11 位有效手机号'
-  register.passwordMismatch = '两次输入的密码不一致'
-  agreement.required = '请阅读并勾选《用户协议》与《隐私政策》'
-  error.invalidCredentials = '账号或密码不对'
-  error.tooManyAttempts = '操作过于频繁，请稍后再试'
-  error.phoneRegistered = '该手机号已注册，去登录'
-  error.unknown = '出了点问题，请稍后再试'
-  summary.errors = '有 {count} 项需要修改'（ICU，count 为占位符）
-  submit.loggingIn = '登录中…' / submit.registering = '注册中…'
-tests/i18n/request.test.ts：getRequestConfig({ requestLocale: Promise.resolve(undefined) })
-  → locale 为 'zh-CN' 且 messages.auth 存在（无 cookie 兜底）。
-```
+**失败测试:** 重写 endpoints.test.ts——①R7 三情形：先 `registerWithUsername` 造真实账号；`/api/auth/sign-in/username` 三次 directPost（①未注册账户名+任意密码 ②已注册+错密码 ③已注册+空密码绕过前端）→ 状态码/code/message 集合长度 = 1 且无「未注册」「密码错误」类差异字样（**design 开放问题 #1 闭合点**：原生不一致则触发 design 兜底——登录改 Server Action 包装 `auth.api.signInUsername`，记裁决并回写 design 开放问题表）；②hook 403：`/sign-up/email`、`/sign-in/email`、`/is-username-available` 直连均 403；③immutable：注册并登录后携 cookie POST `/update-user`（body 含新 username）→ 4xx（USERNAME_IS_IMMUTABLE 族）且查库 user.username 不变；④登录成功双写（B5）：200 + set-cookie，PG session 行 + Redis 会话键同存；⑤退出失效（R11）：sign-out 后旧 cookie get-session 无用户、Redis 键删、PG 行删。**删除**：原 `/sign-in/phone-number` 三情形例、旧二路径 403 例。
 
-- [ ] **Step 2: 确认失败**（模块/文件不存在）
-- [ ] **Step 3: 实现**：request.ts（`src/locales/zh-CN/auth.json` 以 `auth` 命名空间并入 messages）；next.config.ts 接插件；根布局包 `NextIntlClientProvider`（实现前先读 `node_modules/next/dist/docs/` 根布局与 i18n 相关指南——Next 16 差异）。
-- [ ] **Step 4: 确认通过**；若既有 `tests/render.test.tsx` 因缺 provider 失败，在该测试的渲染处包 `NextIntlClientProvider`（测试侧适配，不改产品断言）
-- [ ] **Step 5: 全量 `npm test` 全绿 + `npm run build` 绿**
-- [ ] **Step 6: 提交**（`feat(i18n): next-intl 最小设施与 auth 文案`）
+**预期失败:** FAIL——helpers 端点路径指向已不存在的 phone-number 端点（连接层失败即形态正确）；403 第三路径新断言失败。
+
+**实现:** 测试任务 + helpers 胶水，无新增产品代码（开放问题 #1 兜底除外）。
+
+**提交:** `test(auth): username 端点三情形统一文案与守卫集成验证`
 
 ---
 
-### Task 9: AuthScreen 与表单校验 UI（渲染层，不接网络）
+### Task 8: 表单组件改造（渲染层）
 
-**Files:**
-- Create: `src/modules/auth/components/` 下 `AuthScreen.tsx`、`AuthTabs.tsx`、`LoginForm.tsx`、`RegisterForm.tsx`、`AccountField.tsx`、`PhoneField.tsx`、`PasswordField.tsx`、`AgreementCheckbox.tsx`、`FormSummary.tsx`、`SubmitButton.tsx`、`ViewSwitchLink.tsx`
-- Test: `tests/auth/components/validation.test.tsx`、`tests/auth/components/view-switch.test.tsx`
+**Files:** Modify `src/modules/auth/components/AccountField.tsx`、`LoginForm.tsx`、`RegisterForm.tsx`、`FormSummary.tsx` · Delete `src/modules/auth/components/PhoneField.tsx` · Test `tests/auth/components/validation.test.tsx`
 
 **Interfaces:**
-- Consumes: `validateAccount` / `validatePassword` / `validateRegisterForm`（Task 2）、`ROUTES`（Task 1）、`useTranslations('auth')`（Task 8）。
-- Produces: `AuthScreen`，props `{ initialView: 'login' | 'register' }`；状态全部提升于 AuthScreen（`activeView`、表单值 `{ account, password, confirmPassword, agreementAccepted }`、`errors`、`submitting`——R16 切换保留、错误清空）；子组件纯受控。Task 10/11 依赖此组件树形态。
+- Consumes: `validateAccount`/`validateRegisterForm`（Task 1）、auth.json 新键（Task 2）、`useTranslations('auth')`。
+- Produces:
+  - `AccountField`（单一实现，两表单共用）：label「账户名」、`autoComplete="username"`、**无 maxLength、无字符过滤**、无 type/inputMode 特化
+  - `LoginForm` props：**无** `agreementAccepted/agreementError/onAgreementChange`（D-13）；字段 `account/password`
+  - `RegisterForm` props：`phone/phoneError/onPhoneChange` → `account/accountError/onAccountChange`；`AgreementCheckbox` 行保留
+  - `FormSummary` errors 键集：`'phone'` → `'username'`
 
-- [ ] **Step 1: 写失败测试**（@testing-library/react，`NextIntlClientProvider` 包装渲染，文案逐字断言）
+**失败测试:** 重写 validation.test.tsx——登录链（R1/R2/R3）：账号留空+密码 a1234567 → 「请输入账户名」+「有 1 项需要修改」，不提交；双空 → 「有 2 项需要修改」；`zhang san!` 与 17 位 → E-02 逐字，**断言输入框 value 完整保留所输字符（无过滤）**，改填 `zhang_san` 后提示消失；密码例不动；**新增登录表单无协议行断言**（query 勾选框/协议文案均不存在）；**删除**登录侧协议 aria-invalid 例。注册链（R8）：`zhang san!` → E-02；确认密码例逐字保留；未勾选 → aria-invalid。R17 显隐例不动（定位器改）。view-switch.test.tsx 同任务更新（标签引用与 E-01 文案；切视图保值断言不动）。
 
-```
-validation.test.tsx：
-  登录校验链（R1/R2/R3/R4）：账号留空+密码 a1234567 提交 → 「请输入手机号或邮箱」+ 顶部「有 1 项需要修改」，不触发提交；
-    账号密码双空 → 「有 2 项需要修改」；'1380013800'/'abc@mail' → 「格式不对：手机号 11 位，或 name@mail.com」，
-    改填合法后提示消失；'12345678'/21 位 → 「密码为 8—20 位，需含字母与数字」；
-    合法账号密码未勾选协议提交 → 勾选框错误态（aria-invalid）+ 不提交。
-  注册校验链（R8）：手机号 '1380013800' → 「请输入 11 位有效手机号」；确认密码空/不一致 → 「两次输入的密码不一致」；
-    未勾选 → 勾选错误态。
-  R17：PasswordField 显隐按钮点击后 input type password→text（三处输入框同构复用）。
-view-switch.test.tsx（R16）：login 视图填入账号/密码 → 切到 register → 输入框值保留；
-  制造错误后切换 → 错误清空；spy history.replaceState → 以 '/register' 调用。
-```
+**预期失败:** FAIL——AccountField 旧 label/placeholder 文案；LoginForm 仍渲染协议行。
 
-- [ ] **Step 2: 确认失败**（组件不存在）
-- [ ] **Step 3: 实现**（Tailwind 4 手写对齐线框图；不引 shadcn；`'use client'`；模块内相对导入、`@/lib/routes`；PhoneField `maxLength={11}` 边界 #1；AgreementCheckbox 协议名纯文本、无链接（D-08）边界 #9；FormSummary 按 errors 键数计数 + ICU `{count}`；SubmitButton 受 `submitting` 与文案键驱动——本任务 submitting 恒 false，提交处理由 Task 10 接入）
-- [ ] **Step 4: 确认通过**（`npm test -- tests/auth/components`）
-- [ ] **Step 5: 全量 `npm test` 全绿**
-- [ ] **Step 6: 提交**（`feat(auth): 登录注册表单校验 UI 与视图切换`）
+**实现:** AccountField 重写文案与去 tel/maxLength 特化；LoginForm 删协议行与三 props；RegisterForm 换 AccountField 删 PhoneField 文件与 import；FormSummary 键集替换。Tailwind 4 手写、模块内相对导入不变。
+
+**提交:** `feat(auth): 账户名输入框单一实现,登录表单删协议勾选行`
 
 ---
 
-### Task 10: 登录/注册提交流程（客户端半边）
+### Task 9: AuthScreen 提交流程换装
 
-**Files:**
-- Modify: `src/modules/auth/components/AuthScreen.tsx`、`LoginForm.tsx`、`RegisterForm.tsx`（接 onSubmit）
-- Test: `tests/auth/components/submission.test.tsx`
+**Files:** Modify `src/modules/auth/components/AuthScreen.tsx` · Test `tests/auth/components/submission.test.tsx`
 
 **Interfaces:**
-- Consumes: `registerAction`（Task 7，相对导入 `../actions`）、`authClient`（Task 4，`@/lib/auth-client`）、`mapSignInError`（Task 7）、`ROUTES`。
-- Produces: 行为契约（Task 11/12 依赖）：注册成功 → `authClient.signIn.phoneNumber` 自动登录 → `router.replace(ROUTES.workbench)`；登录成功同 replace；失败错误置顶呈现；邮箱形态账号（`validateAccount` kind='email'）不发起请求、直接呈现 R7 统一文案（B2）。
+- Consumes: `registerAction`（Task 6）、`authClient.signIn.username`（Task 4）、`mapSignInError`、`ROUTES`、Task 8 组件 props。
+- Produces 行为契约（Task 11 依赖）：注册成功 → `authClient.signIn.username` 自动登录 → `router.replace(ROUTES.workbench)`；登录成功同 replace；`handleLoginSubmit` 无协议校验、无邮箱特例分支（邮箱形态经 validateAccount 走 E-02 字段错误）；R10 顶部文案可点切登录并带入账户名。
 
-- [ ] **Step 1: 写失败测试**（vi.mock `../actions`、`@/lib/auth-client`、`next/navigation` 的 `useRouter`）
+**失败测试:** 重写 submission.test.tsx——R9：registerAction ok → `signIn.username` 以 `{username, password}` 被调 → replace('/workbench')；R5 两文案+disabled 例不动（填充助手改标签）；R10：USERNAME_ALREADY_REGISTERED → 「该账户已注册，去登录」，点击切登录且账户框带入该账户名；R7 客户端 401/429 两例不动；R6 落点例改 payload 断言 `{username}`；**删除** B2 邮箱短路例（新增替代：邮箱形态提交 → 不发请求、呈现 E-02 字段错误「格式不对：…」）；**删除**登录侧协议例。
 
-```
-注册成功链（R9）：registerAction resolve {ok:true} → authClient.signIn.phoneNumber 以 {phoneNumber, password} 被调
-  → router.replace('/workbench')。
-R5：registerAction 挂起（未 resolve 的 Promise）→ 按钮「注册中…」且 disabled；登录同理「登录中…」。
-R10：registerAction resolve {ok:false,error:'PHONE_ALREADY_REGISTERED'} → 顶部「该手机号已注册，去登录」；
-  点「去登录」→ activeView 切 'login' 且账号框值为该手机号。
-R7 客户端：signIn.phoneNumber reject {status:401} → 「账号或密码不对」；reject {status:429} → 「操作过于频繁，请稍后再试」。
-B2：账号填 'name@mail.com' 合法密码提交 → signIn.phoneNumber 未被调，「账号或密码不对」直接呈现。
-R6：登录成功 → router.replace('/workbench')（链路无任何档案查询）。
-```
+**预期失败:** FAIL——AuthScreen 仍调 `signIn.phoneNumber`、仍含登录协议校验与邮箱短路分支。
 
-- [ ] **Step 2: 确认失败**（提交行为未实现：断言的调用与文案均不发生）
-- [ ] **Step 3: 实现提交流程**（submitting 置位→await→复位；失败经 mapSignInError / fieldErrors 呈现；成功一律 `router.replace`）
-- [ ] **Step 4: 确认通过**（`npm test -- tests/auth/components`）
-- [ ] **Step 5: 全量 `npm test` 全绿**
-- [ ] **Step 6: 提交**（`feat(auth): 登录注册提交流程与统一错误呈现`）
+**实现:** `signInWithPhoneNumber` → `signInWithUsername`；`AuthMessageKey`/`AuthFormErrors`/fieldErrors 映射键换装（phoneInvalid → username/account.invalid；phoneRegistered → usernameRegistered）；`handleLoginSubmit` 删 L198-206 协议校验与 L211-214 邮箱短路（D-13/B2 新语义）；顶部错误可点分支改 usernameRegistered。
+
+**提交:** `feat(auth): 登录注册提交流程换装 username 端点与错误映射`
 
 ---
 
-### Task 11: 路由壳、守卫与 workbench 占位
+### Task 10: workbench 承接页与会话展示
 
-**Files:**
-- Create: `src/app/(auth)/layout.tsx`、`src/app/(auth)/login/page.tsx`、`src/app/(auth)/register/page.tsx`、`src/app/(app)/layout.tsx`、`src/app/(app)/workbench/page.tsx`、`src/modules/auth/components/AuthRedirect.tsx`、`src/modules/auth/components/SignOutButton.tsx`
-- Modify: `src/modules/auth/index.ts`（增 `export { AuthScreen } from './components/AuthScreen'`、`export { AuthRedirect }`、`export { SignOutButton }`）
-- Test: `tests/auth/components/auth-redirect.test.tsx`、`tests/auth/route-guards.test.tsx`
+**Files:** Modify `src/app/(app)/workbench/page.tsx` · Test `tests/auth/route-guards.test.tsx`（如涉桩）
 
 **Interfaces:**
-- Consumes: `getCurrentSession`（Task 7，经 `@/modules/auth` 顶入口）、`AuthScreen`（Task 9）、`authClient.signOut`、`ROUTES`。
-- Produces: 路由薄壳（design 契约）：(auth) 布局已登录 → 渲染 `AuthRedirect` 不渲染 children（R12）；(app) 布局未登录 → `redirect(ROUTES.login)`（B6）；`workbench/page.tsx` 占位（标题「工作台」+ `session.user.phoneNumber` + `SignOutButton`，AXY-12 替换，E2E 验收锚点）。
+- Consumes: `AuthSession.user.username`（Task 6）、`SignOutButton`。
+- Produces: workbench 占位显示 `session.user.username`，`data-testid="session-account"`（AXY-12 替换；E2E 验收锚点）。
 
-- [ ] **Step 1: 写失败测试**
+**失败测试:** 全局 grep 断言（或 route-guards 桩例）：`session-phone` 字样在 src/ 与 e2e/ 中为 0 处；E2E 前置占位页渲染断言改 `session-account`。
 
-```
-auth-redirect.test.tsx（mock useRouter；Object.defineProperty(window.history,'length') 可配）：
-  history.length=2 → router.back() 被调；length=1 → router.replace('/workbench')。
-route-guards.test.tsx（vi.mock('@/modules/auth') 的 getCurrentSession；mock next/navigation 的 redirect 使其 throw；
-  布局是 async 组件——`const ui = await AuthLayout({ children }); render(ui)`）：
-  (auth) 布局：session null → children 渲染；session 存在 → children（表单元素）不在文档中，AuthRedirect 在。
-  (app) 布局：session null → redirect 以 '/login' 抛出（B6，未登录不渲染受保护内容）；
-    session 存在 → children 渲染。
-SignOutButton：点击 → authClient.signOut 被调 → router.replace('/login')；signOut reject → 仍 replace。
-```
+**预期失败:** FAIL——页面仍读 `session.user.phoneNumber`（字段已不存在，type-check 即红）。
 
-- [ ] **Step 2: 确认失败**（模块/路由不存在）
-- [ ] **Step 3: 实现薄壳**（实现前读 `node_modules/next/dist/docs/` 路由组/布局指南——Next 16 差异；页面文件零业务逻辑）
-- [ ] **Step 4: 确认通过**（`npm test -- tests/auth`）
-- [ ] **Step 5: 全量 `npm test` 全绿 + `npx next typegen && npm run type-check` 绿 + `npm run build` 绿（路由组类型生成）**
-- [ ] **Step 6: 提交**（`feat(auth): 路由组薄壳/会话守卫/工作台占位页`）
+**实现:** 页面字段与 testid 替换；守卫双检与 SignOutButton 不动。
+
+**提交:** `feat(auth): 工作台承接页展示账户名`
 
 ---
 
-### Task 12: E2E 全流程
+### Task 11: E2E 全流程换装
 
-**Files:**
-- Create: `e2e/auth.spec.ts`、`e2e/helpers/auth.ts`（`uniquePhone()`、`registerViaUI(page, phone, password)`）
-- Test: 即上述 spec（本任务的测试即交付物）
+**Files:** Modify `e2e/helpers/auth.ts`、`e2e/auth.spec.ts`
 
 **Interfaces:**
-- Consumes: 全部前序产物（经生产构建 + 真实 PG/Redis）。
-- Produces: E2E 证据（R1–R6、R8–R12、R16–R17 的浏览器级验证记录；R7 的双半边证据在 Task 6/10，E2E 仅复验呈现）。
+- Consumes: 全部前序产物（生产构建 + 真实 PG/Redis）。
+- Produces: E2E 证据（R1–R6、R8–R12、R16–R17 浏览器级；R7 双半边证据在 Task 7/9）。
 
-- [ ] **Step 1: 写 E2E 用例**（文案断言以页面渲染为准，逐字）
+**AC / 演示态:** AC-1～AC-7；演示态 1 登录 / 2 校验失败 / 3 登录中 / 4 注册 + 重置专态（对应 design 演示态映射表）
 
-```
-校验链组（R1/R2/R3/R4/R8/R17）：登录与注册两视图的全部字段级文案、汇总计数、
-  协议错误态、密码显隐。
-注册流程（R5/R9/R10）：注册成功 → URL /workbench 且渲染「工作台」占位与退出按钮；
-  按钮加载态——page.route 拦截 /api/auth/sign-in/phone-number 延迟 300ms，断言「登录中…」+ disabled；
-  重复注册 → 「该手机号已注册，去登录」→ 点击切登录视图且账号框带入该手机号。
-登录流程（R6）：两个账号（各自经 UI 注册，链路无档案概念）分别登录 → 均落 /workbench，行为一致。
-会话流程（R11）：退出 → /login；直访 /workbench → 重定向 /login；browser back → /login；
-  重新登录同号 → /workbench 且手机号与原账号一致（数据完好）。
-守卫流程（R12 + B6）：已登录经站内导航到 /login（有历史）→ 自动返回工作台；
-  新建 context 直开 /login（无历史）→ 落 /workbench；
-  未登录访问 /workbench：读取响应原文（page.request 或 context.request）断言不含受保护内容标识。
-R16：填值切 tab → 值保留、URL 经 replaceState 同步为 /register。
-```
+**失败测试:** helpers 换装——`uniqueUsername()`（替换 uniquePhone）、`fillLoginForm` 删协议勾选行步骤（D-13）、`registerViaUI` 改账户名填充 + `session-account` 断言、route mock 改 `**/api/auth/sign-in/username`。用例组：R1（空表单 → E-01 + 汇总计数，**无协议错误断言**）、R2（`zhang san!`/17 位 → E-02，输入完整保留，改填消失）、R3/R17（定位器改，断言不动）、R4（**注册侧**未勾选不提交+错误态，勾选解除；**删除**登录侧协议例）、R5/R9/R10（注册成功落工作台；`sign-in/username` 拦截延迟断言「登录中…」；重复注册 → E-07 切登录带账户名）、R6×2（两账号注册→退出→登录均落 /workbench，session-account 一致）、R11/R12（退出三挡回 + 重登数据完好；有历史 back / 直开 replace）、B6（未登录响应不含 `session-account` 等受保护标识）、R16（保值清错 + replaceState）。
 
-- [ ] **Step 2: 运行，确认失败并记录**
+**预期失败:** FAIL——记录失败清单（预期为文案/端点/助手胶水缺口；若全绿逐条核对断言强度后提交信息注明）。
 
-前置：`npm run dev:infra`、`.env` 从 `.env.example` 复制就位（`BETTER_AUTH_SECRET` 填 32+ 字符随机串）、`npm run db:migrate`。
-Run: `npm run test:e2e`
-Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer 环境变量注入、种子数据、文案渲染差异；若全部用例直接通过，逐条核对断言强度后在本任务提交信息注明）。
+**实现:** 测试即交付物；发现产品缺陷回对应任务模块修复并补单测（偏离记裁决）。
 
-- [ ] **Step 3: 修复胶水至全绿**（发现产品缺陷 → 回对应模块修复并补单测，偏离记裁决）
-- [ ] **Step 4: 全量三套件全绿**：`npm test` + `npm run test:integration` + `npm run test:e2e`
-- [ ] **Step 5: 提交**（`test(e2e): 登录注册全流程端到端验证`）
+**提交:** `test(e2e): 登录注册全流程换装账户名凭据`
 
 ---
 
-### Task 13: CI 接入 PG/Redis 服务、文档同步与收尾
+### Task 12: 全量回归与 change-record 闭合回填
 
-**Files:**
-- Modify: `.github/workflows/ci.yml`（verify job）、`AGENTS.md`
-- Test: 无新增测试文件（验证方式见步骤）
+**Files:** Modify `docs/product/AXY-8-auth/change-record.md`（§5/§8 回填）
 
 **Interfaces:**
-- Consumes: `test:integration`（Task 5）、`db:migrate`（Task 3）、compose.dev 凭据（Task 1）。
-- Produces: CI 流水线对集成/E2E 真实执行（PR 即全量门禁）；AGENTS.md 与工程现状一致。
+- Consumes: 全部前序任务产物。
+- Produces: change-record §5 改造 commit 列表回填；§8 测试删除清单 + 三套件全绿证据；记录状态改「已闭合」。
 
-- [ ] **Step 1: 修改 ci.yml verify job**：增 `services:`——`postgres`（镜像 `pgvector/pgvector:pg17`，env/health options 与 compose.dev 同参）与 `redis`（`redis:7-alpine`，health `redis-cli ping`）；job 级 `env` 注入 `DATABASE_URL`（指向 services 别名 `postgres`）、`REDIS_URL`、`BETTER_AUTH_SECRET`（CI 专用随机串，非生产机密——ADR-0022 零机密接触不破）、`BETTER_AUTH_URL=http://localhost:3000`；Build/单测/E2E 步骤继承 env；在 Unit tests 后增 `Integration tests (Vitest)` 步骤跑 `npm run test:integration`（迁移由其 globalSetup 自理）；E2E 前确保迁移已应用（复用 globalSetup 思路或显式 `npm run db:migrate` 步骤）。
-- [ ] **Step 2: 本地核对**：`npm run build`（无 .env）与 `docker build --target runner` 仍绿；YAML 语法核对。CI 全量绿以推送后的 PR 流水线为准（DOD 阶段 4/5 在合流时闭合，由人工决定何时开 PR）。
-- [ ] **Step 3: AGENTS.md 同步**：常用命令补 `test` / `test:integration` / `test:e2e` / `db:generate` / `db:migrate` / `dev:infra`；删除「尚未安装测试框架」旧描述；注明本地 PG/Redis 经 `compose.dev.yaml` 提供、`.env` 从 `.env.example` 复制。
-- [ ] **Step 4: 全量本地三套件绿后提交**（`chore(ci): 流水线接入 PG/Redis,同步工程文档`）
+**失败测试:** 无新增测试文件（验证方式见步骤）。
+
+**实现步骤:** ①`npm run type-check` + `npm run lint` + `npm run lint:circular` 干净退出；②`npm test` 全绿；③`npm run test:integration` 全绿（真实 PG/Redis）；④`npm run test:e2e` 全绿；⑤汇总各任务的被替换测试删除清单（文件+用例名）回填 §8；⑥改造 commit hash 链回填 §5；⑦`npm run docs:build` 绿。
+
+**提交:** `chore(auth): CR-20261116-1 改造收尾,变更记录回填闭合`
 
 ---
 
 ## 裁决记录
 
-执行中发现的计划缺陷记入此处，格式：`裁决: <决定了什么> — <为什么> — <错了的代价>`。
+执行中发现的计划缺陷记入此处，格式：`裁决: <决定了什么> — <为什么> — <错了的代价>`。**以下为原手机号版执行期裁决（2026-11-14～11-15，历史原貌保留；其中基建类裁决对修订版继续有效，凭据类裁决仅存史**：
 
 - 裁决: drizzle-orm 版本范围由 `^1` 改为 `^1.0.0-rc.1`（Task 1） — npm 上 1.x 仅有 rc/beta（stable latest 为 0.45.4），semver `^1` 不匹配 prerelease 导致安装失败；`^1.0.0-rc.1` 恰落在 better-auth 1.7.23 peerOptional 允许区间 `>=1.0.0-rc.1 <2.0.0`，stable 发布后可自动升级 — rc 版 API 稳定性风险，后续任务遇 rc 破坏性变更需回头调整
 - 裁决: redis 单测中 ioredis 类经动态 import 获取（Task 1） — 静态 import 会使 Step 2 先报 `Cannot find module 'ioredis'`，偏离任务预期的 `Cannot find module '@/lib/redis'` 失败形态；断言内容不变 — 测试代码略绕，无功能影响
@@ -599,7 +352,7 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: PasswordField 显隐布尔与 ForgotPasswordLink 提示显示态保留为组件内局部 state（Task 9） — design「状态提升」清单仅列 activeView/表单值/errors/submitting 四项；显隐是三输入框各自独立的同构状态，提升反而破坏复用 — 若未来需要跨字段统一显隐，需改 PasswordField props
 - 裁决: 非 16 键的结构性布局文案（「手机号 / 邮箱」「注册并进入」「微信登录」等）硬编码中文于组件（Task 9） — auth.json 键清单（16 键）不含布局文案，与 Task 8 最小 i18n 设施一致 — 后续扩 i18n 键时改动点集中在各字段组件；多语言启动前需补齐
 - 裁决: `authClient.signIn.phoneNumber` 失败按 `{ data: null, error: { status, ... } }` 返回值处理而非 reject（Task 10） — better-auth 1.7 客户端经 @better-fetch 未设 `throw: true`，失败不 reject；实现取 `result.error` 喂 mapSignInError，try/catch 仅兜网络层异常归一 unknown（否则测试绿而真实链路坏） — Task 11/12 依赖此行为契约，不得假设 reject 形态
-- 裁决: R10「去登录」以整条文案渲染为单个可点按钮（Task 10） — 16 键文案被 messages.test.ts 逐字锁定（`该手机号已注册，去登录`），不拆分不增键；行为满足 R10（切视图+带入手机号） — accessible name 为全句；若产品要求仅「去登录」三字可点，需改文案结构并动 16 键清单
+- 裁决: R10「去登录」以整条文案渲染为单个可点按钮（Task 10） — 16 键文案被 messages.test.ts 逐字锁定（`该手机号已注册，去登录`），不拆分不增键；行为满足 R10（切视图+带入手机号） — accessible name 为全句；若产品要求仅「去登录」三字可点，需改文案结构并动键清单
 - 裁决: 布局 Props 用 `LayoutProps<"/">` 而非文档示例的 `LayoutProps<'/login'>`（Task 11） — Next 16.4.6 实测 typegen 后 routes.d.ts 的 LayoutRoutes 只有 "/"（路由组布局按 `LayoutConfig<"/">` 校验），文档示例与实际版本不符；测试调用布局须补 `params: Promise.resolve({})` — Next 升级若改变 LayoutRoutes 生成规则需复核
 - 裁决: `instant = false` 豁免扩至两个组布局与 workbench 页（Task 11） — getCurrentSession → headers() 必然无法静态预渲染，与根布局同类（Task 8 裁决的延伸），实现时即加并注释 — 全站四路由均为 Dynamic；ADR-0010 proxy 终态落地时统一回迁
 - 裁决: AuthRedirect 渲染 `role="status"` 占位（「正在进入…」）而非 null（Task 11） — 任务测试要求断言「AuthRedirect 在」，纯 null 组件无法从 DOM 断言存在 — 占位文案一闪而过，无验收影响
@@ -615,3 +368,27 @@ Expected: FAIL——记录失败清单（预期为跨层胶水缺口：webServer
 - 裁决: 限流语义陈旧注释纠偏（spec-review 批次） — `src/lib/auth.ts` 与 `tests/integration/helpers.ts` 的注释仍写「phoneNumber 插件 10 次/60 秒限制/防 429」，与 Task 12 裁决实测结论（内置 specialRule 登录路径 3 次/10 秒，插件规则不覆盖顶层 sign-in 路径）矛盾；随裁决更新两处注释表述，代码不动 — 无
 - 裁决: design.md 回写 `hooks.before`/`validateSchema` 实现裁决注记、proposal.md 同步 R6 验证方式（spec-review 批次） — Task 4 裁决（hooks.before 为单个 `createAuthMiddleware`）、Task 6 裁决（`advanced.database.validateSchema: false`）均承诺「待 design 回写」，proposal R6 的 PO 修订（2026-11-14，非目标 #9 废除建档概念）未同步到验证方式单元格；一并闭合文档欠账 — 无
 - 裁决: R1 汇总计数的「项」定义为字段项（账号/密码/手机号/确认密码），协议勾选错误不进顶部汇总、仅在勾选框旁单独呈现（spec-review 终审，提出者裁决 2026-11-14） — Task 9 裁决已将协议错误定为局部态，R4 独立定义了协议错误的呈现通道（勾选框高亮），两条文互补而非重叠；proposal R1 措辞随裁决同步修订 — 若未来 UX 评审认为汇总应含协议项，需同改 FormSummary 传参与单测/E2E 断言
+
+**以下为 CR-20261116-1 修订重走执行期新增裁决（追加于此，不改写上行历史）：**
+
+- 裁决: 修订版任务序列存在已知中间红，且红例归属图随文案换装扩大（Task 2 收口态 `npm test` 13 failed | 95 passed (108)；基线勘误为 9 红|99 绿，Task 1 报告的「98|10」系笔误）。归属图：schema.test 5→T3、lib/auth.test 1→T4、validation.test 4（旧 2 + 文案换装新增 2）→T8、submission.test 2（旧 1 + R10 文案新增 1）→T9、view-switch.test 1（文案换装新增）→T8；`type-check` 错误数随卡递减（5→T3 后 4→T4 后 3→T6 后 1→T9 后 0） — 凭据换装的消费者测试分散在 T3/T4/T6/T8/T9 各卡，单卡提前修复等于并卡提交，破坏任务拆分与 PR 拆分纪律；文案键删除物理上必然击穿渲染锚定断言，属预期红 — 中间红禁止他卡修复；Task 12 三套件全绿收口
+- 裁决: AuthScreen.tsx 三处引用已删键 `auth.error.phoneRegistered`（类型并集 ：80、setTopError :172、三元渲染 :277），T9 前该路径渲染缺失消息 — 键删除在 T2、组件换装在 T9 是任务排序的既定中间态；运行时仅影响分支内部，无真实用户 — T9 落地后消除，无额外动作
+- 裁决: type-check 中间态为 17 处（T3 后），远超卡面「剩 4 处」预估——删 registerInputSchema 的 phone 键使潜伏级联类型错显形，全部落在 T5/T6/T9 将整体重写的文件（service.ts、actions.ts、AuthScreen.tsx 及对应集成测试） — 卡面预估只数了 T1 报告的直接错误，未含 zod 类型级联；顺手修复即越权改他卡文件 — T5/T6/T9 重写后自然清零，T12 type-check 干净收口
+- 裁决: 集成套件中间红基线 T3 后为 10 failed | 5 passed (15)——旧手机号流程测试在新 schema（username NOT NULL）下必红：service.test 3→T5、actions.test 3→T6、queries.test 1→T6、endpoints.test 3→T7 — 迁移先行于消费重写是「新增迁移不改旧」纪律的必然结果 — 各卡重写后 T12 集成全绿收口
+- 裁决: 空表假设失效触发授权清库（design 开放问题 #4）——dev 库实测 user 181 行/account 181 行/session 49 行（既有测试数据，compose 卷持久化），迁移前 `TRUNCATE "account","session","verification","user" RESTART IDENTITY CASCADE` — ADD COLUMN NOT NULL 在存量行上必失败，0.1.0 无生产数据，处置符合 design 声明的「迁移前人工处置（清库）」分支 — 生产化前若出现真实存量数据，须按开放问题 #4 回流 proposal 追认回填策略
+- 裁决: drizzle-kit RC 对「删列+增列」歧义检测需 `--hints` 显式 create 消歧；生成 SQL 首行多一条规范 `DROP INDEX "user_phone_number"`（删列前显式删索引，语义与随列删一致）；迁移目录名 `20261116074441_crazy_molly_hayes` 为生成名不重命名 — RC 工具链行为，以实际产物为准记录 — 无
+- 裁决: auth-client 方法名守护的「预期红」结构性不可达成——better-auth 1.7.23 客户端为 Proxy，任意属性路径运行时均返回 function（探针实证），`typeof === 'function'` 断言对插件换装不敏感；断言照 design 开放问题 #2 指定形态保留，闭合证据由类型面承载（usernameClient 生成 `signIn.username({username,password,rememberMe?,callbackURL?})` 类型化签名，type-check 0 错）——**开放问题 #2 闭合（T4，2026-11-16）**：signIn.username 成立，无需回写 design 契约 — 运行时守护弱于类型面，未来 SDK 若改生成规则需复核
+- 裁决: 「无 .env 的 npm run build 仍须成功」门禁在 T3 级联中间态下推迟——stash 实证基线（17 错）与 T4 态（20 错）均在 Next build 的 type-check 阶段中止，失败全在他卡文件；betterAuth 模块作用域无 env 不抛错的设计意图已另行探针实证 — 门禁待 T6/T8/T9 类型错清零后恢复，T12 收口复核
+- 裁决: helpers 的 `uniquePhone` 保留至 T7 才删除（T5 只新增 `uniqueUsername`）——actions.test/endpoints.test（T6/T7 卡文件）仍 import 它，提前删除会改变他卡红的失败形态而非红例归属 — T7 重写 endpoints 后删最后一个消费者 — 无
+- 裁决: 卡面「email 冲突不可达、不再映射 user_email_key」被实证证伪——psql 直插与集成实测均显示同名再注册时 PG 先抛 `user_email_key` 23505（表级约束先于 user_username 索引检查），仅认 user_username 的版本聚焦 2 failed；修正为**双约束映射**（user_username ∨ user_email_key → USERNAME_ALREADY_REGISTERED），语义等价：占位邮箱由账户名单射派生 + 两约束均区分大小写 → email 冲突当且仅当同名冲突（与原手机号版 Task 5 同构偏离） — design 契约注释只写了 user_username 单约束，实测约束触发顺序不同 — 若未来出现非派生邮箱的写入路径，等价不成立需收紧；design 侧已留一行指针不改契约块
+- 裁决: 测试 4 的 `Alice`/`alice` 裸字面量会在二次运行撞 compose 卷持久化的 user_username 残留行——改为 `uniqueUsername()` 整串大小写互变对（lower/upper，均 F-01 合法、跨运行唯一），区分大小写直证语义不变 — 测试数据跨运行持久化 — 无
+- 裁决: type-check 收口 18 处而非约 15 处——registerWithPhone 改名使 3 个卡外消费者新增 TS2305 缺失导出（actions.ts:17、integration/queries.test.ts:25、integration/endpoints.test.ts:23），均在 T6/T7 范围，按「他卡文件不得修」纪律保留 — T6/T7 重写后清零 — 无
+- 裁决: type-check 基线计数两处勘误（T6 实测）——queries.test 基线 1 处而非卡面 2 处（user.phoneNumber 断言在基线类型下合法）；T6 收口 11 处而非预期 6 处，差额为 AuthSession 换装的下游涟漪（workbench/page.tsx TS2339 新增 1→T10、AuthScreen TS2367/TS2339 新增 2 与 submission.test TS2820 新增 1→T9） — 字面量联合类型换装的比较点/消费点级联无法前置枚举 — 剩余 11 处分布：AuthScreen 6（T9）、submission.test 2（T9）、workbench 1（T10）、validation.test 1（T8）、endpoints.test 1（T7），T9/T10 后清零
+- 裁决: errors.test「换字面量后无红」属断言换字的正常形态（mapSignInError 按 status 判定、code 不参与逻辑），卡面已预判，照常走完六步 — 无
+- 裁决: 限流 specialRule 默认仅 production 启用（better-auth create-context.mjs `rateLimit.enabled ?? isProduction`，vitest NODE_ENV=test），集成测试全程无 429 无需节流；E2E 生产构建下限流生效（原 Task 12 裁决语义继续成立） — 事实备查已写入测试文件头注释 — 无
+- 裁决: GET /get-session 基座以测试文件内局部 `directGetSession` 落地（未扩 helpers 契约面）；实测响应原文经一次性探针测试取回后即删 — T7 卡仅授权删 uniquePhone，最小改动纪律 — 无
+- **开放问题 #1 闭合（T7，2026-11-16）**：三情形原生统一 401 + INVALID_USERNAME_OR_PASSWORD（源码 index.mjs:157/172/186，含时序安全假哈希防探测），design 开放问题表已回写处置列
+- 裁决: E2E strict violation 判为测试胶水、产品代码不动——登录/注册共用 label「账户名」（单一 AccountField 产品契约）+ Next 16 客户端导航以 React `<Activity>` 保留离开页 DOM（display:none，官方文档证实为框架默认行为），getByLabel 双匹配；字段填充一律弃 getByLabel 改 `#login-*`/`#register-*` 字段 id（表单契约唯一锚点，AccountField 既有 id 已满足） — 手机号时代两视图 label 文案不同故未暴露；产品侧无义务为 E2E 改变 label 单一实现 — 后续 E2E 新用例一律用字段 id 定位；若未来 id 契约变更需同步全部用例
+- 裁决: 节流打点时机修正属测试胶水——`registerViaUI` 在自动登录请求完成（session-account 断言通过）后重置 lastSignInAt，保证下一发登录与其真实间隔 ≥3.5s（原打点在点击前，被 registerAction 服务端往返耗时吃掉，四发挤进同一 10 秒窗口致第 4 发 429） — 未放宽阈值、未绕过限流 — 无
+- 裁决: R4 的 E2E 登录侧整例删除后，E-06「账号或密码不对」的浏览器级呈现断言不再有 E2E 载体 — R7 的证据双半边在集成（T7 三情形同文案）+ 组件（T9 submission 401/429 例），proposal R7 测试层本为「集成测试（接口层断言文案一致）」，E2E 呈现属复验非承载 — spec-review 时留意此项证据归属说明
+- 裁决: validation.test.tsx 的 authClient 桩键残留 phoneNumber 判 Important 并于 spec-review 终审修复批闭合（2026-11-16） — 桩键与实现调用键（signIn.username）不一致使 not.toHaveBeenCalled 恒真空转、合法值改填用例经 TypeError→catch→unknown 异常分支仍绿——属「绿得错误」的测试完整性缺陷而非实现缺陷（R1「表单不提交」在 E2E 层有真载体，故 R 条目不因此判 ❌）；修复：桩键换 username、默认 resolve `{ data, error }` 形态、补正向对照断言（合法值提交到达提交边界恰一次）、头注更新，修复后 110/110 复验全绿 — 若不修，组件层的「表单不提交」守护名存实亡，校验漏放行类回归不会被该文件捕获；正向对照断言防桩键再次漂移

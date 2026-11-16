@@ -1,36 +1,37 @@
 /**
- * registerWithPhone 集成测试（Task 5，design「modules/auth/service.ts」契约）。
+ * registerWithUsername 集成测试（Task 5，design「modules/auth/service.ts」契约）。
  *
- * 真实 Postgres（compose.dev.yaml），覆盖 R9/R10/R13/R14/R15：
+ * 真实 Postgres（compose.dev.yaml），覆盖 R9/R10/R13/R14/R15 与 F-01：
  * 1. 注册成功——user/agreement 字段落库 + credential account 密码摘要（R9/R13/R15）；
- * 2. 同号再注册——23505 映射 PHONE_ALREADY_REGISTERED，无重复行（R10）；
- * 3. 并发同号——恰一 ok 一 PHONE_ALREADY_REGISTERED（R14）。
+ * 2. 同名再注册——23505 映射 USERNAME_ALREADY_REGISTERED，无重复行（R10）；
+ * 3. 并发同名——恰一 ok 一 USERNAME_ALREADY_REGISTERED（R14）；
+ * 4. 并发大小写变体——两行共存，user_username 区分大小写直证（R14/F-01）。
  * R13 日志纪律（不记录入参）属运行时行为，以查库断言密码不含明文间接守护。
  */
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { verifyPassword } from "better-auth/crypto";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db/client";
 import { account, user } from "@/db/schema";
-import { uniquePhone } from "../helpers";
+import { uniqueUsername } from "../helpers";
 import {
   AGREEMENT_VERSION,
-  phoneToPlaceholderEmail,
-  registerWithPhone,
+  registerWithUsername,
+  usernameToPlaceholderEmail,
 } from "../../../src/modules/auth/service";
 
 afterAll(async () => {
   await db.$client.end();
 });
 
-describe("registerWithPhone（tests/integration/auth/service）", () => {
+describe("registerWithUsername（tests/integration/auth/service）", () => {
   it("注册成功：user 行含 agreement 留痕，account 行为 credential 摘要（R9/R13/R15）", async () => {
     const startedAt = new Date();
-    const phone = uniquePhone();
+    const username = uniqueUsername();
     const password = "abcdefg1";
 
-    const result = await registerWithPhone({ phone, password });
+    const result = await registerWithUsername({ username, password });
 
     expect(result).toEqual({ ok: true, userId: expect.any(String) });
     if (!result.ok) {
@@ -40,13 +41,13 @@ describe("registerWithPhone（tests/integration/auth/service）", () => {
     const users = await db
       .select()
       .from(user)
-      .where(eq(user.phoneNumber, phone));
+      .where(eq(user.username, username));
     expect(users).toHaveLength(1);
     const u = users[0];
     expect(u.id).toBe(result.userId);
-    expect(u.name).toBe(phone);
-    expect(u.email).toBe(phoneToPlaceholderEmail(phone));
-    expect(u.phoneNumber).toBe(phone);
+    expect(u.name).toBe(username);
+    expect(u.email).toBe(usernameToPlaceholderEmail(username));
+    expect(u.username).toBe(username);
     expect(u.agreementVersion).toBe(AGREEMENT_VERSION);
     expect(u.agreedAt.getTime()).toBeGreaterThan(startedAt.getTime());
 
@@ -66,29 +67,29 @@ describe("registerWithPhone（tests/integration/auth/service）", () => {
     ).toBe(true);
   });
 
-  it("同号再注册：PHONE_ALREADY_REGISTERED，user 表恰 1 行（R10）", async () => {
-    const phone = uniquePhone();
+  it("同名再注册：USERNAME_ALREADY_REGISTERED，user 表恰 1 行（R10）", async () => {
+    const username = uniqueUsername();
     const password = "abcdefg1";
 
-    const first = await registerWithPhone({ phone, password });
+    const first = await registerWithUsername({ username, password });
     expect(first.ok).toBe(true);
-    const second = await registerWithPhone({ phone, password });
+    const second = await registerWithUsername({ username, password });
 
-    expect(second).toEqual({ ok: false, error: "PHONE_ALREADY_REGISTERED" });
+    expect(second).toEqual({ ok: false, error: "USERNAME_ALREADY_REGISTERED" });
     const users = await db
       .select()
       .from(user)
-      .where(eq(user.phoneNumber, phone));
+      .where(eq(user.username, username));
     expect(users).toHaveLength(1);
   });
 
-  it("并发同号：Promise.allSettled 恰一 ok 一 PHONE_ALREADY_REGISTERED（R14）", async () => {
-    const phone = uniquePhone();
+  it("并发同名：Promise.allSettled 恰一 ok 一 USERNAME_ALREADY_REGISTERED（R14）", async () => {
+    const username = uniqueUsername();
     const password = "abcdefg1";
 
     const settled = await Promise.allSettled([
-      registerWithPhone({ phone, password }),
-      registerWithPhone({ phone, password }),
+      registerWithUsername({ username, password }),
+      registerWithUsername({ username, password }),
     ]);
 
     expect(settled).toHaveLength(2);
@@ -96,21 +97,50 @@ describe("registerWithPhone（tests/integration/auth/service）", () => {
       expect(s.status).toBe("fulfilled");
     }
     const outcomes = settled.map(
-      (s) => (s as PromiseFulfilledResult<Awaited<ReturnType<typeof registerWithPhone>>>)
+      (s) => (s as PromiseFulfilledResult<Awaited<ReturnType<typeof registerWithUsername>>>)
         .value,
     );
     const succeeded = outcomes.filter((o) => o.ok);
     expect(succeeded).toHaveLength(1);
     expect(
       outcomes.filter(
-        (o) => !o.ok && o.error === "PHONE_ALREADY_REGISTERED",
+        (o) => !o.ok && o.error === "USERNAME_ALREADY_REGISTERED",
       ),
     ).toHaveLength(1);
 
     const users = await db
       .select()
       .from(user)
-      .where(eq(user.phoneNumber, phone));
+      .where(eq(user.username, username));
     expect(users).toHaveLength(1);
+  });
+
+  it("并发大小写变体：大小写互变对两账号均 ok、两行共存（R14/F-01 区分大小写直证）", async () => {
+    // uniqueUsername 全 [0-9a-z]，uppercase 后是逐字符大小写互变的合法变体对
+    // （等价「Alice/alice」字面），跨运行唯一防残留串扰。
+    const lower = uniqueUsername();
+    const upper = lower.toUpperCase();
+    const password = "abcdefg1";
+
+    const settled = await Promise.allSettled([
+      registerWithUsername({ username: lower, password }),
+      registerWithUsername({ username: upper, password }),
+    ]);
+
+    expect(settled).toHaveLength(2);
+    for (const s of settled) {
+      expect(s.status).toBe("fulfilled");
+    }
+    const outcomes = settled.map(
+      (s) => (s as PromiseFulfilledResult<Awaited<ReturnType<typeof registerWithUsername>>>)
+        .value,
+    );
+    expect(outcomes.filter((o) => o.ok)).toHaveLength(2);
+
+    const users = await db
+      .select()
+      .from(user)
+      .where(inArray(user.username, [lower, upper]));
+    expect(users).toHaveLength(2);
   });
 });

@@ -4,7 +4,7 @@
  * R7 错误映射表：任一登录失败（401 凭证错误族 / 400 格式拒绝族）→
  * invalidCredentials；429 限流 → tooManyAttempts；其余（500、空值）
  * → unknown。设计依据：Task 6 实测三失败情形均为 401 +
- * INVALID_PHONE_NUMBER_OR_PASSWORD（design 开放问题 #1 闭合记录）。
+ * INVALID_USERNAME_OR_PASSWORD（design 开放问题 #1 闭合记录）。
  */
 import { describe, expect, it } from "vitest";
 
@@ -17,10 +17,10 @@ describe("mapSignInError", () => {
     );
   });
 
-  it("status 400 + code INVALID_PHONE_NUMBER → auth.error.invalidCredentials", () => {
-    expect(mapSignInError({ status: 400, code: "INVALID_PHONE_NUMBER" })).toBe(
-      "auth.error.invalidCredentials",
-    );
+  it("status 400 + code INVALID_USERNAME_OR_PASSWORD → auth.error.invalidCredentials", () => {
+    expect(
+      mapSignInError({ status: 400, code: "INVALID_USERNAME_OR_PASSWORD" }),
+    ).toBe("auth.error.invalidCredentials");
   });
 
   it("status 429 → auth.error.tooManyAttempts", () => {

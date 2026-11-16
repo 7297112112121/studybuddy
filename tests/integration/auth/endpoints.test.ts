@@ -1,26 +1,33 @@
 /**
- * Better Auth 端点集成测试（Task 6，design「Review Focus #1/#2」）。
+ * Better Auth 端点集成测试（Task 7，design「Review Focus #1/#2」）。
  *
  * 覆盖：
- * 1. R7 三情形同文案（Review Focus #1）：/sign-in/phone-number 对
- *    「未注册号 / 错密码 / 空密码直连 POST」返回同状态码 + 同 code + 同
- *    message，无账号存在性探测面（design 开放问题 #1 闭合点）；
- * 2. hook 403：邮箱注册/登录端点被 lib/auth.ts before hook 拦死（B2）；
- * 3. 登录成功双写（B5）：PG session 行 + Redis（secondaryStorage）会话键；
- * 4. 退出失效（R11 服务端半边）：sign-out 后旧 cookie get-session 无用户、
+ * 1. R7 三情形同文案（Review Focus #1）：/sign-in/username 对
+ *    「未注册账户名 / 错密码 / 空密码直连 POST」返回同状态码 + 同 code +
+ *    同 message，无账号存在性探测面（design 开放问题 #1 闭合点）；
+ * 2. hook 403 三路径：邮箱注册/登录端点与 /is-username-available 被
+ *    lib/auth.ts before hook 拦死（B2；后者为 R7 不可探测纪律下的
+ *    账户名枚举面）；
+ * 3. immutable 守卫：immutableUsername=true 时已登录会话携新 username
+ *    直连 /update-user 被拒（4xx），库内 username 不变（负空间无改名语义）；
+ * 4. 登录成功双写（B5）：PG session 行 + Redis（secondaryStorage）会话键；
+ * 5. 退出失效（R11 服务端半边）：sign-out 后旧 cookie get-session 无用户、
  *    Redis 会话键与 PG session 行均删。
  *
- * 各用例独立 uniquePhone()，防 phoneNumber 插件 10 次/60 秒限流串扰。
+ * 各用例独立 uniqueUsername() 造号。限流说明：内置 specialRule
+ * （/sign-in 前缀 3 次/10 秒）默认仅 production 启用
+ * （rateLimit.enabled ?? isProduction，vitest 环境为 test），集成测试不触发。
  */
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db/client";
-import { session } from "@/db/schema";
+import { session, user } from "@/db/schema";
+import { auth } from "@/lib/auth";
 import { redis } from "@/lib/redis";
-import { directPost, signInAndGetCookie, uniquePhone } from "../helpers";
+import { directPost, signInAndGetCookie, uniqueUsername } from "../helpers";
 import {
-  registerWithPhone,
+  registerWithUsername,
   type RegisterOutcome,
 } from "../../../src/modules/auth/service";
 
@@ -34,6 +41,20 @@ function expectRegisteredOk(outcome: RegisterOutcome): asserts outcome is Extrac
 /** 与 service.test.ts 一致的合法测试密码（PASSWORD_RE：字母+数字，8..20） */
 const PASSWORD = "abcdefg1";
 
+/**
+ * GET 基座：directPost 仅覆盖 POST，get-session 语义为 GET（Task 7 卡）。
+ * 构造方式与 helpers.directPost 同源（basePath '/api/auth' + 受信任 origin）。
+ */
+async function directGetSession(cookie: string): Promise<Response> {
+  const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+  return auth.handler(
+    new Request(`${base}/api/auth/get-session`, {
+      method: "GET",
+      headers: { cookie, origin: base },
+    }),
+  );
+}
+
 afterAll(async () => {
   await db.$client.end();
   if (redis.status === "ready") {
@@ -41,19 +62,19 @@ afterAll(async () => {
   }
 });
 
-describe("R7：/sign-in/phone-number 三失败情形同文案（Review Focus #1）", () => {
-  it("未注册号/错密码/空密码：同状态码 + 同 code + 同 message，无差异字样", async () => {
-    const phone = uniquePhone();
-    const registered = await registerWithPhone({ phone, password: PASSWORD });
+describe("R7：/sign-in/username 三失败情形同文案（Review Focus #1）", () => {
+  it("未注册账户名/错密码/空密码：同状态码 + 同 code + 同 message，无差异字样", async () => {
+    const username = uniqueUsername();
+    const registered = await registerWithUsername({ username, password: PASSWORD });
     expectRegisteredOk(registered);
 
     const cases = [
-      { phoneNumber: uniquePhone(), password: PASSWORD }, // ① 未注册号 + 任意密码
-      { phoneNumber: phone, password: "zzzzzzz9" }, // ② 已注册号 + 错密码
-      { phoneNumber: phone, password: "" }, // ③ 已注册号 + 空密码（绕过前端直连）
+      { username: uniqueUsername(), password: PASSWORD }, // ① 未注册账户名 + 任意密码
+      { username, password: "zzzzzzz9" }, // ② 已注册账户名 + 错密码
+      { username, password: "" }, // ③ 已注册账户名 + 空密码（绕过前端直连）
     ];
     const responses = await Promise.all(
-      cases.map((body) => directPost("/sign-in/phone-number", body)),
+      cases.map((body) => directPost("/sign-in/username", body)),
     );
     const bodies = await Promise.all(
       responses.map(async (res) => await res.json()),
@@ -77,30 +98,62 @@ describe("R7：/sign-in/phone-number 三失败情形同文案（Review Focus #1�
   });
 });
 
-describe("hook 403：邮箱端点禁用（B2/非目标 #4）", () => {
-  it("/sign-up/email 与 /sign-in/email 直连均 403", async () => {
-    const email = `${uniquePhone()}@phone.styb.invalid`;
-    const body = { email, password: PASSWORD, name: "hook-test" };
-
-    const signUpRes = await directPost("/sign-up/email", body);
+describe("hook 403：三路径直连禁用（B2/非目标 #4）", () => {
+  it("/sign-up/email、/sign-in/email、/is-username-available 直连均 403", async () => {
+    const email = "hook-test@user.styb.invalid";
+    const signUpRes = await directPost("/sign-up/email", {
+      email,
+      password: PASSWORD,
+      name: "hook-test",
+    });
     const signInRes = await directPost("/sign-in/email", {
       email,
       password: PASSWORD,
     });
+    const availableRes = await directPost("/is-username-available", {
+      username: uniqueUsername(),
+    });
 
     expect(signUpRes.status).toBe(403);
     expect(signInRes.status).toBe(403);
+    expect(availableRes.status).toBe(403);
+  });
+});
+
+describe("immutable 守卫：/update-user 携 username 改名拒绝（负空间无改名语义）", () => {
+  it("已登录会话 POST /update-user（含新 username）→ 4xx，库内 username 不变", async () => {
+    const username = uniqueUsername();
+    const registered = await registerWithUsername({ username, password: PASSWORD });
+    expectRegisteredOk(registered);
+
+    const cookie = await signInAndGetCookie(username, PASSWORD);
+
+    const res = await directPost(
+      "/update-user",
+      { username: uniqueUsername() },
+      cookie,
+    );
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBeLessThan(500);
+
+    // 库内核验：username 保持注册原值，未被改名
+    const rows = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, registered.userId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].username).toBe(username);
   });
 });
 
 describe("登录成功双写（B5）", () => {
   it("200 + set-cookie；PG session 行与 Redis 会话键同时存在", async () => {
-    const phone = uniquePhone();
-    const registered = await registerWithPhone({ phone, password: PASSWORD });
+    const username = uniqueUsername();
+    const registered = await registerWithUsername({ username, password: PASSWORD });
     expectRegisteredOk(registered);
 
-    const res = await directPost("/sign-in/phone-number", {
-      phoneNumber: phone,
+    const res = await directPost("/sign-in/username", {
+      username,
       password: PASSWORD,
     });
     expect(res.status).toBe(200);
@@ -123,11 +176,11 @@ describe("登录成功双写（B5）", () => {
 
 describe("退出失效（R11 服务端半边）", () => {
   it("sign-out 后旧 cookie get-session 无用户，Redis 键与 PG 行均删", async () => {
-    const phone = uniquePhone();
-    const registered = await registerWithPhone({ phone, password: PASSWORD });
+    const username = uniqueUsername();
+    const registered = await registerWithUsername({ username, password: PASSWORD });
     expectRegisteredOk(registered);
 
-    const cookie = await signInAndGetCookie(phone, PASSWORD);
+    const cookie = await signInAndGetCookie(username, PASSWORD);
 
     // 登录后双写就位：PG 行 + Redis 键（作为退出断言的前置事实）
     const rowsBefore = await db
@@ -144,8 +197,8 @@ describe("退出失效（R11 服务端半边）", () => {
     const signOutRes = await directPost("/sign-out", {}, cookie);
     expect(signOutRes.status).toBe(200);
 
-    // 旧 cookie 直连 get-session：响应不含用户
-    const sessionRes = await directPost("/get-session", {}, cookie);
+    // 旧 cookie 直连 get-session（GET）：响应不含用户
+    const sessionRes = await directGetSession(cookie);
     const sessionBody = await sessionRes.json();
     expect(sessionBody?.user ?? null).toBeNull();
 
