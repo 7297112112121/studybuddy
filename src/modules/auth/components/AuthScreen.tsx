@@ -22,8 +22,11 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { CalendarCheck2Icon, CheckIcon } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { authClient } from "@/lib/auth-client";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { registerAction } from "../actions";
 import type { RegisterInput } from "../schema";
 import { mapSignInError } from "../errors";
@@ -58,17 +61,12 @@ export type AuthFormValues = {
   agreementAccepted: boolean;
 };
 
-/** 错误状态：协议勾选错误单列（R4，不进顶部汇总计数），其余进 FormSummary（R1）。 */
+/** 错误状态：协议勾选错误单列（R4），其余以字段级文案呈现在各输入框下。 */
 export type AuthFormErrors = Partial<
   Record<
     "account" | "username" | "password" | "confirmPassword" | "agreement",
     AuthMessageKey
   >
->;
-
-/** FormSummary 计数用：去掉 agreement 后的字段错误（已渲染为文案）。 */
-export type AuthFieldErrors = Partial<
-  Record<"account" | "username" | "password" | "confirmPassword", string>
 >;
 
 /**
@@ -224,101 +222,180 @@ export default function AuthScreen(props: AuthScreenProps) {
     }
   }
 
-  const fieldErrors: AuthFieldErrors = {};
-  if (errors.account !== undefined) {
-    fieldErrors.account = errorText(errors.account);
-  }
-  if (errors.username !== undefined) {
-    fieldErrors.username = errorText(errors.username);
-  }
-  if (errors.password !== undefined) {
-    fieldErrors.password = errorText(errors.password);
-  }
-  if (errors.confirmPassword !== undefined) {
-    fieldErrors.confirmPassword = errorText(errors.confirmPassword);
-  }
-  const agreementError =
-    errors.agreement !== undefined ? errorText(errors.agreement) : undefined;
+  /** 字段错误态：仅以红框呈现（aria-invalid），文案不再渲染。 */
+  const isInvalid = (key: keyof Omit<AuthFormErrors, "agreement">) =>
+    errors[key] !== undefined;
+  const agreementInvalid = errors.agreement !== undefined;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="grid w-full max-w-4xl gap-8 md:grid-cols-[1fr_1.2fr]">
-        {/* 品牌区（线框图左侧，静态文案） */}
-        <aside className="hidden md:block">
-          <p className="text-2xl font-bold text-slate-800">AI 学业陪伴</p>
-          <h2 className="mt-4 text-xl font-semibold text-slate-700">
-            你的规划、任务和情绪
-            <br />
-            都在一个账号里
-          </h2>
-          <p className="mt-3 text-sm text-slate-500">
-            登录后接着上次的进度继续，换设备也一样。
-          </p>
-        </aside>
+    <main className="aurora-theme relative isolate min-h-dvh overflow-hidden bg-background text-foreground">
+      {/* aurora 背景层（aria-hidden，-z-10）：墨底上散布柔光斑 → aurora 纱幕
+          （网格 + 颗粒）→ 双重压暗（中央保持可读、边缘沉入墨底）。
+          整页一张背景，卡片与宣传列同景，不再有分区边界。 */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-40 -left-32 size-[28rem] rounded-full bg-aurora-aqua/30 blur-3xl" />
+        <div className="absolute top-1/4 right-1/3 size-96 rounded-full bg-aurora-indigo/30 blur-3xl" />
+        <div className="absolute -bottom-44 -right-24 size-[30rem] rounded-full bg-aurora-magenta/25 blur-3xl" />
+        <div className="absolute bottom-1/4 left-1/4 size-72 rounded-full bg-aurora-indigo-deep/40 blur-3xl" />
+        <div className="absolute top-1/2 -left-16 size-80 rounded-full bg-aurora-magenta-deep/20 blur-3xl" />
+        <div className="aurora-veil absolute inset-0" />
+        <div className="absolute inset-0 bg-aurora-ink/30" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,var(--aurora-ink)_100%)]" />
+      </div>
 
-        {/* 表单卡片 */}
-        <section className="rounded-xl bg-white p-6 shadow-md">
-          <AuthTabs active={activeView} onSwitch={switchView} />
+      {/* 主内容：lg 双列（宣传列左 / 玻璃卡右），移动端单列且卡片在前。
+          max-w-7xl 居中，所有内容直接压在共享 aurora 背景上。 */}
+      <div className="mx-auto grid min-h-dvh w-full max-w-7xl items-center gap-14 px-6 py-12 lg:grid-cols-2 lg:gap-10">
+        {/* 玻璃签名卡（移动端在前）：.glass-card 提供卡面渐变、内描边高光与
+            深投影，backdrop-blur 隔角落「吻光」取景；加载入场一次淡入上滑，
+            prefers-reduced-motion 下关闭。section 占满列宽、卡片列内居中——
+            卡宽不随视图内容伸缩（fit-content 定位会让 w-full 退化为内容宽）。 */}
+        <section className="relative order-1 lg:order-2">
+          {/* 角落 aurora 吻光（aria-hidden）：垫在玻璃卡后，隔毛玻璃透出柔光。 */}
+          <div
+            aria-hidden="true"
+            className="absolute -top-10 -right-10 -z-10 size-40 rounded-full bg-aurora-magenta/30 blur-2xl"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute -bottom-10 -left-10 -z-10 size-40 rounded-full bg-aurora-aqua/25 blur-2xl"
+          />
+          {/* 卡片高度统一以注册视图（内容更高者）为基准：登录视图 min-h
+              撑到同高，切换视图不再跳动；内容超出时卡片仍可自然长高。 */}
+          <div className="glass-card mx-auto min-h-[34.5rem] w-full max-w-md rounded-4xl border border-border p-8 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-3 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
+            {/* 视图级大标题（auth-2 视觉重做）：随 activeView 切换文案。 */}
+            <h1 className="mb-5 text-3xl font-bold tracking-tight text-foreground">
+              {activeView === "login" ? "欢迎回来" : "创建你的账号"}
+            </h1>
 
-          {/* 顶部错误（R7/R10）：服务端/客户端提交失败统一置顶呈现；
-              撞号文案整体可点，切回登录视图并带入账户名（R10）。 */}
-          {topError === null ? null : (
+            <AuthTabs active={activeView} onSwitch={switchView} />
+
+            {/* 顶部错误（R7/R10）：服务端/客户端提交失败统一置顶呈现；
+                撞号文案整体可点，切回登录视图并带入账户名（R10）。 */}
+            {topError === null ? null : (
+              <Alert variant="destructive" className="mb-4">
+                {topError === "auth.error.usernameRegistered" ? (
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => switchView("login")}
+                    className="h-auto p-0 text-destructive"
+                  >
+                    {errorText(topError)}
+                  </Button>
+                ) : (
+                  errorText(topError)
+                )}
+              </Alert>
+            )}
+
+            {/* 表单区：key 驱动切视图时 300ms 淡入上滑（动作回应），reduced-motion 关。 */}
             <div
-              role="alert"
-              className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
+              key={activeView}
+              className="animate-in fade-in slide-in-from-bottom-2 [animation-duration:300ms] [animation-fill-mode:both] motion-reduce:animate-none"
             >
-              {topError === "auth.error.usernameRegistered" ? (
-                <button
-                  type="button"
-                  onClick={() => switchView("login")}
-                  className="font-medium underline"
-                >
-                  {errorText(topError)}
-                </button>
+              {activeView === "login" ? (
+                <LoginForm
+                  account={values.account}
+                  password={values.password}
+                  accountInvalid={isInvalid("account")}
+                  passwordInvalid={isInvalid("password")}
+                  submitting={submitting}
+                  onSubmit={handleLoginSubmit}
+                  onAccountChange={(value) => updateValue("account", value)}
+                  onPasswordChange={(value) => updateValue("password", value)}
+                  onSwitchView={switchView}
+                />
               ) : (
-                errorText(topError)
+                <RegisterForm
+                  account={values.account}
+                  password={values.password}
+                  confirmPassword={values.confirmPassword}
+                  agreementAccepted={values.agreementAccepted}
+                  accountInvalid={isInvalid("username")}
+                  passwordInvalid={isInvalid("password")}
+                  confirmPasswordInvalid={isInvalid("confirmPassword")}
+                  agreementInvalid={agreementInvalid}
+                  submitting={submitting}
+                  onSubmit={handleRegisterSubmit}
+                  onAccountChange={(value) => updateValue("account", value)}
+                  onPasswordChange={(value) => updateValue("password", value)}
+                  onConfirmPasswordChange={(value) =>
+                    updateValue("confirmPassword", value)
+                  }
+                  onAgreementChange={(accepted) =>
+                    updateValue("agreementAccepted", accepted)
+                  }
+                  onSwitchView={switchView}
+                />
               )}
             </div>
-          )}
-
-          {activeView === "login" ? (
-            <LoginForm
-              account={values.account}
-              password={values.password}
-              accountError={fieldErrors.account}
-              passwordError={fieldErrors.password}
-              fieldErrors={fieldErrors}
-              submitting={submitting}
-              onSubmit={handleLoginSubmit}
-              onAccountChange={(value) => updateValue("account", value)}
-              onPasswordChange={(value) => updateValue("password", value)}
-              onSwitchView={switchView}
-            />
-          ) : (
-            <RegisterForm
-              account={values.account}
-              password={values.password}
-              confirmPassword={values.confirmPassword}
-              agreementAccepted={values.agreementAccepted}
-              accountError={fieldErrors.username}
-              passwordError={fieldErrors.password}
-              confirmPasswordError={fieldErrors.confirmPassword}
-              agreementError={agreementError}
-              fieldErrors={fieldErrors}
-              submitting={submitting}
-              onSubmit={handleRegisterSubmit}
-              onAccountChange={(value) => updateValue("account", value)}
-              onPasswordChange={(value) => updateValue("password", value)}
-              onConfirmPasswordChange={(value) =>
-                updateValue("confirmPassword", value)
-              }
-              onAgreementChange={(accepted) =>
-                updateValue("agreementAccepted", accepted)
-              }
-              onSwitchView={switchView}
-            />
-          )}
+          </div>
         </section>
+
+        {/* 宣传列（移动端垫在卡片后）：与卡片同景直接压在 aurora 背景上——
+            无面板底色，分区边界不再存在。品牌语 + 渐变强调标题 + 今日时间线
+            （静态示意，aria-hidden），沿用线框图静态文案约定。 */}
+        <aside className="order-2 flex flex-col justify-center lg:order-1">
+          <div className="animate-in fade-in slide-in-from-bottom-4 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
+            <p className="flex items-center gap-2 text-lg font-semibold">
+              <CalendarCheck2Icon
+                aria-hidden="true"
+                className="size-5 text-aurora-aqua"
+              />
+              AI 学业陪伴
+            </p>
+            <p className="mt-6 max-w-lg text-4xl leading-snug font-semibold tracking-tight xl:text-5xl">
+              你的规划、任务和情绪
+              <br />
+              都在
+              <span className="bg-linear-[100deg] from-aurora-aqua-bright to-aurora-magenta bg-clip-text text-transparent">
+                一个账号
+              </span>
+              里
+            </p>
+            <p className="mt-4 max-w-md text-sm text-muted-foreground">
+              登录后接着上次的进度继续，换设备也一样。
+            </p>
+            {/* 今日时间线：产品语境的「实物」示意，非真实数据；三个状态
+                （已完成/进行中/待开始）以图标表达，不加编号。 */}
+            <ul
+              aria-hidden="true"
+              className="mt-10 max-w-md space-y-1 border-l border-border pl-5"
+            >
+              <li className="flex items-center gap-3 py-1.5 text-sm">
+                <span className="w-12 shrink-0 text-muted-foreground">
+                  08:00
+                </span>
+                <span className="flex-1 text-foreground/80">晨读 30 分钟</span>
+                <CheckIcon
+                  aria-hidden="true"
+                  className="size-4 text-aurora-aqua"
+                />
+              </li>
+              <li className="mx-[-1.25rem] flex items-center gap-3 rounded-lg bg-muted px-2.5 py-1.5 text-sm font-medium">
+                <span className="w-12 shrink-0 text-muted-foreground">
+                  14:00
+                </span>
+                <span className="flex-1">微积分习题集</span>
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full bg-aurora-aqua"
+                />
+              </li>
+              <li className="flex items-center gap-3 py-1.5 text-sm">
+                <span className="w-12 shrink-0 text-muted-foreground">
+                  21:30
+                </span>
+                <span className="flex-1 text-foreground/80">今日复盘</span>
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full border border-muted-foreground/50"
+                />
+              </li>
+            </ul>
+          </div>
+        </aside>
       </div>
     </main>
   );

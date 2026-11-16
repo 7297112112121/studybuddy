@@ -22,9 +22,9 @@ export default async function WorkbenchPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-100 p-4">
-      <h1 className="text-2xl font-bold text-slate-800">工作台</h1>
-      <p className="text-sm text-slate-600">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted p-4">
+      <h1 className="text-2xl font-bold text-foreground">工作台</h1>
+      <p className="text-sm text-muted-foreground">
         当前登录：<span data-testid="session-account">{session.user.username}</span>
       </p>
       <SignOutButton />

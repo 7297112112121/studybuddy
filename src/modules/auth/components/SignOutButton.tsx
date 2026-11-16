@@ -11,6 +11,7 @@
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 import { authClient } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
 
 export default function SignOutButton() {
   const router = useRouter();
@@ -26,8 +27,8 @@ export default function SignOutButton() {
   }
 
   return (
-    <button type="button" onClick={() => void handleSignOut()}>
+    <Button type="button" variant="outline" onClick={() => void handleSignOut()}>
       退出登录
-    </button>
+    </Button>
   );
 }

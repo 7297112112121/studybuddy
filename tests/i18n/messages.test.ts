@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import auth from "@/locales/zh-CN/auth.json";
 
 /**
- * auth 命名空间 13 键文案与 design 文案表逐字对照
+ * auth 命名空间 12 键文案与 design 文案表逐字对照
  * （docs/dev/AXY-8-auth/design.mdx「文案」节；E2E 断言以渲染文案为准，
  *  本测试锁定 JSON 源值：全角标点、省略号「…」、破折号「—」、ICU 占位符不得漂移）。
  */
@@ -34,32 +34,20 @@ describe("auth.json 文案与 design 文案表逐字一致", () => {
     expect(auth.error.unknown).toBe("出了点问题，请稍后再试");
   });
 
-  it("summary：表单汇总（ICU，count 为占位符）", () => {
-    expect(auth.summary.errors).toBe("有 {count} 项需要修改");
-  });
-
   it("submit：提交态（省略号为 U+2026）", () => {
     expect(auth.submit.loggingIn).toBe("登录中…");
     expect(auth.submit.registering).toBe("注册中…");
   });
 
-  it("结构：共 13 个叶子键，命名空间齐全", () => {
+  it("结构：共 12 个叶子键，命名空间齐全", () => {
     expect(Object.keys(auth).sort()).toEqual(
-      [
-        "account",
-        "agreement",
-        "error",
-        "password",
-        "register",
-        "submit",
-        "summary",
-      ].sort(),
+      ["account", "agreement", "error", "password", "register", "submit"].sort(),
     );
     const leafCount = Object.values(auth).reduce(
       (sum, group) => sum + Object.keys(group as object).length,
       0,
     );
-    expect(leafCount).toBe(13);
+    expect(leafCount).toBe(12);
     expect(Object.keys(auth.register)).toEqual(["passwordMismatch"]);
     expect("phoneRegistered" in auth.error).toBe(false);
     expect("usernameRegistered" in auth.error).toBe(true);

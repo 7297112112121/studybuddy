@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import {
   E2E_PASSWORD,
@@ -34,23 +34,13 @@ import {
  *    产品代码不动）。
  */
 
-/** 顶部汇总（R1）：计数文案在独立 span 内，外层 alert 含装饰性「!」。 */
-function formSummary(page: Page) {
-  return page.getByText(/^有 \d+ 项需要修改$/);
-}
-
 test.describe("校验链（登录视图）", () => {
-  test("R1: 空表单提交呈现账户名与密码必填错误、汇总计数，不提交", async ({
+  test("R1: 空表单提交呈现账户名与密码必填错误态（红框无文案），不提交", async ({
     page,
   }) => {
     await page.goto("/login");
     await page.getByRole("button", { name: "登录", exact: true }).click();
 
-    await expect(formSummary(page)).toHaveText(/^有 2 项需要修改$/);
-    await expect(page.locator("#login-account-error")).toHaveText(
-      "请输入账户名",
-    );
-    await expect(page.locator("#login-password-error")).toHaveText("请输入密码");
     await expect(page.locator("#login-account")).toHaveAttribute(
       "aria-invalid",
       "true",
@@ -67,20 +57,21 @@ test.describe("校验链（登录视图）", () => {
   }) => {
     await page.goto("/login");
 
-    // 含空格与非法字符：E-02 逐字，输入框无过滤完整保留所输值（D-12）
+    // 含空格与非法字符：E-02 红框态，输入框无过滤完整保留所输值（D-12）
     await fillLoginForm(page, "zhang san!");
     await page.getByRole("button", { name: "登录", exact: true }).click();
-    await expect(page.locator("#login-account-error")).toHaveText(
-      "格式不对：1—16 位中文、字母、数字或下划线",
+    await expect(page.locator("#login-account")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
     await expect(page.locator("#login-account")).toHaveValue("zhang san!");
-    await expect(formSummary(page)).toHaveText(/^有 1 项需要修改$/);
 
-    // 17 位超长：同样 E-02，value 完整保留 17 位（无 maxLength 直证）
+    // 17 位超长：同样 E-02 红框态，value 完整保留 17 位（无 maxLength 直证）
     await fillLoginForm(page, "abcdefghijklmnopq");
     await page.getByRole("button", { name: "登录", exact: true }).click();
-    await expect(page.locator("#login-account-error")).toHaveText(
-      "格式不对：1—16 位中文、字母、数字或下划线",
+    await expect(page.locator("#login-account")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
     await expect(page.locator("#login-account")).toHaveValue(
       "abcdefghijklmnopq",
@@ -90,9 +81,13 @@ test.describe("校验链（登录视图）", () => {
     // 使提交止于前端校验、不触发对未注册账户的真实登录请求。
     await fillLoginForm(page, "zhang_san", "12345678");
     await page.getByRole("button", { name: "登录", exact: true }).click();
-    await expect(page.locator("#login-account-error")).toBeHidden();
-    await expect(page.locator("#login-password-error")).toHaveText(
-      "密码为 8—20 位，需含字母与数字",
+    await expect(page.locator("#login-account")).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(page.locator("#login-password")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
     await expect(page).toHaveURL(/\/login$/);
   });
@@ -101,8 +96,9 @@ test.describe("校验链（登录视图）", () => {
     await page.goto("/login");
     await fillLoginForm(page, uniqueUsername(), "12345678");
     await page.getByRole("button", { name: "登录", exact: true }).click();
-    await expect(page.locator("#login-password-error")).toHaveText(
-      "密码为 8—20 位，需含字母与数字",
+    await expect(page.locator("#login-password")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
     await expect(page).toHaveURL(/\/login$/);
   });
@@ -133,17 +129,19 @@ test.describe("校验链（注册视图）", () => {
   }) => {
     await page.goto("/register");
 
-    // 空表单：账户名 + 密码两项进汇总，协议单列（R4 用例专验）
+    // 空表单：账户名 + 密码字段级错误态，协议单列（R4 用例专验）
     await page.getByRole("button", { name: "注册并进入" }).click();
-    await expect(formSummary(page)).toHaveText(/^有 2 项需要修改$/);
-    await expect(page.locator("#register-account-error")).toHaveText(
-      "格式不对：1—16 位中文、字母、数字或下划线",
+    await expect(page.locator("#register-account")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
-    await expect(page.locator("#register-password-error")).toHaveText(
-      "请输入密码",
+    await expect(page.locator("#register-password")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
-    await expect(page.locator("#register-agreement-error")).toHaveText(
-      "请阅读并勾选《用户协议》与《隐私政策》",
+    await expect(page.locator("#register-agreement")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
 
     // 17 位账户名（密码两框一致、协议已勾）：账户名单项
@@ -154,19 +152,19 @@ test.describe("校验链（注册视图）", () => {
     await page.locator("#register-confirm").fill(E2E_PASSWORD);
     await page.locator("#register-agreement").check();
     await page.getByRole("button", { name: "注册并进入" }).click();
-    await expect(page.locator("#register-account-error")).toHaveText(
-      "格式不对：1—16 位中文、字母、数字或下划线",
+    await expect(page.locator("#register-account")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
-    await expect(formSummary(page)).toHaveText(/^有 1 项需要修改$/);
 
     // 确认密码不一致（账户名与密码合格）：确认密码单项
     await page.locator("#register-account").fill(uniqueUsername());
     await page.locator("#register-confirm").fill("different999");
     await page.getByRole("button", { name: "注册并进入" }).click();
-    await expect(page.locator("#register-confirm-error")).toHaveText(
-      "两次输入的密码不一致",
+    await expect(page.locator("#register-confirm")).toHaveAttribute(
+      "aria-invalid",
+      "true",
     );
-    await expect(formSummary(page)).toHaveText(/^有 1 项需要修改$/);
     await expect(page).toHaveURL(/\/register$/);
   });
 
@@ -179,14 +177,10 @@ test.describe("校验链（注册视图）", () => {
     await page.locator("#register-confirm").fill(E2E_PASSWORD);
     await page.getByRole("button", { name: "注册并进入" }).click();
 
-    await expect(page.locator("#register-agreement-error")).toHaveText(
-      "请阅读并勾选《用户协议》与《隐私政策》",
-    );
     await expect(page.locator("#register-agreement")).toHaveAttribute(
       "aria-invalid",
       "true",
     );
-    await expect(formSummary(page)).toBeHidden(); // 协议错误不进汇总计数
     await expect(page).toHaveURL(/\/register$/);
 
     // 勾选后再提交：协议错误解除。确认密码改坏使提交止于前端校验、
@@ -194,8 +188,14 @@ test.describe("校验链（注册视图）", () => {
     await page.locator("#register-agreement").check();
     await page.locator("#register-confirm").fill("different999");
     await page.getByRole("button", { name: "注册并进入" }).click();
-    await expect(page.locator("#register-agreement-error")).toBeHidden();
-    await expect(page.locator("#register-confirm-error")).toBeVisible();
+    await expect(page.locator("#register-agreement")).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(page.locator("#register-confirm")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
     await expect(page).toHaveURL(/\/register$/);
   });
 
@@ -207,21 +207,27 @@ test.describe("校验链（注册视图）", () => {
 
     // 先制造错误，再切视图：错误应被清空
     await page.getByRole("button", { name: "登录", exact: true }).click();
-    await expect(page.locator("#login-account-error")).toBeVisible();
+    await expect(page.locator("#login-account")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
 
     await fillLoginForm(page, username);
     await page.getByRole("tab", { name: "注册" }).click();
 
     // URL 经 replaceState 同步为 /register，已填值在注册视图保留
+    // （shadcn 化后非激活视图不渲染，登录侧错误清空待切回后再验）
     await expect(page).toHaveURL(/\/register$/);
     await expect(page.locator("#register-account")).toHaveValue(username);
     await expect(page.locator("#register-password")).toHaveValue(E2E_PASSWORD);
-    await expect(page.locator("#login-account-error")).toBeHidden();
-    await expect(formSummary(page)).toBeHidden();
 
-    // 底部切换控件（ViewSwitchLink 为 button 语义，不导航）切回登录：值继续保留
+    // 底部切换控件（ViewSwitchLink 为 button 语义，不导航）切回登录：错误已清空、值继续保留
     await page.getByRole("button", { name: "去登录", exact: true }).click();
     await expect(page).toHaveURL(/\/login$/);
+    await expect(page.locator("#login-account")).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
     await expect(page.locator("#login-account")).toHaveValue(username);
     await expect(page.locator("#login-password")).toHaveValue(E2E_PASSWORD);
   });

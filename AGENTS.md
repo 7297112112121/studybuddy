@@ -46,6 +46,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 接到新功能需求时,先读 `product-design` 技能——未经批准的用户故事不得进入开发落地。
 - 产品设计按用户故事 → proposal 接力(product-design、proposal-writing,proposal 属产品侧文档);开发落地按 design → plan → TDD 实现 → spec-review 接力;两道批准门(proposal、design)未过,不得拆任务或写任何产品代码,对应技能:proposal-writing、architecture-design、plan-writing、spec-review。
 - 一切产品代码遵循 TDD 铁律:无先失败的测试,即无产品代码。
+- 一切 UI/前端代码遵循 [docs/dev/前端设计规范.md](docs/dev/前端设计规范.md)——组件从 `src/components/ui/`(shadcn,ADR-0004)选型,颜色/圆角/阴影一律语义 token,禁裸色值与手写平行组件;组件与主题基础见 ADR-0004/0003;视觉实现手法(美学方向、排版)参考外部技能 `frontend-design`(skills-lock.json 管理),与规范冲突时以规范为准。
 - 技术选型与既有 ADR(docs/dev/adr/)冲突或无 ADR 覆盖时,先走 ADR 流程再继续设计。
 
 ## 文档地图
@@ -54,7 +55,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - 全部文档在 `docs/`(文档站 `website/` 的源目录)。格式约定:给 AI 的指令与规范一律 `.md`,面向人类的富媒体页(交互原型)一律 `.mdx`;线上每页均有纯文本 `.md` 端点,全站索引见 `https://7297112112121.github.io/studybuddy/llms.txt`。
 - `docs/intro.md` — 产品简介;`docs/研发流程.md` — 三阶段流程总览(门禁见上节,不重复)。
-- `docs/dev/` — 技术规范:代码目录约定(`代码目录.md`)、ADR 流程与决策日志(`docs/dev/adr/index.md`)、特性开发工件(`docs/dev/AXY-<N>-<slug>/`:design/tasks/review;proposal 在 docs/product/)。
+- `docs/dev/` — 技术规范:代码目录约定(`代码目录.md`)、前端设计规范(`前端设计规范.md`,UI 落地门禁)、ADR 流程与决策日志(`docs/dev/adr/index.md`)、特性开发工件(`docs/dev/AXY-<N>-<slug>/`:design/tasks/review;proposal 在 docs/product/)。
 - `docs/product/` — 产品侧文档:用户故事 `AXY-<N>-<slug>/story.md`(编号即路径,index.md 仅总览仪表盘,勿按文件名盲搜;五大组成部分)与需求规范(`AXY-<N>-<slug>/proposal.md`,含原型契约);通用 DoD 基线在 `docs/product/dod.md`。交互原型一律不入库,proposal 的「原型契约」节是原型唯一资产与 AI 唯一接口(演示态清单唯一源),需要演示时按契约现场生成一次性 HTML 看完即弃。AXY 编号由项目管理平台生成,禁止自行分配。
 - `docs/other/` — 调研存档:格式调研(`md-vs-mdx-research.mdx`)、技能管理标杆、特性开发流程调研;`docs/test/` — 测试文档索引。
 
@@ -72,3 +73,27 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 2. rg / read 仅用于模糊文本查找、读取codegraph返回之外的补充文件
 3. 不要重复read codegraph已经返回源码片段的文件
 
+本项目已启用 shadcn MCP（`.mcp.json`，无密钥、团队通用）。
+用途：写 UI 前查询组件 registry（可用组件、源码、demo），避免凭记忆写组件 API；配合 docs/dev/前端设计规范.md 使用。
+
+
+<!-- BEGIN:nextjs-agent-feedback -->
+
+## Report Next.js feedback
+
+The project owner enabled `experimental.agentFeedback`, authorizing this feedback pass. When enabled, `next dev` writes this block and restores it if removed. Commit `AGENTS.md` with your work to keep the tree clean.
+
+During the current user request, retain anonymized facts as feedback candidates for meaningful or recurring Next.js issues:
+
+- Crashes, hangs, OOMs, or unexpected slowness
+- Incorrect behavior, output, errors, or diagnostics
+- Missing, unclear, or conflicting documentation
+- Unexpected CLI, codemod, Skill, or upgrade behavior and non-obvious workarounds
+
+Continue the current user request without reporting immediately. Routine debugging is not feedback. Verify changes before retaining them as feedback candidates. Never retain code, logs, paths, URLs, secrets, personal information, or project-specific data.
+
+Retain qualifying friction even if it is later fixed or worked around; record the final outcome during the reporting pass.
+
+Before the final response, run one reporting pass. If candidates remain, from this file's directory run `npx --no-install next internal agent-feedback-instructions` once without piping or truncating its output. Follow its output or error guidance. If a network sandbox blocks it, retry with network access; if it still returns no output, continue normally.
+
+<!-- END:nextjs-agent-feedback -->

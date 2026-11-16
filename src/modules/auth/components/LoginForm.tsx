@@ -6,7 +6,6 @@
 import type { FormEvent } from "react";
 import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
-import FormSummary from "./FormSummary";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
 import type { AuthView } from "./AuthTabs";
@@ -14,10 +13,8 @@ import type { AuthView } from "./AuthTabs";
 type LoginFormProps = {
   account: string;
   password: string;
-  accountError?: string;
-  passwordError?: string;
-  /** R1：字段错误，FormSummary 按键数计数。 */
-  fieldErrors: Partial<Record<"account" | "password", string>>;
+  accountInvalid?: boolean;
+  passwordInvalid?: boolean;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onAccountChange: (value: string) => void;
@@ -29,13 +26,11 @@ type LoginFormProps = {
 export default function LoginForm(props: LoginFormProps) {
   return (
     <form id="auth-login" noValidate onSubmit={props.onSubmit}>
-      <FormSummary errors={props.fieldErrors} />
-
       <div className="space-y-4">
         <AccountField
           id="login-account"
           value={props.account}
-          error={props.accountError}
+          invalid={props.accountInvalid}
           onChange={props.onAccountChange}
         />
 
@@ -43,7 +38,7 @@ export default function LoginForm(props: LoginFormProps) {
           id="login-password"
           label="密码"
           value={props.password}
-          error={props.passwordError}
+          invalid={props.passwordInvalid}
           autoComplete="current-password"
           placeholder="8 位以上，含字母与数字"
           onChange={props.onPasswordChange}

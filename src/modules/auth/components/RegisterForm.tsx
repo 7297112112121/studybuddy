@@ -6,7 +6,6 @@ import type { FormEvent } from "react";
 import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
-import FormSummary from "./FormSummary";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
 import type { AuthView } from "./AuthTabs";
@@ -16,14 +15,10 @@ type RegisterFormProps = {
   password: string;
   confirmPassword: string;
   agreementAccepted: boolean;
-  accountError?: string;
-  passwordError?: string;
-  confirmPasswordError?: string;
-  agreementError?: string;
-  /** R8：字段错误（不含协议勾选），FormSummary 按键数计数。 */
-  fieldErrors: Partial<
-    Record<"username" | "password" | "confirmPassword", string>
-  >;
+  accountInvalid?: boolean;
+  passwordInvalid?: boolean;
+  confirmPasswordInvalid?: boolean;
+  agreementInvalid?: boolean;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onAccountChange: (value: string) => void;
@@ -37,13 +32,11 @@ type RegisterFormProps = {
 export default function RegisterForm(props: RegisterFormProps) {
   return (
     <form id="auth-register" noValidate onSubmit={props.onSubmit}>
-      <FormSummary errors={props.fieldErrors} />
-
       <div className="space-y-4">
         <AccountField
           id="register-account"
           value={props.account}
-          error={props.accountError}
+          invalid={props.accountInvalid}
           onChange={props.onAccountChange}
         />
 
@@ -51,7 +44,7 @@ export default function RegisterForm(props: RegisterFormProps) {
           id="register-password"
           label="设置密码"
           value={props.password}
-          error={props.passwordError}
+          invalid={props.passwordInvalid}
           autoComplete="new-password"
           placeholder="8 位以上，含字母与数字"
           hint="长度 8—20 位，需同时含字母与数字"
@@ -62,7 +55,7 @@ export default function RegisterForm(props: RegisterFormProps) {
           id="register-confirm"
           label="确认密码"
           value={props.confirmPassword}
-          error={props.confirmPasswordError}
+          invalid={props.confirmPasswordInvalid}
           autoComplete="new-password"
           placeholder="再输一次"
           onChange={props.onConfirmPasswordChange}
@@ -71,7 +64,7 @@ export default function RegisterForm(props: RegisterFormProps) {
         <AgreementCheckbox
           id="register-agreement"
           checked={props.agreementAccepted}
-          error={props.agreementError}
+          invalid={props.agreementInvalid}
           onChange={props.onAgreementChange}
         />
 

@@ -1,7 +1,7 @@
 /**
  * Task 8：登录/注册表单渲染层校验链测试（CR-20261116-1：凭据手机号→账户名+密码）。
  *
- * 覆盖：R1（顶部汇总）/ R2 / R3（validateAccount·validatePassword 映射）、
+ * 覆盖：R2 / R3（validateAccount·validatePassword 映射）、
  * D-13（登录表单无协议勾选行，Review Focus #5）、R8（注册校验）、
  * R17（密码显隐）。文案断言以 useTranslations('auth') 渲染的真实
  * auth.json（13 键新版）为准。
@@ -66,8 +66,17 @@ function submitActiveForm(container: HTMLElement): void {
   fireEvent.submit(form);
 }
 
+/** 字段错误态断言：aria-invalid 红框呈现，且不渲染任何字段级错误文案。 */
+function expectInvalid(label: string): void {
+  expect(
+    (screen.getByLabelText(label) as HTMLInputElement).getAttribute(
+      "aria-invalid",
+    ),
+  ).toBe("true");
+}
+
 describe("登录校验链（R1/R2/R3）", () => {
-  it("账号留空+密码 a1234567 提交 → 「请输入账户名」+ 顶部「有 1 项需要修改」，不触发提交", () => {
+  it("账号留空+密码 a1234567 提交 → 账户名红框无文案，无顶部汇总，不触发提交", () => {
     const { container } = renderAuthScreen();
 
     fireEvent.change(screen.getByLabelText("密码"), {
@@ -75,22 +84,25 @@ describe("登录校验链（R1/R2/R3）", () => {
     });
     submitActiveForm(container);
 
-    expect(screen.getByText("请输入账户名")).toBeDefined();
-    expect(screen.getByText("有 1 项需要修改")).toBeDefined();
+    expectInvalid("账户名");
+    expect(screen.queryByText("请输入账户名")).toBeNull();
+    expect(screen.queryByText(/项需要修改/)).toBeNull();
     expect(signInMock).not.toHaveBeenCalled();
   });
 
-  it("账号密码双空提交 → 顶部「有 2 项需要修改」", () => {
+  it("账号密码双空提交 → 两字段红框无文案，无顶部汇总", () => {
     const { container } = renderAuthScreen();
 
     submitActiveForm(container);
 
-    expect(screen.getByText("请输入账户名")).toBeDefined();
-    expect(screen.getByText("请输入密码")).toBeDefined();
-    expect(screen.getByText("有 2 项需要修改")).toBeDefined();
+    expectInvalid("账户名");
+    expectInvalid("密码");
+    expect(screen.queryByText("请输入账户名")).toBeNull();
+    expect(screen.queryByText("请输入密码")).toBeNull();
+    expect(screen.queryByText(/项需要修改/)).toBeNull();
   });
 
-  it("账号 zhang san! → 格式文案，输入无过滤原样保留；17 位同文案且完整保留；改填 zhang_san 后提示消失", () => {
+  it("账号 zhang san! → 账户名红框，输入无过滤原样保留；17 位同态且完整保留；改填 zhang_san 后红框解除", () => {
     const { container } = renderAuthScreen();
     const account = screen.getByLabelText("账户名") as HTMLInputElement;
 
@@ -101,29 +113,26 @@ describe("登录校验链（R1/R2/R3）", () => {
       target: { value: "a1234567" },
     });
     submitActiveForm(container);
+    expect(account.getAttribute("aria-invalid")).toBe("true");
     expect(
-      screen.getByText("格式不对：1—16 位中文、字母、数字或下划线"),
-    ).toBeDefined();
+      screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
+    ).toBeNull();
 
     fireEvent.change(account, { target: { value: "abcdefghijklmnopq" } });
     // D-12：无 maxLength，17 位完整保留
     expect(account.value).toBe("abcdefghijklmnopq");
     submitActiveForm(container);
-    expect(
-      screen.getByText("格式不对：1—16 位中文、字母、数字或下划线"),
-    ).toBeDefined();
+    expect(account.getAttribute("aria-invalid")).toBe("true");
 
     fireEvent.change(account, { target: { value: "zhang_san" } });
     submitActiveForm(container);
-    expect(
-      screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
-    ).toBeNull();
+    expect(account.getAttribute("aria-invalid")).toBeNull();
     expect(screen.queryByText(/项需要修改/)).toBeNull();
     // 正向对照：合法值提交确实到达提交边界（防 mock 键漂移后的空转绿）。
     expect(signInMock).toHaveBeenCalledTimes(1);
   });
 
-  it("账号 12345678/密码 21 位 → 密码规则文案", () => {
+  it("账号 12345678/密码 21 位 → 密码红框无文案", () => {
     const { container } = renderAuthScreen();
     const password21 = "a12345678901234567890";
 
@@ -135,7 +144,10 @@ describe("登录校验链（R1/R2/R3）", () => {
     });
     submitActiveForm(container);
 
-    expect(screen.getByText("密码为 8—20 位，需含字母与数字")).toBeDefined();
+    expectInvalid("密码");
+    expect(
+      screen.queryByText("密码为 8—20 位，需含字母与数字"),
+    ).toBeNull();
     expect(signInMock).not.toHaveBeenCalled();
   });
 
@@ -148,7 +160,7 @@ describe("登录校验链（R1/R2/R3）", () => {
 });
 
 describe("注册校验链（R8）", () => {
-  it("账号 zhang san! → E-02 格式文案，不触发注册", () => {
+  it("账号 zhang san! → E-02 账户名红框，不触发注册", () => {
     renderAuthScreen({ initialView: "register" });
 
     fireEvent.change(screen.getByLabelText("账户名"), {
@@ -156,13 +168,14 @@ describe("注册校验链（R8）", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "注册并进入" }));
 
+    expectInvalid("账户名");
     expect(
-      screen.getByText("格式不对：1—16 位中文、字母、数字或下划线"),
-    ).toBeDefined();
+      screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
+    ).toBeNull();
     expect(registerMock).not.toHaveBeenCalled();
   });
 
-  it("确认密码为空或不一致 → 「两次输入的密码不一致」", () => {
+  it("确认密码为空或不一致 → 确认密码红框无文案", () => {
     const { container } = renderAuthScreen({ initialView: "register" });
 
     fireEvent.change(screen.getByLabelText("账户名"), {
@@ -181,17 +194,18 @@ describe("注册校验链（R8）", () => {
       target: { value: "" },
     });
     submitActiveForm(container);
-    expect(screen.getByText("两次输入的密码不一致")).toBeDefined();
+    expectInvalid("确认密码");
+    expect(screen.queryByText("两次输入的密码不一致")).toBeNull();
 
     // 确认密码不一致
     fireEvent.change(screen.getByLabelText("确认密码"), {
       target: { value: "study2027" },
     });
     submitActiveForm(container);
-    expect(screen.getByText("两次输入的密码不一致")).toBeDefined();
+    expectInvalid("确认密码");
   });
 
-  it("合法账户名密码但未勾选协议 → 勾选框 aria-invalid 错误态", () => {
+  it("合法账户名密码但未勾选协议 → 勾选框 aria-invalid 错误态，无文案", () => {
     const { container } = renderAuthScreen({ initialView: "register" });
     const checkbox = screen.getByLabelText(
       /我已阅读并同意/,
@@ -209,7 +223,9 @@ describe("注册校验链（R8）", () => {
     submitActiveForm(container);
 
     expect(checkbox.getAttribute("aria-invalid")).toBe("true");
-    expect(screen.getByText("请阅读并勾选《用户协议》与《隐私政策》")).toBeDefined();
+    expect(
+      screen.queryByText("请阅读并勾选《用户协议》与《隐私政策》"),
+    ).toBeNull();
   });
 });
 

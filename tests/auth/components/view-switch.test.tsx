@@ -70,12 +70,16 @@ describe("R16 视图切换", () => {
     }
 
     fireEvent.submit(form);
-    expect(screen.getByText("请输入账户名")).toBeDefined();
-    expect(screen.getByText("有 2 项需要修改")).toBeDefined();
+    expect(
+      screen.getByLabelText("账户名").getAttribute("aria-invalid"),
+    ).toBe("true");
+    expect(screen.queryByText(/项需要修改/)).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "注册一个" }));
 
-    expect(screen.queryByText("请输入账户名")).toBeNull();
+    expect(
+      screen.getByLabelText("账户名").getAttribute("aria-invalid"),
+    ).toBeNull();
     expect(screen.queryByText(/项需要修改/)).toBeNull();
     expect(replaceState).toHaveBeenCalledWith(null, "", "/register");
   });
