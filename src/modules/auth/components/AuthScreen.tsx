@@ -248,8 +248,9 @@ export default function AuthScreen(props: AuthScreenProps) {
       <div className="mx-auto grid min-h-dvh w-full max-w-7xl items-center gap-14 px-6 py-12 lg:grid-cols-2 lg:gap-10">
         {/* 玻璃签名卡（移动端在前）：.glass-card 提供卡面渐变、内描边高光与
             深投影，backdrop-blur 隔角落「吻光」取景；加载入场一次淡入上滑，
-            prefers-reduced-motion 下关闭。 */}
-        <section className="relative order-1 lg:order-2 lg:justify-self-end">
+            prefers-reduced-motion 下关闭。section 占满列宽、卡片列内居中——
+            卡宽不随视图内容伸缩（fit-content 定位会让 w-full 退化为内容宽）。 */}
+        <section className="relative order-1 lg:order-2">
           {/* 角落 aurora 吻光（aria-hidden）：垫在玻璃卡后，隔毛玻璃透出柔光。 */}
           <div
             aria-hidden="true"
