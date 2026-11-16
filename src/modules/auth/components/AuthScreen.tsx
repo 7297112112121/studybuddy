@@ -259,7 +259,9 @@ export default function AuthScreen(props: AuthScreenProps) {
             aria-hidden="true"
             className="absolute -bottom-10 -left-10 -z-10 size-40 rounded-full bg-aurora-aqua/25 blur-2xl"
           />
-          <div className="glass-card mx-auto w-full max-w-md rounded-4xl border border-border p-8 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-3 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
+          {/* 卡片高度统一以注册视图（内容更高者）为基准：登录视图 min-h
+              撑到同高，切换视图不再跳动；内容超出时卡片仍可自然长高。 */}
+          <div className="glass-card mx-auto min-h-[34.5rem] w-full max-w-md rounded-4xl border border-border p-8 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-3 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
             {/* 视图级大标题（auth-2 视觉重做）：随 activeView 切换文案。 */}
             <h1 className="mb-5 text-3xl font-bold tracking-tight text-foreground">
               {activeView === "login" ? "欢迎回来" : "创建你的账号"}
