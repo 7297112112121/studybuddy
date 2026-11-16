@@ -76,3 +76,21 @@ export function uniquePhone(): string {
   const head = 3 + (uniquePhoneSeq % 7); // 3..9，落在 PHONE_RE 合法域
   return `1${head}${stem}${uniquePhoneSeq}`;
 }
+
+let uniqueUsernameSeq = 0;
+
+/**
+ * 每次调用返回不重复且 F-01 合法（/^[一-龥A-Za-z0-9_]{1,16}$/）的账户名
+ * （14 位 ≤ 16）。
+ *
+ * user_username 唯一索引跨测试运行持久化（compose 卷）——时间戳主干（36
+ * 进制）保证跨运行不重复，模内计数器保证同毫秒内连续调用不重复，随机尾
+ * 进一步防并行 worker 同毫秒同计数器碰撞，从源头防唯一冲突串扰。全字符
+ * 落在 [0-9a-z]，uppercase() 后仍是 F-01 合法变体（大小写测试用）。
+ */
+export function uniqueUsername(): string {
+  uniqueUsernameSeq = (uniqueUsernameSeq + 1) % 10;
+  const stem = Date.now().toString(36).slice(-8).padStart(8, "0");
+  const tail = crypto.randomUUID().replace(/-/g, "").slice(0, 4);
+  return `u${stem}${tail}${uniqueUsernameSeq}`;
+}
