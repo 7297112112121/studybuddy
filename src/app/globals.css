@@ -31,6 +31,11 @@
   --color-destructive: var(--destructive);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-aurora-aqua: var(--aurora-aqua);
+  --color-aurora-aqua-deep: var(--aurora-aqua-deep);
+  --color-aurora-magenta: var(--aurora-magenta);
+  --color-aurora-magenta-deep: var(--aurora-magenta-deep);
+  --color-aurora-indigo: var(--aurora-indigo);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -72,6 +77,14 @@
      取 Tailwind amber-600/800 的 oklch 近似值;暗色未校准。 */
   --warning: oklch(0.666 0.179 58);
   --warning-foreground: oklch(0.476 0.114 61);
+  /* aurora 装饰色:auth 页「aurora glass」视觉方向引入的辅助强调组,只作点缀
+     (光斑 / 渐变面 / 焦点环),不进入组件默认态。取 Tailwind teal / fuchsia /
+     indigo 的 oklch 近似值;deep 端供渐变浓墨面使用(白字对比达标),暗色未校准。 */
+  --aurora-aqua: oklch(0.6 0.106 184.7);
+  --aurora-aqua-deep: oklch(0.437 0.078 188.2);
+  --aurora-magenta: oklch(0.591 0.272 327.6);
+  --aurora-magenta-deep: oklch(0.518 0.253 323.9);
+  --aurora-indigo: oklch(0.511 0.262 276.97);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);

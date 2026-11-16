@@ -2,7 +2,8 @@
  * 密码输入框（R17 显隐切换）。登录密码、注册密码、确认密码三处同构复用；
  * 显隐为视图局部态（wireframe 同构），不进 AuthScreen 全局状态。纯受控。
  * 视觉：shadcn Label + Input + ghost icon Button（lucide Eye/EyeOff，
- * 显隐图标按钮的可访问名经 aria-label 保持「显示密码/隐藏密码」不变）。
+ * 显隐图标按钮的可访问名经 aria-label 保持「显示密码/隐藏密码」不变），
+ * 焦点环 aurora aqua。
  */
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
@@ -45,7 +46,7 @@ export default function PasswordField(props: PasswordFieldProps) {
           onChange={(event) => props.onChange(event.target.value)}
           aria-invalid={props.error !== undefined ? true : undefined}
           aria-describedby={describedBy === "" ? undefined : describedBy}
-          className="h-10 pr-11"
+          className="h-10 pr-11 focus-visible:border-aurora-aqua focus-visible:ring-aurora-aqua/30"
         />
         <Button
           type="button"

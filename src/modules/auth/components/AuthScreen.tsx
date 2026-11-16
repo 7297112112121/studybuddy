@@ -244,10 +244,19 @@ export default function AuthScreen(props: AuthScreenProps) {
     errors.agreement !== undefined ? errorText(errors.agreement) : undefined;
 
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
-      {/* 品牌面板（lg+）：整页唯一的浓墨处——近黑底反白，今日时间线给产品语境。
+    <main className="relative isolate grid min-h-dvh overflow-hidden bg-background lg:grid-cols-[1.05fr_1fr]">
+      {/* aurora 光斑装饰层（aria-hidden）：aqua/magenta/indigo 柔光斑，
+          压在纸面底色上、垫在内容之后，右列玻璃卡片隔其取景。 */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-24 right-1/5 size-80 rounded-full bg-aurora-aqua/20 blur-3xl" />
+        <div className="absolute -bottom-28 -right-20 size-96 rounded-full bg-aurora-magenta/15 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 size-80 rounded-full bg-aurora-indigo/10 blur-3xl" />
+      </div>
+
+      {/* 品牌面板（lg+）：整页唯一的浓墨处——aurora 深端渐变（aqua-deep→
+          magenta-deep）反白，今日时间线给产品语境。
           静态装饰内容（aria-hidden），沿用线框图左侧静态文案约定（文案测试依赖）。 */}
-      <aside className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex">
+      <aside className="hidden flex-col justify-between bg-linear-[155deg] from-aurora-aqua-deep to-aurora-magenta-deep p-10 text-primary-foreground lg:flex">
         <p className="flex items-center gap-2 text-lg font-semibold">
           <CalendarCheck2Icon aria-hidden="true" className="size-5" />
           AI 学业陪伴
@@ -303,9 +312,10 @@ export default function AuthScreen(props: AuthScreenProps) {
         </div>
       </aside>
 
-      {/* 表单列：无卡片容器，直接落在纸面底色上，把视觉重量留给品牌面板 */}
+      {/* 表单列：玻璃质感卡片（半透明 card + backdrop-blur）浮在 aurora 光斑上，
+          签名观感来自卡片后透出的柔光。 */}
       <section className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card/75 p-8 shadow-lg backdrop-blur-md">
           {/* 移动端品牌条（lg 以下品牌面板隐藏） */}
           <div className="mb-8 lg:hidden">
             <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
