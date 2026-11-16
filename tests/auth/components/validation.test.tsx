@@ -6,9 +6,10 @@
  * R17（密码显隐）。文案断言以 useTranslations('auth') 渲染的真实
  * auth.json（13 键新版）为准。
  *
- * 「不触发提交」以提交边界未被调用断言。AuthScreen 的提交边界换装
- * （signIn.phoneNumber → signIn.username）与注册链 account 值接线归 T9：
- * 其间账号字段相关断言若红，归属 T9 待修红。
+ * 「不触发提交」以提交边界（authClient.signIn.username）未被调用断言；
+ * 合法值改填用例以提交边界被调用一次作正向对照，防桩键漂移后的空转绿
+ * （spec-review 终审修复批，2026-11-16：原桩键残留 phoneNumber，致
+ * not.toHaveBeenCalled 恒真、改填用例走异常分支仍绿）。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -18,10 +19,13 @@ import authMessages from "../../../src/locales/zh-CN/auth.json";
 import { registerAction } from "../../../src/modules/auth/actions";
 
 const routerReplace = vi.hoisted(() => vi.fn());
-// AuthScreen（T9 卡换装前）运行时仍调 authClient.signIn.phoneNumber，
-// 经 hoisted 桩注入拦截；不走 vi.mocked(authClient.signIn.phoneNumber)——
-// 真实 auth-client 类型面已是 signIn.username，后者会误报类型错误。
-const signInMock = vi.hoisted(() => vi.fn());
+// authClient.signIn.username 经 hoisted 桩注入拦截，默认 resolve
+// better-auth 客户端真实形态 { data, error }（@better-fetch 默认不 throw，
+// 错误在 error 字段）；不走 vi.mocked(authClient.signIn.username)——
+// 与真实 auth-client 类型面解耦。
+const signInMock = vi.hoisted(() =>
+  vi.fn(async () => ({ data: null, error: null })),
+);
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: routerReplace }),
@@ -31,7 +35,7 @@ vi.mock("../../../src/modules/auth/actions", () => ({
 }));
 vi.mock("../../../src/lib/auth-client", () => ({
   authClient: {
-    signIn: { phoneNumber: signInMock },
+    signIn: { username: signInMock },
     signOut: vi.fn(),
   },
 }));
@@ -115,6 +119,8 @@ describe("登录校验链（R1/R2/R3）", () => {
       screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
     ).toBeNull();
     expect(screen.queryByText(/项需要修改/)).toBeNull();
+    // 正向对照：合法值提交确实到达提交边界（防 mock 键漂移后的空转绿）。
+    expect(signInMock).toHaveBeenCalledTimes(1);
   });
 
   it("账号 12345678/密码 21 位 → 密码规则文案", () => {
