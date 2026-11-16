@@ -388,3 +388,6 @@ sidebar_position: 3
 - 裁决: 限流 specialRule 默认仅 production 启用（better-auth create-context.mjs `rateLimit.enabled ?? isProduction`，vitest NODE_ENV=test），集成测试全程无 429 无需节流；E2E 生产构建下限流生效（原 Task 12 裁决语义继续成立） — 事实备查已写入测试文件头注释 — 无
 - 裁决: GET /get-session 基座以测试文件内局部 `directGetSession` 落地（未扩 helpers 契约面）；实测响应原文经一次性探针测试取回后即删 — T7 卡仅授权删 uniquePhone，最小改动纪律 — 无
 - **开放问题 #1 闭合（T7，2026-11-16）**：三情形原生统一 401 + INVALID_USERNAME_OR_PASSWORD（源码 index.mjs:157/172/186，含时序安全假哈希防探测），design 开放问题表已回写处置列
+- 裁决: E2E strict violation 判为测试胶水、产品代码不动——登录/注册共用 label「账户名」（单一 AccountField 产品契约）+ Next 16 客户端导航以 React `<Activity>` 保留离开页 DOM（display:none，官方文档证实为框架默认行为），getByLabel 双匹配；字段填充一律弃 getByLabel 改 `#login-*`/`#register-*` 字段 id（表单契约唯一锚点，AccountField 既有 id 已满足） — 手机号时代两视图 label 文案不同故未暴露；产品侧无义务为 E2E 改变 label 单一实现 — 后续 E2E 新用例一律用字段 id 定位；若未来 id 契约变更需同步全部用例
+- 裁决: 节流打点时机修正属测试胶水——`registerViaUI` 在自动登录请求完成（session-account 断言通过）后重置 lastSignInAt，保证下一发登录与其真实间隔 ≥3.5s（原打点在点击前，被 registerAction 服务端往返耗时吃掉，四发挤进同一 10 秒窗口致第 4 发 429） — 未放宽阈值、未绕过限流 — 无
+- 裁决: R4 的 E2E 登录侧整例删除后，E-06「账号或密码不对」的浏览器级呈现断言不再有 E2E 载体 — R7 的证据双半边在集成（T7 三情形同文案）+ 组件（T9 submission 401/429 例），proposal R7 测试层本为「集成测试（接口层断言文案一致）」，E2E 呈现属复验非承载 — spec-review 时留意此项证据归属说明

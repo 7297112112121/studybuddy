@@ -10,7 +10,7 @@ sidebar_position: 5
 | ---- | ---- | ---- | ---- |
 | 关联特性 | AXY-8 登录注册 | 批准人 | 海渝 |
 
-> 本记录由 feature-supersede 技能产出，是 story / proposal / design / tasks / review 之外的**第五份工件**：未来 spec-review 判断「哪些代码是活的」以本记录为准。**记录状态：未闭合**——第 5 节改造 commit 与第 8 节全量测试证据待代码处置执行后回填，闭合前不解除冻结。
+> 本记录由 feature-supersede 技能产出，是 story / proposal / design / tasks / review 之外的**第五份工件**：未来 spec-review 判断「哪些代码是活的」以本记录为准。**记录状态：已闭合（2026-11-16）**——代码处置已执行（改造 commit 链见第 5 节），全量测试套件三绿（证据见第 8 节），冻结解除。
 
 ## 1. 定级与判据
 
@@ -50,7 +50,7 @@ sidebar_position: 5
 | 项 | 值 |
 | - | - |
 | 处置 | **部分回滚改造** |
-| Git 引用 | 实现基线：PR #14 merge commit `baa88ea`（spec-review 基线 `4a7774c`，含修复批 `b6fdd6b`）。被替换逻辑（手机号/邮箱凭据、登录协议勾选）与保留基建（路由常量、会话守卫、i18n 设施、迁移底座）在同一批 feat 提交中交织（`8f48362`…`f73e1a5`），逐 commit revert 不可干净切分——处置为「删除被替换行为 + 按修订版 design TDD 重建」，改造 commit 于实现完成后回填本节 |
+| Git 引用 | 实现基线：PR #14 merge commit `baa88ea`（spec-review 基线 `4a7774c`，含修复批 `b6fdd6b`）。被替换逻辑（手机号/邮箱凭据、登录协议勾选）与保留基建（路由常量、会话守卫、i18n 设施、迁移底座）在同一批 feat 提交中交织（`8f48362`…`f73e1a5`），逐 commit revert 不可干净切分——处置为「删除被替换行为 + 按修订版 design TDD 重建」。**改造 commit 链（2026-11-16，分支 feat/axy-8-username，每 commit 先红后绿）**：`b26c54d` validators 换装 → `6d32f15` i18n 13 键 → `dccddb7` schema+迁移 `20261116074441_crazy_molly_hayes`（删 phone 两列与索引、增 username 唯一索引；迁移前授权清库 dev 测试数据 181 行）→ `8119a43` username 插件换装 → `b0bb420` 注册事务 → `16897aa` actions/queries → `c5289d9` 端点集成 → `a1eca68` 表单组件（删 PhoneField）→ `f7732aa` AuthScreen 提交流程 → `31595c1` workbench 承接页 → `1a81ac3` E2E 换装；文档批：`59bc5b5`（CR 文档）、`f8eca08`（design/tasks 重走获批）、`cb0db43`（执行裁决入档） |
 | 旧测试处理 | 被替换行为（手机号/邮箱凭据校验、手机号注册事务、登录协议勾选、手机号唯一索引并发、相关文案逐字断言）的单元 / 集成 / E2E 用例**删除**；保留部分（密码规则 R3、提交态 R5、落点分流 R6、统一失败文案 R7、会话守卫 R11 / R12、摘要 R13、协议落库 R15、视图切换 R16、显隐 R17）的测试继续生效，断言按 v4 更新 |
 | 迁移处理 | **新增迁移**承载：删 user.phone_number / user.phone_number_verified 列与 user_phone_number 唯一索引，增 username 列与唯一索引（区分大小写）；**不改**旧迁移 `20261114052112_perpetual_songbird` |
 | 删除期限与责任人 | 不适用 |
@@ -62,7 +62,7 @@ sidebar_position: 5
 | story | docs/product/AXY-8-auth/story.md | 不加墓碑——B 级修订后仍有效，按修订纪律更新（状态行注记修订依据 CR-20261116-1） | 是 |
 | proposal | docs/product/AXY-8-auth/proposal.md | 不加墓碑——修订升版 v4（frontmatter status: approved），Changelog 终条登记本次处置 | 是 |
 | design | docs/dev/AXY-8-auth/design.md | 不加墓碑——已按 architecture-design 修订纪律重走（头部注记 CR-20261116-1 与实现基线，正文按 v4 重写为最终形态），2026-11-16 获批 | 是 |
-| tasks | docs/dev/AXY-8-auth/tasks.md | 不加墓碑——待 plan 重走时按 plan-writing 修订纪律更新（既有裁决记录保持历史原貌，新增修订裁决节） | 否（随重走下游客） |
+| tasks | docs/dev/AXY-8-auth/tasks.md | 不加墓碑——已按 plan-writing 修订纪律重走（12 任务改造序列，旧版 43 条裁决历史原貌保留，修订执行期裁决追加尾部），T1–T12 全部执行完毕（2026-11-16） | 是 |
 | review | docs/dev/AXY-8-auth/review.md | 头部加历史报告注记（判定结论不改，不得作为新 review 依据）+ 实现基线 Git 引用 `baa88ea` | 是 |
 
 ## 7. 重走下游客
@@ -70,7 +70,7 @@ sidebar_position: 5
 | 阶段 | 状态 | 备注 |
 | - | - | - |
 | design | 已完成（2026-11-16 获批，批准人海渝） | 经 architecture-design 技能修订重走。**保留资产兼容性核对结论已落 design**（会话双写与守卫 R11/R12、协议落库 R15、密码摘要 R13、视图切换/显隐 R16/R17、路由常量、i18n 设施——逐项凭据无关，证据在 design 各对应节）；账号表结构随 design 定稿：user.username + user_username 唯一索引（区分大小写），新增迁移承载；开放问题 #4 声明空表迁移假设 |
-| plan | 待重走 | 经 plan-writing 技能（design 获批后） |
+| plan | 已完成（2026-11-16，12 任务 T1–T12 全部收口） | 经 plan-writing 技能修订重走；执行方式为子代理逐任务（每卡自包含 prompt），执行期裁决 20 余条入 tasks.md 裁决记录节 |
 | review | 待重走 | 经 spec-review 技能（实现完成后）；旧 review 已加墓碑，不参与新终审，新 review 只审新实现 |
 
 ## 8. 证据
@@ -80,5 +80,5 @@ sidebar_position: 5
 | Git 查证 | `git log --oneline baa88ea~1..baa88ea^2`：30 提交（`8f48362`…`f73e1a5`），phone 逻辑与保留基建交织，逐 commit revert 不可行（输出摘要见会话记录）；`git tag -l` 为空，B 级无处置 tag 约定 |
 | 冻结记录 | 2026-11-16 story / proposal 头部标「需重审」（proposal frontmatter `status: needs-review`），冻结至重新批准；改造完成前代码维持冻结 |
 | 重新批准记录 | story 第三稿（7 条 AC，批准人海渝，2026-11-16，CR 签发后）；proposal v4（批准人海渝，2026-11-16，CR 签发后） |
-| 测试删除 / skip 记录 | 待实现阶段执行后回填（删除清单随改造 commit 登记） |
-| 全量测试套件 | **待回填**——代码处置执行后 `npm test` + `npm run test:integration` + `npm run test:e2e` 全绿为本记录闭合条件；在此之前本记录保持未闭合，不解除冻结 |
+| 测试删除 / skip 记录 | **已执行（2026-11-16，全删除零 skip）**。删除清单（文件→用例）：tests/auth/validators.test.ts 13 例（PHONE_RE 5、EMAIL_RE 3、手机号/邮箱格式与 kind 分类 5）；tests/auth/schema.test.ts 3 例（phone 10 位拒绝、phoneNumber notNull、user_phone_number 索引）；tests/integration/auth/service.test.ts 手机号 3 例（注册/同号/并发同号）；tests/integration/auth/actions.test.ts phone 3 例；tests/integration/auth/endpoints.test.ts 旧 4 例（/sign-in/phone-number 三情形 + phone 版 403 二路径）；tests/auth/components/validation.test.tsx 3 例（旧格式文案 2 + 登录侧协议 aria-invalid 1）；tests/auth/components/submission.test.tsx B2 邮箱短路 1 例；e2e/auth.spec.ts R4 登录侧整例（新写注册侧 R4 替代，例数 13 不变）。组件：PhoneField.tsx 整文件删除（全仓 grep 零残留）。helpers：uniquePhone/uniquePhoneSeq 删除（T7 后全仓零引用）。i18n：删 2 键（register.phoneInvalid、error.phoneRegistered） |
+| 全量测试套件 | **已闭合（2026-11-16）**：`npm test` 16 文件 110/110 全过；`npm run test:integration` 5 文件 17/17 全过（真实 PG/Redis）；`npm run test:e2e` 14 用例全过（42.5s，含生产构建，限流敏感区两轮稳定复验）；`npm run type-check` + `npm run lint` + `npm run lint:circular` 干净退出；`npm run docs:build` SUCCESS |
