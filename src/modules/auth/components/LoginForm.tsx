@@ -13,8 +13,8 @@ import type { AuthView } from "./AuthTabs";
 type LoginFormProps = {
   account: string;
   password: string;
-  accountError?: string;
-  passwordError?: string;
+  accountInvalid?: boolean;
+  passwordInvalid?: boolean;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onAccountChange: (value: string) => void;
@@ -30,7 +30,7 @@ export default function LoginForm(props: LoginFormProps) {
         <AccountField
           id="login-account"
           value={props.account}
-          error={props.accountError}
+          invalid={props.accountInvalid}
           onChange={props.onAccountChange}
         />
 
@@ -38,7 +38,7 @@ export default function LoginForm(props: LoginFormProps) {
           id="login-password"
           label="密码"
           value={props.password}
-          error={props.passwordError}
+          invalid={props.passwordInvalid}
           autoComplete="current-password"
           placeholder="8 位以上，含字母与数字"
           onChange={props.onPasswordChange}

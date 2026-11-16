@@ -222,10 +222,10 @@ export default function AuthScreen(props: AuthScreenProps) {
     }
   }
 
-  const errorOf = (key: keyof Omit<AuthFormErrors, "agreement">) =>
-    errors[key] !== undefined ? errorText(errors[key]) : undefined;
-  const agreementError =
-    errors.agreement !== undefined ? errorText(errors.agreement) : undefined;
+  /** 字段错误态：仅以红框呈现（aria-invalid），文案不再渲染。 */
+  const isInvalid = (key: keyof Omit<AuthFormErrors, "agreement">) =>
+    errors[key] !== undefined;
+  const agreementInvalid = errors.agreement !== undefined;
 
   return (
     <main className="relative isolate grid min-h-dvh overflow-hidden bg-background lg:grid-cols-[1.05fr_1fr]">
@@ -336,8 +336,8 @@ export default function AuthScreen(props: AuthScreenProps) {
             <LoginForm
               account={values.account}
               password={values.password}
-              accountError={errorOf("account")}
-              passwordError={errorOf("password")}
+              accountInvalid={isInvalid("account")}
+              passwordInvalid={isInvalid("password")}
               submitting={submitting}
               onSubmit={handleLoginSubmit}
               onAccountChange={(value) => updateValue("account", value)}
@@ -350,10 +350,10 @@ export default function AuthScreen(props: AuthScreenProps) {
               password={values.password}
               confirmPassword={values.confirmPassword}
               agreementAccepted={values.agreementAccepted}
-              accountError={errorOf("username")}
-              passwordError={errorOf("password")}
-              confirmPasswordError={errorOf("confirmPassword")}
-              agreementError={agreementError}
+              accountInvalid={isInvalid("username")}
+              passwordInvalid={isInvalid("password")}
+              confirmPasswordInvalid={isInvalid("confirmPassword")}
+              agreementInvalid={agreementInvalid}
               submitting={submitting}
               onSubmit={handleRegisterSubmit}
               onAccountChange={(value) => updateValue("account", value)}

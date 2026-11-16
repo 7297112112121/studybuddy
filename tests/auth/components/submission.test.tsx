@@ -219,15 +219,18 @@ describe("R7 客户端统一文案", () => {
 });
 
 describe("B2 邮箱形态走字段错误（新语义）", () => {
-  it("账号 name@mail.com + 合法密码提交 → signIn.username 未被调，账户字段下 E-02 格式文案", () => {
+  it("账号 name@mail.com + 合法密码提交 → signIn.username 未被调，账户字段红框无文案", () => {
     const { container } = renderAuthScreen();
 
     fillLogin("name@mail.com", "study2026");
     submitActiveForm(container);
 
     expect(
-      screen.getByText("格式不对：1—16 位中文、字母、数字或下划线"),
-    ).toBeDefined();
+      screen.getByLabelText("账户名").getAttribute("aria-invalid"),
+    ).toBe("true");
+    expect(
+      screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
+    ).toBeNull();
     expect(signInMock).not.toHaveBeenCalled();
     expect(registerMock).not.toHaveBeenCalled();
     expect(routerReplace).not.toHaveBeenCalled();
@@ -235,7 +238,7 @@ describe("B2 邮箱形态走字段错误（新语义）", () => {
 });
 
 describe("INVALID_INPUT fieldErrors 归位（E-02）", () => {
-  it("registerAction INVALID_INPUT + fieldErrors:{username:'auth.account.invalid'} → 注册视图账户字段下格式文案，不自动登录", async () => {
+  it("registerAction INVALID_INPUT + fieldErrors:{username:'auth.account.invalid'} → 注册视图账户字段红框无文案，不自动登录", async () => {
     registerMock.mockResolvedValue({
       ok: false,
       error: "INVALID_INPUT",
@@ -246,9 +249,14 @@ describe("INVALID_INPUT fieldErrors 归位（E-02）", () => {
     fillRegister("zhang_san", "study2026");
     submitActiveForm(container);
 
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText("账户名").getAttribute("aria-invalid"),
+      ).toBe("true");
+    });
     expect(
-      await screen.findByText("格式不对：1—16 位中文、字母、数字或下划线"),
-    ).toBeDefined();
+      screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
+    ).toBeNull();
     expect(signInMock).not.toHaveBeenCalled();
     expect(routerReplace).not.toHaveBeenCalled();
   });
