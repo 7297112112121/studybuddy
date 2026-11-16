@@ -6,7 +6,6 @@ import type { FormEvent } from "react";
 import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
-import FormSummary from "./FormSummary";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
 import type { AuthView } from "./AuthTabs";
@@ -20,10 +19,6 @@ type RegisterFormProps = {
   passwordError?: string;
   confirmPasswordError?: string;
   agreementError?: string;
-  /** R8：字段错误（不含协议勾选），FormSummary 按键数计数。 */
-  fieldErrors: Partial<
-    Record<"username" | "password" | "confirmPassword", string>
-  >;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onAccountChange: (value: string) => void;
@@ -37,8 +32,6 @@ type RegisterFormProps = {
 export default function RegisterForm(props: RegisterFormProps) {
   return (
     <form id="auth-register" noValidate onSubmit={props.onSubmit}>
-      <FormSummary errors={props.fieldErrors} />
-
       <div className="space-y-4">
         <AccountField
           id="register-account"

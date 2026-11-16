@@ -61,17 +61,12 @@ export type AuthFormValues = {
   agreementAccepted: boolean;
 };
 
-/** 错误状态：协议勾选错误单列（R4，不进顶部汇总计数），其余进 FormSummary（R1）。 */
+/** 错误状态：协议勾选错误单列（R4），其余以字段级文案呈现在各输入框下。 */
 export type AuthFormErrors = Partial<
   Record<
     "account" | "username" | "password" | "confirmPassword" | "agreement",
     AuthMessageKey
   >
->;
-
-/** FormSummary 计数用：去掉 agreement 后的字段错误（已渲染为文案）。 */
-export type AuthFieldErrors = Partial<
-  Record<"account" | "username" | "password" | "confirmPassword", string>
 >;
 
 /**
@@ -227,19 +222,8 @@ export default function AuthScreen(props: AuthScreenProps) {
     }
   }
 
-  const fieldErrors: AuthFieldErrors = {};
-  if (errors.account !== undefined) {
-    fieldErrors.account = errorText(errors.account);
-  }
-  if (errors.username !== undefined) {
-    fieldErrors.username = errorText(errors.username);
-  }
-  if (errors.password !== undefined) {
-    fieldErrors.password = errorText(errors.password);
-  }
-  if (errors.confirmPassword !== undefined) {
-    fieldErrors.confirmPassword = errorText(errors.confirmPassword);
-  }
+  const errorOf = (key: keyof Omit<AuthFormErrors, "agreement">) =>
+    errors[key] !== undefined ? errorText(errors[key]) : undefined;
   const agreementError =
     errors.agreement !== undefined ? errorText(errors.agreement) : undefined;
 
@@ -352,9 +336,8 @@ export default function AuthScreen(props: AuthScreenProps) {
             <LoginForm
               account={values.account}
               password={values.password}
-              accountError={fieldErrors.account}
-              passwordError={fieldErrors.password}
-              fieldErrors={fieldErrors}
+              accountError={errorOf("account")}
+              passwordError={errorOf("password")}
               submitting={submitting}
               onSubmit={handleLoginSubmit}
               onAccountChange={(value) => updateValue("account", value)}
@@ -367,11 +350,10 @@ export default function AuthScreen(props: AuthScreenProps) {
               password={values.password}
               confirmPassword={values.confirmPassword}
               agreementAccepted={values.agreementAccepted}
-              accountError={fieldErrors.username}
-              passwordError={fieldErrors.password}
-              confirmPasswordError={fieldErrors.confirmPassword}
+              accountError={errorOf("username")}
+              passwordError={errorOf("password")}
+              confirmPasswordError={errorOf("confirmPassword")}
               agreementError={agreementError}
-              fieldErrors={fieldErrors}
               submitting={submitting}
               onSubmit={handleRegisterSubmit}
               onAccountChange={(value) => updateValue("account", value)}

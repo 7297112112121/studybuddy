@@ -6,7 +6,6 @@
 import type { FormEvent } from "react";
 import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
-import FormSummary from "./FormSummary";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
 import type { AuthView } from "./AuthTabs";
@@ -16,8 +15,6 @@ type LoginFormProps = {
   password: string;
   accountError?: string;
   passwordError?: string;
-  /** R1：字段错误，FormSummary 按键数计数。 */
-  fieldErrors: Partial<Record<"account" | "password", string>>;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onAccountChange: (value: string) => void;
@@ -29,8 +26,6 @@ type LoginFormProps = {
 export default function LoginForm(props: LoginFormProps) {
   return (
     <form id="auth-login" noValidate onSubmit={props.onSubmit}>
-      <FormSummary errors={props.fieldErrors} />
-
       <div className="space-y-4">
         <AccountField
           id="login-account"

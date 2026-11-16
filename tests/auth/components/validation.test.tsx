@@ -1,7 +1,7 @@
 /**
  * Task 8：登录/注册表单渲染层校验链测试（CR-20261116-1：凭据手机号→账户名+密码）。
  *
- * 覆盖：R1（顶部汇总）/ R2 / R3（validateAccount·validatePassword 映射）、
+ * 覆盖：R2 / R3（validateAccount·validatePassword 映射）、
  * D-13（登录表单无协议勾选行，Review Focus #5）、R8（注册校验）、
  * R17（密码显隐）。文案断言以 useTranslations('auth') 渲染的真实
  * auth.json（13 键新版）为准。
@@ -67,7 +67,7 @@ function submitActiveForm(container: HTMLElement): void {
 }
 
 describe("登录校验链（R1/R2/R3）", () => {
-  it("账号留空+密码 a1234567 提交 → 「请输入账户名」+ 顶部「有 1 项需要修改」，不触发提交", () => {
+  it("账号留空+密码 a1234567 提交 → 「请输入账户名」，无顶部汇总，不触发提交", () => {
     const { container } = renderAuthScreen();
 
     fireEvent.change(screen.getByLabelText("密码"), {
@@ -76,18 +76,18 @@ describe("登录校验链（R1/R2/R3）", () => {
     submitActiveForm(container);
 
     expect(screen.getByText("请输入账户名")).toBeDefined();
-    expect(screen.getByText("有 1 项需要修改")).toBeDefined();
+    expect(screen.queryByText(/项需要修改/)).toBeNull();
     expect(signInMock).not.toHaveBeenCalled();
   });
 
-  it("账号密码双空提交 → 顶部「有 2 项需要修改」", () => {
+  it("账号密码双空提交 → 仅字段级「请输入账户名」「请输入密码」，无顶部汇总", () => {
     const { container } = renderAuthScreen();
 
     submitActiveForm(container);
 
     expect(screen.getByText("请输入账户名")).toBeDefined();
     expect(screen.getByText("请输入密码")).toBeDefined();
-    expect(screen.getByText("有 2 项需要修改")).toBeDefined();
+    expect(screen.queryByText(/项需要修改/)).toBeNull();
   });
 
   it("账号 zhang san! → 格式文案，输入无过滤原样保留；17 位同文案且完整保留；改填 zhang_san 后提示消失", () => {
