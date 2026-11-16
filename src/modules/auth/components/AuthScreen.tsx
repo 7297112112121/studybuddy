@@ -1,20 +1,22 @@
 "use client";
 
 /**
- * 登录/注册屏（design「UI 与组件」组件树根，Task 9 渲染层 + Task 10 提交流程）。
+ * 登录/注册屏（design「UI 与组件」组件树根 + 提交流程，Task 9 收口）。
  *
  * 状态全部提升于此（R16/R5）：activeView、表单值、errors、submitting、
  * 顶部错误（topError）；子组件一律纯受控。视图切换不导航，经
  * history.replaceState 同步 /login ↔ /register（R16）。
  *
- * 提交流程（Task 10）：登录/注册校验通过后接真实提交——
- * - 登录：邮箱形态账号（B2）不发起请求、直接呈现 R7 统一文案；手机号形态
- *   经 authClient.signIn.phoneNumber（返回 {data, error}，错误经
+ * 提交流程（CR-20261116-1：凭据手机号→账户名+密码）——
+ * - 登录：D-13 无协议校验（同意留痕仅注册侧收集）、无邮箱特例分支——
+ *   邮箱等不合格形态经 validateAccount 返回 E-02 字段错误，不发起请求；
+ *   合法账户名经 authClient.signIn.username（返回 {data, error}，错误经
  *   mapSignInError 归一）；成功 router.replace(ROUTES.workbench)（R6）。
- * - 注册：registerAction（ADR-0025 判别联合）→ 成功经 signIn.phoneNumber
+ * - 注册：registerAction（ADR-0025 判别联合）→ 成功经 signIn.username
  *   自动登录 → router.replace(ROUTES.workbench)（R9）；
- *   PHONE_ALREADY_REGISTERED → 顶部文案（R10）；INVALID_INPUT fieldErrors
- *   归位到字段。任何失败不出现可探测账号存在性的差异文案（R7）。
+ *   USERNAME_ALREADY_REGISTERED → 顶部可点文案切登录并带入账户名（R10）；
+ *   INVALID_INPUT fieldErrors 归位到字段。任何失败不出现可探测账户名
+ *   存在性的差异文案（R7）。
  */
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -37,18 +39,18 @@ import RegisterForm from "./RegisterForm";
 
 /**
  * 校验错误承载的 messageKey 全集（与 validators.ts 的返回键一一对应）。
- * 显式枚举而非推断，键清单变更时在此同步。
+ * 显式枚举而非推断，键清单变更时在此同步。username 无独立注册键
+ * （E-01/E-02 复用 auth.account.*）。
  */
 export type AuthMessageKey =
   | "auth.account.required"
   | "auth.account.invalid"
   | "auth.password.required"
   | "auth.password.invalid"
-  | "auth.register.phoneInvalid"
   | "auth.register.passwordMismatch"
   | "auth.agreement.required";
 
-/** 表单值（R16：login/register 共用一份，切换视图保留）。注册手机号复用 account。 */
+/** 表单值（R16：login/register 共用一份，切换视图保留）。注册账户名复用 account。 */
 export type AuthFormValues = {
   account: string;
   password: string;
@@ -59,25 +61,25 @@ export type AuthFormValues = {
 /** 错误状态：协议勾选错误单列（R4，不进顶部汇总计数），其余进 FormSummary（R1）。 */
 export type AuthFormErrors = Partial<
   Record<
-    "account" | "phone" | "password" | "confirmPassword" | "agreement",
+    "account" | "username" | "password" | "confirmPassword" | "agreement",
     AuthMessageKey
   >
 >;
 
 /** FormSummary 计数用：去掉 agreement 后的字段错误（已渲染为文案）。 */
 export type AuthFieldErrors = Partial<
-  Record<"account" | "phone" | "password" | "confirmPassword", string>
+  Record<"account" | "username" | "password" | "confirmPassword", string>
 >;
 
 /**
  * 顶部错误键（auth.error.* 命名空间，与 auth.json error 组对应）：
- * 登录失败经 mapSignInError 归一（R7），注册撞号固定 phoneRegistered（R10）。
+ * 登录失败经 mapSignInError 归一（R7），注册撞号固定 usernameRegistered（R10）。
  */
 export type AuthTopError =
   | "auth.error.invalidCredentials"
   | "auth.error.tooManyAttempts"
   | "auth.error.unknown"
-  | "auth.error.phoneRegistered";
+  | "auth.error.usernameRegistered";
 
 type AuthScreenProps = {
   initialView: AuthView;
@@ -123,9 +125,9 @@ export default function AuthScreen(props: AuthScreenProps) {
   }
 
   /** R6/R9：登录/自动登录成功一律 replace 到工作台（不留登录页历史）。 */
-  async function signInWithPhoneNumber(): Promise<void> {
-    const result = await authClient.signIn.phoneNumber({
-      phoneNumber: values.account,
+  async function signInWithUsername(): Promise<void> {
+    const result = await authClient.signIn.username({
+      username: values.account,
       password: values.password,
     });
     if (result.error) {
@@ -143,7 +145,7 @@ export default function AuthScreen(props: AuthScreenProps) {
     setSubmitting(true);
     setTopError(null);
     try {
-      await signInWithPhoneNumber();
+      await signInWithUsername();
     } catch {
       // 网络层异常归一为 unknown（errors.ts 兜底约定，不泄露失败细节）。
       setTopError("auth.error.unknown");
@@ -161,21 +163,21 @@ export default function AuthScreen(props: AuthScreenProps) {
     setTopError(null);
     try {
       const result = await registerAction({
-        phone: values.account,
+        username: values.account,
         password: values.password,
         confirmPassword: values.confirmPassword,
         // R8 校验链通过后协议必为 true（validateRegisterForm 已拦截），按契约收窄。
         agreementAccepted: true,
       } satisfies RegisterInput);
       if (!result.ok) {
-        if (result.error === "PHONE_ALREADY_REGISTERED") {
-          setTopError("auth.error.phoneRegistered");
+        if (result.error === "USERNAME_ALREADY_REGISTERED") {
+          setTopError("auth.error.usernameRegistered");
           return;
         }
         setErrors(result.fieldErrors);
         return;
       }
-      await signInWithPhoneNumber();
+      await signInWithUsername();
     } catch {
       setTopError("auth.error.unknown");
     } finally {
@@ -183,7 +185,11 @@ export default function AuthScreen(props: AuthScreenProps) {
     }
   }
 
-  /** R1/R2/R3/R4：登录校验链。任一项不过则呈现错误、不触发提交。 */
+  /**
+   * R1/R2/R3：登录校验链。任一项不过则呈现错误、不触发提交。
+   * D-13：无协议校验（同意留痕 R15 仅注册侧收集）；无邮箱特例分支——
+   * 邮箱等不合格形态经 validateAccount 归 E-02 字段错误（B2 新语义）。
+   */
   function handleLoginSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     const accountCheck = validateAccount(values.account);
@@ -195,21 +201,8 @@ export default function AuthScreen(props: AuthScreenProps) {
     if (!passwordCheck.ok) {
       nextErrors.password = passwordCheck.messageKey;
     }
-    if (!values.agreementAccepted) {
-      nextErrors.agreement = "auth.agreement.required";
-    }
     setErrors(nextErrors);
-    if (
-      !accountCheck.ok ||
-      !passwordCheck.ok ||
-      !values.agreementAccepted
-    ) {
-      return;
-    }
-    // B2：邮箱形态账号不发起请求，直接呈现 R7 统一文案（与错密码同文案，
-    // 不产生任何可探测账号存在性的差异）。
-    if (accountCheck.kind === "email") {
-      setTopError("auth.error.invalidCredentials");
+    if (!accountCheck.ok || !passwordCheck.ok) {
       return;
     }
     void submitSignIn();
@@ -220,7 +213,7 @@ export default function AuthScreen(props: AuthScreenProps) {
     event.preventDefault();
     const registerErrors: AuthFormErrors =
       validateRegisterForm({
-        phone: values.account,
+        username: values.account,
         password: values.password,
         confirmPassword: values.confirmPassword,
         agreementAccepted: values.agreementAccepted,
@@ -235,8 +228,8 @@ export default function AuthScreen(props: AuthScreenProps) {
   if (errors.account !== undefined) {
     fieldErrors.account = errorText(errors.account);
   }
-  if (errors.phone !== undefined) {
-    fieldErrors.phone = errorText(errors.phone);
+  if (errors.username !== undefined) {
+    fieldErrors.username = errorText(errors.username);
   }
   if (errors.password !== undefined) {
     fieldErrors.password = errorText(errors.password);
@@ -268,13 +261,13 @@ export default function AuthScreen(props: AuthScreenProps) {
           <AuthTabs active={activeView} onSwitch={switchView} />
 
           {/* 顶部错误（R7/R10）：服务端/客户端提交失败统一置顶呈现；
-              撞号文案整体可点，切回登录视图并带入手机号（R10）。 */}
+              撞号文案整体可点，切回登录视图并带入账户名（R10）。 */}
           {topError === null ? null : (
             <div
               role="alert"
               className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
             >
-              {topError === "auth.error.phoneRegistered" ? (
+              {topError === "auth.error.usernameRegistered" ? (
                 <button
                   type="button"
                   onClick={() => switchView("login")}
@@ -292,34 +285,29 @@ export default function AuthScreen(props: AuthScreenProps) {
             <LoginForm
               account={values.account}
               password={values.password}
-              agreementAccepted={values.agreementAccepted}
               accountError={fieldErrors.account}
               passwordError={fieldErrors.password}
-              agreementError={agreementError}
               fieldErrors={fieldErrors}
               submitting={submitting}
               onSubmit={handleLoginSubmit}
               onAccountChange={(value) => updateValue("account", value)}
               onPasswordChange={(value) => updateValue("password", value)}
-              onAgreementChange={(accepted) =>
-                updateValue("agreementAccepted", accepted)
-              }
               onSwitchView={switchView}
             />
           ) : (
             <RegisterForm
-              phone={values.account}
+              account={values.account}
               password={values.password}
               confirmPassword={values.confirmPassword}
               agreementAccepted={values.agreementAccepted}
-              phoneError={fieldErrors.phone}
+              accountError={fieldErrors.username}
               passwordError={fieldErrors.password}
               confirmPasswordError={fieldErrors.confirmPassword}
               agreementError={agreementError}
               fieldErrors={fieldErrors}
               submitting={submitting}
               onSubmit={handleRegisterSubmit}
-              onPhoneChange={(value) => updateValue("account", value)}
+              onAccountChange={(value) => updateValue("account", value)}
               onPasswordChange={(value) => updateValue("password", value)}
               onConfirmPasswordChange={(value) =>
                 updateValue("confirmPassword", value)
