@@ -2,9 +2,8 @@
  * Task 9 Step 1：AuthScreen 登录/注册校验链渲染测试。
  *
  * 覆盖：R1（顶部汇总）/ R2 / R3（validateAccount·validatePassword 映射）、
- * R4（协议勾选错误态）、R8（注册校验）、R17（密码显隐）、R18（OAuth 占位）、
- * R19（忘记密码占位提示）。「不触发提交」以提交边界（signIn/registerAction）
- * 未被调用断言。
+ * R4（协议勾选错误态）、R8（注册校验）、R17（密码显隐）。「不触发提交」
+ * 以提交边界（signIn/registerAction）未被调用断言。
  *
  * Task 10 适配：AuthScreen 移除 onSubmit spy prop、校验通过即真实提交，
  * 测试侧 mock next/navigation、../actions 与 @/lib/auth-client；
@@ -254,34 +253,5 @@ describe("R17 密码显隐", () => {
     expect((confirmPassword as HTMLInputElement).type).toBe("password");
     fireEvent.click(toggles[1]);
     expect((confirmPassword as HTMLInputElement).type).toBe("text");
-  });
-});
-
-describe("R18 第三方登录占位", () => {
-  it("两个占位按钮 disabled 且出现「本期不做，仅占位」文案", () => {
-    renderAuthScreen();
-
-    const wechat = screen.getByRole("button", {
-      name: "微信登录",
-    }) as HTMLButtonElement;
-    const onetap = screen.getByRole("button", {
-      name: "手机号一键登录",
-    }) as HTMLButtonElement;
-
-    expect(wechat.disabled).toBe(true);
-    expect(onetap.disabled).toBe(true);
-    expect(screen.getByText("本期不做，仅占位")).toBeDefined();
-  });
-});
-
-describe("R19 忘记密码占位", () => {
-  it("点击「忘记密码?」→ 占位提示出现，preventDefault 无导航", () => {
-    renderAuthScreen();
-
-    expect(window.location.hash).toBe("");
-    fireEvent.click(screen.getByText("忘记密码?"));
-
-    expect(screen.getByText("找回密码功能暂未开通")).toBeDefined();
-    expect(window.location.hash).toBe("");
   });
 });

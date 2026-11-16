@@ -5,7 +5,7 @@
  *
  * 契约（design「UI 与组件」）：有来路 → router.back()
  * 回到来源页；无来路（直接打开/书签）→ router.replace(ROUTES.workbench)
- * 进工作台。组件本身只占位渲染一个 status 提示，跳转在挂载后发生。
+ * 进工作台。组件本身仅临时渲染 status 提示，跳转在挂载后发生。
  */
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";

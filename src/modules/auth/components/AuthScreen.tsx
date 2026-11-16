@@ -34,7 +34,6 @@ import type { AuthView } from "./AuthTabs";
 import AuthTabs from "./AuthTabs";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
-import OAuthPlaceholder from "./OAuthPlaceholder";
 
 /**
  * 校验错误承载的 messageKey 全集（与 validators.ts 的返回键一一对应）。
@@ -331,8 +330,6 @@ export default function AuthScreen(props: AuthScreenProps) {
               onSwitchView={switchView}
             />
           )}
-
-          <OAuthPlaceholder />
         </section>
       </div>
     </main>

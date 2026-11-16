@@ -12,17 +12,18 @@
 
 ## 技能清单
 
-目录为扁平结构，按研发流程三大部分（产品设计 / 开发落地 / 测试提质）组织流程技能；外部技能以依赖形式安装，由根目录 `skills-lock.json` 锁定版本。
+目录为扁平结构，按研发流程组织技能：流程技能分属产品设计 / 开发落地 / 测试提质，另设横切 / 变更管理分组（不在单向流内，任意阶段可触发）；外部技能以依赖形式安装，由根目录 `skills-lock.json` 锁定版本。
 
 ### 流程技能（本地维护）
 
 | 分组 | 技能 | 职责 | 输入 → 输出 |
 | --- | --- | --- | --- |
-| 产品设计 | `product-design/` | 将模糊想法转换为产品设计 | 模糊想法 → 用户故事（docs/product） |
-| 开发落地 | `proposal-writing/` | 用户故事 → 需求规范 | 已批准用户故事 → proposal（批准门一） |
+| 产品设计 | `product-design/` | 将模糊想法转换为用户故事 | 模糊想法 → 用户故事（docs/product，五大组成部分） |
+| 产品设计 | `proposal-writing/` | 用户故事 → 需求规范 | 已批准用户故事 → proposal（批准门一；docs/product/AXY-<N>-<slug>/，含原型契约） |
 | 开发落地 | `architecture-design/` | 需求规范 → 架构设计 | 已批准 proposal → design（批准门二） |
 | 开发落地 | `plan-writing/` | 架构设计 → 实现计划 | 已批准 design → tasks（微任务 + TDD） |
 | 开发落地 | `spec-review/` | 实现完成后的规范终审 | proposal + 实现产物 → review 报告 |
+| 横切 / 变更管理 | `feature-supersede/` | 已合并主分支特性的推翻 / 取代 / 废弃 | 旧全部工件 + 现有代码 → 定级 + 重新批准 + 代码处置（revert / tag）+ 墓碑 + 变更记录（第五份工件） |
 | 测试提质 | （暂缺） | 测试提质阶段的质量加固 | 暂不编写 |
 
 ### 外部技能（skills-lock.json 管理）
@@ -41,10 +42,10 @@
 
 | 下游技能 | 上游产物 | 必读 | 按需展开 |
 | --- | --- | --- | --- |
-| `proposal-writing/` | 用户故事 | 全文（故事很短）+「依赖与引用」一层 | 更深的引用物 |
-| `architecture-design/` | proposal | 头部表、需求条目、边界与约束、性能与质量要求、豁免项 | 目标背景等叙述节 |
+| `proposal-writing/` | 用户故事 | 全文（故事很短，五大组成部分）+「依赖」一层 | 更深的引用物 |
+| `architecture-design/` | proposal | 头部表、需求条目、边界与约束、性能与质量要求、原型契约 | 目标背景等叙述节 |
 | `plan-writing/` | design + proposal | design 契约与需求承载对照、proposal 需求条目与边界与约束 | 数据模型细节、UI 小节 |
-| `spec-review/` | proposal + design + tasks | proposal 头部/需求条目/非目标/边界/豁免项，design 需求承载对照与契约总表，tasks Global Constraints 与裁决记录 | design 其余小节、任务卡细节 |
+| `spec-review/` | proposal + design + tasks | proposal 头部/需求条目/非目标/边界（Q 条目不在终审范围），design 需求承载对照与契约总表，tasks Global Constraints 与裁决记录 | design 其余小节、任务卡细节 |
 
 ## 新增技能的规则
 

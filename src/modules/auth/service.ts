@@ -12,7 +12,7 @@ import { hashPassword } from "better-auth/crypto";
 import { db } from "@/db/client";
 import { account, user } from "./schema";
 
-/** 当前协议版本（R15）；协议正文为占位（非目标 #5） */
+/** 当前协议版本（R15）；协议正文本期不呈现（非目标 #5） */
 export const AGREEMENT_VERSION = "v1" as const;
 
 /** 占位邮箱：`.invalid` 为 RFC 2606 保留 TLD，永不展示、不投递 */

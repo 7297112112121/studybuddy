@@ -8,7 +8,6 @@ import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
 import FormSummary from "./FormSummary";
 import SubmitButton from "./SubmitButton";
-import ForgotPasswordLink from "./ForgotPasswordLink";
 import ViewSwitchLink from "./ViewSwitchLink";
 import type { AuthView } from "./AuthTabs";
 
@@ -51,7 +50,6 @@ export default function LoginForm(props: LoginFormProps) {
           autoComplete="current-password"
           placeholder="8 位以上，含字母与数字"
           onChange={props.onPasswordChange}
-          action={<ForgotPasswordLink />}
         />
 
         <AgreementCheckbox

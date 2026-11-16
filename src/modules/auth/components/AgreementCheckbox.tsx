@@ -1,5 +1,5 @@
 /**
- * 协议勾选框（R4）。协议链接为占位不跳转（design 边界 #9，preventDefault）。
+ * 协议勾选框（R4）。协议名为纯文本提及，无链接（非目标 #5）。
  * 错误态：勾选框 aria-invalid + 错误文案。纯受控。
  */
 type AgreementCheckboxProps = {
@@ -28,24 +28,7 @@ export default function AgreementCheckbox(props: AgreementCheckboxProps) {
             props.error !== undefined ? "outline-red-500" : ""
           }`}
         />
-        <span>
-          我已阅读并同意
-          <a
-            href="#"
-            onClick={(event) => event.preventDefault()}
-            className="text-slate-700 underline"
-          >
-            《用户协议》
-          </a>
-          与
-          <a
-            href="#"
-            onClick={(event) => event.preventDefault()}
-            className="text-slate-700 underline"
-          >
-            《隐私政策》
-          </a>
-        </span>
+        <span>我已阅读并同意《用户协议》与《隐私政策》</span>
       </label>
       {props.error !== undefined && (
         <p id={errorId} className="mt-1 text-sm text-red-600">

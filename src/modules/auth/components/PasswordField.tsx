@@ -3,7 +3,6 @@
  * 显隐为视图局部态（wireframe 同构），不进 AuthScreen 全局状态。纯受控。
  */
 import { useState } from "react";
-import type { ReactNode } from "react";
 
 type PasswordFieldProps = {
   id: string;
@@ -14,8 +13,6 @@ type PasswordFieldProps = {
   hint?: string;
   autoComplete?: string;
   placeholder?: string;
-  /** 标签行右侧动作位（登录视图放忘记密码链接，R19）。 */
-  action?: ReactNode;
 };
 
 export default function PasswordField(props: PasswordFieldProps) {
@@ -38,7 +35,6 @@ export default function PasswordField(props: PasswordFieldProps) {
         >
           {props.label}
         </label>
-        {props.action}
       </div>
       <div className="relative mt-1">
         <input
