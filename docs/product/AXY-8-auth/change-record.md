@@ -71,7 +71,7 @@ sidebar_position: 5
 | - | - | - |
 | design | 已完成（2026-11-16 获批，批准人海渝） | 经 architecture-design 技能修订重走。**保留资产兼容性核对结论已落 design**（会话双写与守卫 R11/R12、协议落库 R15、密码摘要 R13、视图切换/显隐 R16/R17、路由常量、i18n 设施——逐项凭据无关，证据在 design 各对应节）；账号表结构随 design 定稿：user.username + user_username 唯一索引（区分大小写），新增迁移承载；开放问题 #4 声明空表迁移假设 |
 | plan | 已完成（2026-11-16，12 任务 T1–T12 全部收口） | 经 plan-writing 技能修订重走；执行方式为子代理逐任务（每卡自包含 prompt），执行期裁决 20 余条入 tasks.md 裁决记录节 |
-| review | 待重走 | 经 spec-review 技能（实现完成后）；旧 review 已加墓碑，不参与新终审，新 review 只审新实现 |
+| review | 已完成（2026-11-16，判定**通过**） | 经 spec-review 技能重走：四层核对（R1–R17 全过、F/E/路由行为/D-xx 逐字逐项、design 补强行为、非目标 9 条零越界）+ 契约一致 + CR 期 20 条裁决全落实；1 项 Important（validation.test 桩键残留 phoneNumber）于终审修复批闭合并复验（110/110）；注入验证 4 处（三层 + 高风险条目）与 R13 人工抽检证据见 review.md 证据附录；旧手机号版报告全文保留于 review.md 历史附录 |
 
 ## 8. 证据
 
