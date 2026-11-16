@@ -216,17 +216,18 @@ test.describe("校验链（注册视图）", () => {
     await page.getByRole("tab", { name: "注册" }).click();
 
     // URL 经 replaceState 同步为 /register，已填值在注册视图保留
+    // （shadcn 化后非激活视图不渲染，登录侧错误清空待切回后再验）
     await expect(page).toHaveURL(/\/register$/);
     await expect(page.locator("#register-account")).toHaveValue(username);
     await expect(page.locator("#register-password")).toHaveValue(E2E_PASSWORD);
+
+    // 底部切换控件（ViewSwitchLink 为 button 语义，不导航）切回登录：错误已清空、值继续保留
+    await page.getByRole("button", { name: "去登录", exact: true }).click();
+    await expect(page).toHaveURL(/\/login$/);
     await expect(page.locator("#login-account")).not.toHaveAttribute(
       "aria-invalid",
       "true",
     );
-
-    // 底部切换控件（ViewSwitchLink 为 button 语义，不导航）切回登录：值继续保留
-    await page.getByRole("button", { name: "去登录", exact: true }).click();
-    await expect(page).toHaveURL(/\/login$/);
     await expect(page.locator("#login-account")).toHaveValue(username);
     await expect(page.locator("#login-password")).toHaveValue(E2E_PASSWORD);
   });
