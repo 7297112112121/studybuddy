@@ -23,6 +23,7 @@
 | 开发落地 | `architecture-design/` | 需求规范 → 架构设计 | 已批准 proposal → design（批准门二） |
 | 开发落地 | `plan-writing/` | 架构设计 → 实现计划 | 已批准 design → tasks（微任务 + TDD） |
 | 开发落地 | `spec-review/` | 实现完成后的规范终审 | proposal + 实现产物 → review 报告 |
+| 开发落地 | `front-design/` | UI 落地门禁:组件选型 + token 纪律 | tasks/design 或直接 UI 修复请求 → 符合 [前端设计规范](../../docs/dev/前端设计规范.md) 的 UI 代码 |
 | 横切 / 变更管理 | `feature-supersede/` | 已合并主分支特性的推翻 / 取代 / 废弃 | 旧全部工件 + 现有代码 → 定级 + 重新批准 + 代码处置（revert / tag）+ 墓碑 + 变更记录（第五份工件） |
 | 测试提质 | （暂缺） | 测试提质阶段的质量加固 | 暂不编写 |
 
