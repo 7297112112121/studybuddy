@@ -268,6 +268,7 @@ export type RegisterOutcome =
 /** 单事务：校验由调用方完成；插入 user（username/name/agreement_version/agreed_at/占位邮箱）+ credential account（R9/R13/R15）*/
 export async function registerWithUsername(input: { username: string; password: string }): Promise<RegisterOutcome>;
 // 错误情形：PG 23505 且约束为 user_username 唯一索引 → USERNAME_ALREADY_REGISTERED（R10/R14）
+// （实测注记：user_email_key 表级约束先于该索引抛出，实现按双约束映射，语义等价——见 tasks.md 裁决记录 CR-20261116-1 节）
 // 纪律：本函数与调用链不记录任何入参（R13 日志无明文密码）
 ```
 
@@ -517,7 +518,7 @@ SignOutButton (client：authClient.signOut() → router.replace(ROUTES.login))
 
 | # | 问题 | 不阻塞什么 | 处置 |
 | - | ---- | ---- | ---- |
-| 1 | `/sign-in/username` 对「用户不存在/密码错误/空密码」是否原生同文案（401 + INVALID_USERNAME_OR_PASSWORD）——R7 统一文案的实现前提 | 数据模型、守卫等其余设计定稿与实现启动 | 待实测闭合（集成测试三情形断言即证据；若原生有差异，兜底同原版方案：登录改由 Server Action 包装 `auth.api.signInUsername` 统一返回） |
-| 2 | `authClient.signIn.username` 的确切方法名以 `usernameClient` 生成类型为准（契约锚点是端点 `POST /sign-in/username`） | 数据模型、service、守卫等全部其余设计 | 待实测闭合（tests/lib/auth-client.test.ts 常驻守护，形态同原版开放问题 #2 的闭合方式） |
+| 1 | `/sign-in/username` 对「用户不存在/密码错误/空密码」是否原生同文案（401 + INVALID_USERNAME_OR_PASSWORD）——R7 统一文案的实现前提 | 数据模型、守卫等其余设计定稿与实现启动 | 已实测闭合（T7，2026-11-16）：三情形原生统一 401 + `INVALID_USERNAME_OR_PASSWORD`（better-auth index.mjs:157/172/186，含时序安全假哈希），无探测性差异字样；集成 endpoints.test.ts 集合长度=1 常驻断言，无需兜底包装 |
+| 2 | `authClient.signIn.username` 的确切方法名以 `usernameClient` 生成类型为准（契约锚点是端点 `POST /sign-in/username`） | 数据模型、service、守卫等全部其余设计 | 已实测闭合（T4，2026-11-16）：`signIn.username({ username, password, rememberMe?, callbackURL? })` 成立——usernameClient 类型化签名 type-check 0 错 + 运行时 typeof 双证（客户端 Proxy 语义弱性见 tasks.md 裁决记录）；tests/lib/auth-client.test.ts 常驻守护 |
 | 3 | 工作台占位页形态（标题 + 账户名 + 退出按钮）由 AXY-12 正式设计替换 | 本特性验收（proposal 边界 #10 已确认占位承接） | 待定稿（AXY-12 承接） |
 | 4 | 存量数据与新增迁移的兼容：`ADD COLUMN username text NOT NULL` 在含存量行的库上失败。**声明假设**：0.1.0 无生产部署，迁移按空表形态生成；若执行环境存在存量行，迁移前人工处置（清库，或回填 `username = 原手机号串`——11 位数字恰好满足 F-01；回填策略若需产品化，回流 proposal 追认）。影响范围：迁移任务执行前置检查；不阻塞实现与集成测试（globalSetup 测试库按迁移链生成，无跨版本存量） | 不阻塞实现与测试；阻塞任何含存量数据环境的迁移执行 | 声明假设（如上） |

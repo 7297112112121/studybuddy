@@ -371,4 +371,20 @@ sidebar_position: 3
 
 **以下为 CR-20261116-1 修订重走执行期新增裁决（追加于此，不改写上行历史）：**
 
-（暂无——执行开始后逐条追加）
+- 裁决: 修订版任务序列存在已知中间红，且红例归属图随文案换装扩大（Task 2 收口态 `npm test` 13 failed | 95 passed (108)；基线勘误为 9 红|99 绿，Task 1 报告的「98|10」系笔误）。归属图：schema.test 5→T3、lib/auth.test 1→T4、validation.test 4（旧 2 + 文案换装新增 2）→T8、submission.test 2（旧 1 + R10 文案新增 1）→T9、view-switch.test 1（文案换装新增）→T8；`type-check` 错误数随卡递减（5→T3 后 4→T4 后 3→T6 后 1→T9 后 0） — 凭据换装的消费者测试分散在 T3/T4/T6/T8/T9 各卡，单卡提前修复等于并卡提交，破坏任务拆分与 PR 拆分纪律；文案键删除物理上必然击穿渲染锚定断言，属预期红 — 中间红禁止他卡修复；Task 12 三套件全绿收口
+- 裁决: AuthScreen.tsx 三处引用已删键 `auth.error.phoneRegistered`（类型并集 ：80、setTopError :172、三元渲染 :277），T9 前该路径渲染缺失消息 — 键删除在 T2、组件换装在 T9 是任务排序的既定中间态；运行时仅影响分支内部，无真实用户 — T9 落地后消除，无额外动作
+- 裁决: type-check 中间态为 17 处（T3 后），远超卡面「剩 4 处」预估——删 registerInputSchema 的 phone 键使潜伏级联类型错显形，全部落在 T5/T6/T9 将整体重写的文件（service.ts、actions.ts、AuthScreen.tsx 及对应集成测试） — 卡面预估只数了 T1 报告的直接错误，未含 zod 类型级联；顺手修复即越权改他卡文件 — T5/T6/T9 重写后自然清零，T12 type-check 干净收口
+- 裁决: 集成套件中间红基线 T3 后为 10 failed | 5 passed (15)——旧手机号流程测试在新 schema（username NOT NULL）下必红：service.test 3→T5、actions.test 3→T6、queries.test 1→T6、endpoints.test 3→T7 — 迁移先行于消费重写是「新增迁移不改旧」纪律的必然结果 — 各卡重写后 T12 集成全绿收口
+- 裁决: 空表假设失效触发授权清库（design 开放问题 #4）——dev 库实测 user 181 行/account 181 行/session 49 行（既有测试数据，compose 卷持久化），迁移前 `TRUNCATE "account","session","verification","user" RESTART IDENTITY CASCADE` — ADD COLUMN NOT NULL 在存量行上必失败，0.1.0 无生产数据，处置符合 design 声明的「迁移前人工处置（清库）」分支 — 生产化前若出现真实存量数据，须按开放问题 #4 回流 proposal 追认回填策略
+- 裁决: drizzle-kit RC 对「删列+增列」歧义检测需 `--hints` 显式 create 消歧；生成 SQL 首行多一条规范 `DROP INDEX "user_phone_number"`（删列前显式删索引，语义与随列删一致）；迁移目录名 `20261116074441_crazy_molly_hayes` 为生成名不重命名 — RC 工具链行为，以实际产物为准记录 — 无
+- 裁决: auth-client 方法名守护的「预期红」结构性不可达成——better-auth 1.7.23 客户端为 Proxy，任意属性路径运行时均返回 function（探针实证），`typeof === 'function'` 断言对插件换装不敏感；断言照 design 开放问题 #2 指定形态保留，闭合证据由类型面承载（usernameClient 生成 `signIn.username({username,password,rememberMe?,callbackURL?})` 类型化签名，type-check 0 错）——**开放问题 #2 闭合（T4，2026-11-16）**：signIn.username 成立，无需回写 design 契约 — 运行时守护弱于类型面，未来 SDK 若改生成规则需复核
+- 裁决: 「无 .env 的 npm run build 仍须成功」门禁在 T3 级联中间态下推迟——stash 实证基线（17 错）与 T4 态（20 错）均在 Next build 的 type-check 阶段中止，失败全在他卡文件；betterAuth 模块作用域无 env 不抛错的设计意图已另行探针实证 — 门禁待 T6/T8/T9 类型错清零后恢复，T12 收口复核
+- 裁决: helpers 的 `uniquePhone` 保留至 T7 才删除（T5 只新增 `uniqueUsername`）——actions.test/endpoints.test（T6/T7 卡文件）仍 import 它，提前删除会改变他卡红的失败形态而非红例归属 — T7 重写 endpoints 后删最后一个消费者 — 无
+- 裁决: 卡面「email 冲突不可达、不再映射 user_email_key」被实证证伪——psql 直插与集成实测均显示同名再注册时 PG 先抛 `user_email_key` 23505（表级约束先于 user_username 索引检查），仅认 user_username 的版本聚焦 2 failed；修正为**双约束映射**（user_username ∨ user_email_key → USERNAME_ALREADY_REGISTERED），语义等价：占位邮箱由账户名单射派生 + 两约束均区分大小写 → email 冲突当且仅当同名冲突（与原手机号版 Task 5 同构偏离） — design 契约注释只写了 user_username 单约束，实测约束触发顺序不同 — 若未来出现非派生邮箱的写入路径，等价不成立需收紧；design 侧已留一行指针不改契约块
+- 裁决: 测试 4 的 `Alice`/`alice` 裸字面量会在二次运行撞 compose 卷持久化的 user_username 残留行——改为 `uniqueUsername()` 整串大小写互变对（lower/upper，均 F-01 合法、跨运行唯一），区分大小写直证语义不变 — 测试数据跨运行持久化 — 无
+- 裁决: type-check 收口 18 处而非约 15 处——registerWithPhone 改名使 3 个卡外消费者新增 TS2305 缺失导出（actions.ts:17、integration/queries.test.ts:25、integration/endpoints.test.ts:23），均在 T6/T7 范围，按「他卡文件不得修」纪律保留 — T6/T7 重写后清零 — 无
+- 裁决: type-check 基线计数两处勘误（T6 实测）——queries.test 基线 1 处而非卡面 2 处（user.phoneNumber 断言在基线类型下合法）；T6 收口 11 处而非预期 6 处，差额为 AuthSession 换装的下游涟漪（workbench/page.tsx TS2339 新增 1→T10、AuthScreen TS2367/TS2339 新增 2 与 submission.test TS2820 新增 1→T9） — 字面量联合类型换装的比较点/消费点级联无法前置枚举 — 剩余 11 处分布：AuthScreen 6（T9）、submission.test 2（T9）、workbench 1（T10）、validation.test 1（T8）、endpoints.test 1（T7），T9/T10 后清零
+- 裁决: errors.test「换字面量后无红」属断言换字的正常形态（mapSignInError 按 status 判定、code 不参与逻辑），卡面已预判，照常走完六步 — 无
+- 裁决: 限流 specialRule 默认仅 production 启用（better-auth create-context.mjs `rateLimit.enabled ?? isProduction`，vitest NODE_ENV=test），集成测试全程无 429 无需节流；E2E 生产构建下限流生效（原 Task 12 裁决语义继续成立） — 事实备查已写入测试文件头注释 — 无
+- 裁决: GET /get-session 基座以测试文件内局部 `directGetSession` 落地（未扩 helpers 契约面）；实测响应原文经一次性探针测试取回后即删 — T7 卡仅授权删 uniquePhone，最小改动纪律 — 无
+- **开放问题 #1 闭合（T7，2026-11-16）**：三情形原生统一 401 + INVALID_USERNAME_OR_PASSWORD（源码 index.mjs:157/172/186，含时序安全假哈希防探测），design 开放问题表已回写处置列
