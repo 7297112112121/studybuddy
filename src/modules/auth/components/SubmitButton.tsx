@@ -20,7 +20,7 @@ export default function SubmitButton(props: SubmitButtonProps) {
     <Button
       type="submit"
       disabled={props.submitting}
-      className="h-10 w-full bg-linear-[110deg] from-aurora-aqua-deep to-aurora-magenta shadow-md shadow-aurora-aqua/30"
+      className="h-11 w-full rounded-xl bg-linear-[110deg] from-aurora-aqua-deep to-aurora-magenta shadow-md shadow-aurora-aqua/30"
     >
       {props.submitting ? t(props.pendingKey) : props.children}
     </Button>

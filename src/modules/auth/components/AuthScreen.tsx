@@ -245,12 +245,12 @@ export default function AuthScreen(props: AuthScreenProps) {
           <CalendarCheck2Icon aria-hidden="true" className="size-5" />
           AI 学业陪伴
         </p>
-        <div>
-          <h1 className="text-3xl font-semibold leading-snug xl:text-4xl">
+        <div className="animate-in fade-in slide-in-from-bottom-4 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
+          <p className="text-3xl font-semibold leading-snug xl:text-4xl">
             你的规划、任务和情绪
             <br />
             都在一个账号里
-          </h1>
+          </p>
           <p className="mt-3 text-sm text-primary-foreground/70">
             登录后接着上次的进度继续，换设备也一样。
           </p>
@@ -297,9 +297,10 @@ export default function AuthScreen(props: AuthScreenProps) {
       </aside>
 
       {/* 表单列：玻璃质感卡片（半透明 card + backdrop-blur）浮在 aurora 光斑上，
-          签名观感来自卡片后透出的柔光。 */}
+          签名观感来自卡片后透出的柔光；加载入场一次淡入上滑（auth-2 视觉
+          重做），prefers-reduced-motion 下关闭。 */}
       <section className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card/75 p-8 shadow-lg backdrop-blur-md">
+        <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card/75 p-8 shadow-lg backdrop-blur-md animate-in fade-in slide-in-from-bottom-3 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
           {/* 移动端品牌条（lg 以下品牌面板隐藏） */}
           <div className="mb-8 lg:hidden">
             <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
@@ -310,6 +311,11 @@ export default function AuthScreen(props: AuthScreenProps) {
               你的规划、任务和情绪，都在一个账号里。
             </p>
           </div>
+
+          {/* 视图级大标题（auth-2 视觉重做）：随 activeView 切换文案。 */}
+          <h1 className="mb-5 text-3xl font-bold tracking-tight text-foreground">
+            {activeView === "login" ? "欢迎回来" : "创建你的账号"}
+          </h1>
 
           <AuthTabs active={activeView} onSwitch={switchView} />
 
@@ -332,41 +338,47 @@ export default function AuthScreen(props: AuthScreenProps) {
             </Alert>
           )}
 
-          {activeView === "login" ? (
-            <LoginForm
-              account={values.account}
-              password={values.password}
-              accountInvalid={isInvalid("account")}
-              passwordInvalid={isInvalid("password")}
-              submitting={submitting}
-              onSubmit={handleLoginSubmit}
-              onAccountChange={(value) => updateValue("account", value)}
-              onPasswordChange={(value) => updateValue("password", value)}
-              onSwitchView={switchView}
-            />
-          ) : (
-            <RegisterForm
-              account={values.account}
-              password={values.password}
-              confirmPassword={values.confirmPassword}
-              agreementAccepted={values.agreementAccepted}
-              accountInvalid={isInvalid("username")}
-              passwordInvalid={isInvalid("password")}
-              confirmPasswordInvalid={isInvalid("confirmPassword")}
-              agreementInvalid={agreementInvalid}
-              submitting={submitting}
-              onSubmit={handleRegisterSubmit}
-              onAccountChange={(value) => updateValue("account", value)}
-              onPasswordChange={(value) => updateValue("password", value)}
-              onConfirmPasswordChange={(value) =>
-                updateValue("confirmPassword", value)
-              }
-              onAgreementChange={(accepted) =>
-                updateValue("agreementAccepted", accepted)
-              }
-              onSwitchView={switchView}
-            />
-          )}
+          {/* 表单区：key 驱动切视图时 300ms 淡入上滑（动作回应），reduced-motion 关。 */}
+          <div
+            key={activeView}
+            className="animate-in fade-in slide-in-from-bottom-2 [animation-duration:300ms] [animation-fill-mode:both] motion-reduce:animate-none"
+          >
+            {activeView === "login" ? (
+              <LoginForm
+                account={values.account}
+                password={values.password}
+                accountInvalid={isInvalid("account")}
+                passwordInvalid={isInvalid("password")}
+                submitting={submitting}
+                onSubmit={handleLoginSubmit}
+                onAccountChange={(value) => updateValue("account", value)}
+                onPasswordChange={(value) => updateValue("password", value)}
+                onSwitchView={switchView}
+              />
+            ) : (
+              <RegisterForm
+                account={values.account}
+                password={values.password}
+                confirmPassword={values.confirmPassword}
+                agreementAccepted={values.agreementAccepted}
+                accountInvalid={isInvalid("username")}
+                passwordInvalid={isInvalid("password")}
+                confirmPasswordInvalid={isInvalid("confirmPassword")}
+                agreementInvalid={agreementInvalid}
+                submitting={submitting}
+                onSubmit={handleRegisterSubmit}
+                onAccountChange={(value) => updateValue("account", value)}
+                onPasswordChange={(value) => updateValue("password", value)}
+                onConfirmPasswordChange={(value) =>
+                  updateValue("confirmPassword", value)
+                }
+                onAgreementChange={(accepted) =>
+                  updateValue("agreementAccepted", accepted)
+                }
+                onSwitchView={switchView}
+              />
+            )}
+          </div>
         </div>
       </section>
     </main>
