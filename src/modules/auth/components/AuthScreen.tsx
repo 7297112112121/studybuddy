@@ -22,6 +22,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { CalendarCheck2Icon, CheckIcon } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { authClient } from "@/lib/auth-client";
 import { Alert } from "@/components/ui/alert";
@@ -243,23 +244,79 @@ export default function AuthScreen(props: AuthScreenProps) {
     errors.agreement !== undefined ? errorText(errors.agreement) : undefined;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted p-4">
-      <div className="grid w-full max-w-4xl gap-8 md:grid-cols-[1fr_1.2fr]">
-        {/* 品牌区（线框图左侧，静态文案） */}
-        <aside className="hidden md:block">
-          <p className="text-2xl font-bold text-foreground">AI 学业陪伴</p>
-          <h2 className="mt-4 text-xl font-semibold text-foreground">
+    <main className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
+      {/* 品牌面板（lg+）：整页唯一的浓墨处——近黑底反白，今日时间线给产品语境。
+          静态装饰内容（aria-hidden），沿用线框图左侧静态文案约定（文案测试依赖）。 */}
+      <aside className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex">
+        <p className="flex items-center gap-2 text-lg font-semibold">
+          <CalendarCheck2Icon aria-hidden="true" className="size-5" />
+          AI 学业陪伴
+        </p>
+        <div>
+          <h1 className="text-3xl font-semibold leading-snug xl:text-4xl">
             你的规划、任务和情绪
             <br />
             都在一个账号里
-          </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
+          </h1>
+          <p className="mt-3 text-sm text-primary-foreground/70">
             登录后接着上次的进度继续，换设备也一样。
           </p>
-        </aside>
+          {/* 今日时间线：产品语境的「实物」示意，非真实数据；三个状态
+              （已完成/进行中/待开始）以图标表达，不加编号。 */}
+          <ul
+            aria-hidden="true"
+            className="mt-10 space-y-1 border-l border-primary-foreground/25 pl-5"
+          >
+            <li className="flex items-center gap-3 py-1.5 text-sm">
+              <span className="w-12 shrink-0 text-primary-foreground/60">
+                08:00
+              </span>
+              <span className="flex-1 text-primary-foreground/80">
+                晨读 30 分钟
+              </span>
+              <CheckIcon
+                aria-hidden="true"
+                className="size-4 text-primary-foreground/60"
+              />
+            </li>
+            <li className="mx-[-1.25rem] flex items-center gap-3 rounded-lg bg-primary-foreground/10 px-2.5 py-1.5 text-sm font-medium">
+              <span className="w-12 shrink-0 text-primary-foreground/70">
+                14:00
+              </span>
+              <span className="flex-1">微积分习题集</span>
+              <span
+                aria-hidden="true"
+                className="size-1.5 rounded-full bg-primary-foreground"
+              />
+            </li>
+            <li className="flex items-center gap-3 py-1.5 text-sm">
+              <span className="w-12 shrink-0 text-primary-foreground/60">
+                21:30
+              </span>
+              <span className="flex-1 text-primary-foreground/80">今日复盘</span>
+              <span
+                aria-hidden="true"
+                className="size-1.5 rounded-full border border-primary-foreground/50"
+              />
+            </li>
+          </ul>
+        </div>
+      </aside>
 
-        {/* 表单卡片 */}
-        <section className="rounded-xl border bg-card p-6 shadow-sm">
+      {/* 表单列：无卡片容器，直接落在纸面底色上，把视觉重量留给品牌面板 */}
+      <section className="flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          {/* 移动端品牌条（lg 以下品牌面板隐藏） */}
+          <div className="mb-8 lg:hidden">
+            <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
+              <CalendarCheck2Icon aria-hidden="true" className="size-5" />
+              AI 学业陪伴
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              你的规划、任务和情绪，都在一个账号里。
+            </p>
+          </div>
+
           <AuthTabs active={activeView} onSwitch={switchView} />
 
           {/* 顶部错误（R7/R10）：服务端/客户端提交失败统一置顶呈现；
@@ -318,8 +375,8 @@ export default function AuthScreen(props: AuthScreenProps) {
               onSwitchView={switchView}
             />
           )}
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }
