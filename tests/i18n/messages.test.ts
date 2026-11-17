@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import auth from "@/locales/zh-CN/auth.json";
+import calendar from "@/locales/zh-CN/calendar.json";
 
 /**
  * auth 命名空间 12 键文案与 design 文案表逐字对照
@@ -51,5 +52,36 @@ describe("auth.json 文案与 design 文案表逐字一致", () => {
     expect(Object.keys(auth.register)).toEqual(["passwordMismatch"]);
     expect("phoneRegistered" in auth.error).toBe(false);
     expect("usernameRegistered" in auth.error).toBe(true);
+  });
+});
+
+describe("calendar.json 文案与 design 键表逐字一致（AXY-22）", () => {
+  it("error：E-01/E-02/E-03 逐字 + 防御性键（Global Constraints 补定值）", () => {
+    expect(calendar.error.titleRequired).toBe("请填写事项内容");
+    expect(calendar.error.saveFailed).toBe("保存失败,请重试");
+    expect(calendar.error.endTimeAfterStart).toBe("结束时间需晚于开始时间");
+    expect(calendar.error.titleTooLong).toBe("事项内容不能超过 50 字");
+    expect(calendar.error.invalidDate).toBe("日期不合法");
+    expect(calendar.error.invalidTime).toBe("时间不合法");
+  });
+
+  it("empty/page/entryPoint：空态、页题与工作台入口逐字", () => {
+    expect(calendar.empty.day).toBe("这天还没有安排");
+    expect(calendar.page.title).toBe("日程日历");
+    expect(calendar.entryPoint).toBe("日程日历");
+  });
+
+  it("结构：error 六键齐全，无残留手机号时代占位键", () => {
+    expect(Object.keys(calendar.error).sort()).toEqual(
+      [
+        "endTimeAfterStart",
+        "invalidDate",
+        "invalidTime",
+        "saveFailed",
+        "titleRequired",
+        "titleTooLong",
+      ].sort(),
+    );
+    expect("entry" in calendar).toBe(true); // 表单/条目行键组（裁决补键）在场
   });
 });
