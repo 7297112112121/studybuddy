@@ -1,6 +1,9 @@
 {
   "page": {
-    "title": "日程日历"
+    "title": "日程日历",
+    "monthLabel": "{year}年{month}月",
+    "prevMonth": "上一月",
+    "nextMonth": "下一月"
   },
   "entryPoint": "日程日历",
   "empty": {

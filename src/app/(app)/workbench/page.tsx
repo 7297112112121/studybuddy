@@ -9,7 +9,9 @@
  * Next 16 cacheComponents 预渲染校验豁免（与根布局同一豁免，instant =
  * false）：会话读取无法纳入静态预渲染，允许阻塞在请求期渲染。
  */
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getCurrentSession, SignOutButton } from "@/modules/auth";
 import { ROUTES } from "@/lib/routes";
 
@@ -20,6 +22,7 @@ export default async function WorkbenchPage() {
   if (!session) {
     redirect(ROUTES.login);
   }
+  const t = await getTranslations("calendar");
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted p-4">
@@ -28,6 +31,14 @@ export default async function WorkbenchPage() {
         当前登录：<span data-testid="session-account">{session.user.username}</span>
       </p>
       <SignOutButton />
+      {/* AXY-22 D-06：仅新增「日程日历」入口链接，不改既有承接行为 */}
+      <Link
+        href={ROUTES.calendar}
+        data-testid="calendar-entry"
+        className="text-sm font-medium underline-offset-4 hover:underline"
+      >
+        {t("entryPoint")}
+      </Link>
     </main>
   );
 }
