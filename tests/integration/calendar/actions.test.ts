@@ -6,7 +6,6 @@
  * revalidatePath 同理桩接并断言其入参（成功路径必经，ADR-0025）。
  * 断言值逐字取自 tasks.md Task 4「失败测试」行。
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { getCurrentSessionMock, revalidatePathMock } = vi.hoisted(() => ({

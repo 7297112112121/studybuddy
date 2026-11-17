@@ -28,7 +28,11 @@ import {
   type CalendarFieldErrors,
 } from "../schema";
 import type { CalendarEntryView } from "../queries";
-import { createEntryAction, updateEntryAction } from "../actions";
+import {
+  createEntryAction,
+  updateEntryAction,
+  type CalendarEntryActionResult,
+} from "../actions";
 
 type EntryFormProps = {
   /** 所选日期（新建模式提交日期；编辑模式被日期控件初值覆盖）。 */
@@ -113,7 +117,7 @@ export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
     setIsPending(true);
     // E-02（网络/服务异常）：action 传输层失败（fetch reject）与服务端
     // SAVE_FAILED 同归一为表单提示区文案，不向 React 边界抛未捕获异常
-    let result: Awaited<ReturnType<typeof createEntryAction>>;
+    let result: CalendarEntryActionResult;
     try {
       result = editing
         ? await updateEntryAction(entry.id, parsed.data)

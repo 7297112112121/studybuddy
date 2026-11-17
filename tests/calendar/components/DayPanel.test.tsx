@@ -10,7 +10,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { NextIntlClientProvider } from "next-intl";
 import DayPanel from "@/modules/calendar/components/DayPanel";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
-import { deleteEntryAction } from "@/modules/calendar/actions";
 
 const deleteEntryActionMock = vi.hoisted(() => vi.fn());
 

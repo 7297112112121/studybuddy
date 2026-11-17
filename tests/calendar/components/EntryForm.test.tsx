@@ -12,10 +12,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { NextIntlClientProvider } from "next-intl";
 import EntryForm from "@/modules/calendar/components/EntryForm";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
-import {
-  createEntryAction,
-  updateEntryAction,
-} from "@/modules/calendar/actions";
 
 const routerMock = vi.hoisted(() => ({
   replace: vi.fn(),
