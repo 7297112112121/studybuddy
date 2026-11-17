@@ -218,7 +218,7 @@ lib/auth.ts 契约块逐项一致（六配置项、403 三路径、session 双�
 
 | # | 结论 | 实现落点 | 测试证据（断言含 proposal 精确值） |
 | - | ---- | ---- | ---- |
-| R1 | 通过 | [validators.ts](../../../src/modules/auth/validators.ts)、[AuthScreen.tsx](../../../src/modules/auth/components/AuthScreen.tsx)、[FormSummary.tsx](../../../src/modules/auth/components/FormSummary.tsx) | 单测 `validation.test.tsx`（留空文案「请输入手机号或邮箱」+ 汇总计数 + 不提交）；E2E R1 用例逐字断言双空「有 2 项需要修改」+ aria-invalid + URL 不变。汇总计数的「项」为字段项、协议错误依 R4 单独呈现——提出者裁决 2026-11-14，proposal 措辞已同步 |
+| R1 | 通过 | [validators.ts](../../../src/modules/auth/validators.ts)、[AuthScreen.tsx](../../../src/modules/auth/components/AuthScreen.tsx)、FormSummary.tsx（历史文件,已随 79a0132 ADR-0004 落地重做移除） | 单测 `validation.test.tsx`（留空文案「请输入手机号或邮箱」+ 汇总计数 + 不提交）；E2E R1 用例逐字断言双空「有 2 项需要修改」+ aria-invalid + URL 不变。汇总计数的「项」为字段项、协议错误依 R4 单独呈现——提出者裁决 2026-11-14，proposal 措辞已同步 |
 | R2 | 通过 | validators.ts（PHONE_RE/EMAIL_RE/validateAccount） | 单测全分支（10 位、首位 2、号段外、含空格、abc@mail）；组件测试「格式不对：手机号 11 位，或 name@mail.com」逐字 + 改填消失；E2E R2 同文案 |
 | R3 | 通过 | validators.ts（PASSWORD_RE/validatePassword），三处输入框共用 | 单测接受 abcd1234/a1234567、拒绝 12345678/abcdefgh/1234567/21 位；组件测试逐字「密码为 8—20 位，需含字母与数字」；E2E R3 纯数字反例 |
 | R4 | 通过 | AgreementCheckbox.tsx（aria-invalid）、AuthScreen（未勾选不提交） | 组件测试 aria-invalid + 不提交；E2E R4 逐字「请阅读并勾选《用户协议》与《隐私政策》」+ 勾选后解除 |

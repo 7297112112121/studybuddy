@@ -13,5 +13,6 @@ sidebar_position: 10
 | 编号 | 状态 | 优先级 | 文档 | 依赖 | 批准日期 | 变更记录 |
 | --- | --- | --- | --- | --- | --- | --- |
 | AXY-8 | 已批准 | P0 | [登录注册](./AXY-8-auth/story) | 无 | 2026-11-16 | [CR-20261116-1](./AXY-8-auth/change-record) |
+| AXY-22 | 已批准 | P0 | [个人日程日历](./AXY-22-study-calendar/story) | AXY-8 | 2026-11-17 | — |
 
 状态、优先级、依赖与批准日期取自各故事文档头部，以原文为准。变更记录列登记 CR 编号——特性经 feature-supersede 技能推翻 / 取代 / 废弃时产出 `AXY-<N>-<slug>/change-record.md`（第五份工件）；「—」表示尚无。
