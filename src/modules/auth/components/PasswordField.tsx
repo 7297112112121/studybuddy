@@ -5,12 +5,17 @@
  * 视觉：shadcn Label + Input + ghost icon Button（lucide Eye/EyeOff，
  * 显隐图标按钮的可访问名经 aria-label 保持「显示密码/隐藏密码」不变），
  * 焦点环 aurora aqua。
+ * 聚焦时展开规则浮层（FieldRulesPopover，AXY-8 UI 优化）：规则清单由
+ * 调用方传入（确认密码只传匹配规则，不重复强度规则）；不传则无浮层。
  */
 import { useState } from "react";
+import type { FocusEvent } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import type { FieldRuleState } from "../validators";
+import FieldRulesPopover from "./FieldRulesPopover";
 
 type PasswordFieldProps = {
   id: string;
@@ -21,16 +26,35 @@ type PasswordFieldProps = {
   hint?: string;
   autoComplete?: string;
   placeholder?: string;
+  /** 聚焦浮层的规则清单（validators 的 *RuleStates / 调用方补充规则）。 */
+  rules?: FieldRuleState[];
 };
 
 export default function PasswordField(props: PasswordFieldProps) {
   const [visible, setVisible] = useState<boolean>(false);
+  const [rulesOpen, setRulesOpen] = useState<boolean>(false);
   const hintId = `${props.id}-hint`;
+
+  // 浮层开合：包裹层 focus-within 语义——focusin/focusout 冒泡到这里，
+  // relatedTarget 仍在层内（如显隐按钮）时不收起。
+  function handleFocus(event: FocusEvent<HTMLDivElement>): void {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      return;
+    }
+    setRulesOpen(true);
+  }
+
+  function handleBlur(event: FocusEvent<HTMLDivElement>): void {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      return;
+    }
+    setRulesOpen(false);
+  }
 
   return (
     <div>
       <Label htmlFor={props.id}>{props.label}</Label>
-      <div className="relative mt-1">
+      <div className="relative mt-1" onFocus={handleFocus} onBlur={handleBlur}>
         <Input
           id={props.id}
           type={visible ? "text" : "password"}
@@ -52,6 +76,9 @@ export default function PasswordField(props: PasswordFieldProps) {
         >
           {visible ? <EyeOffIcon /> : <EyeIcon />}
         </Button>
+        {props.rules !== undefined && (
+          <FieldRulesPopover rules={props.rules} open={rulesOpen} />
+        )}
       </div>
       {props.hint !== undefined && (
         <p id={hintId} className="mt-1 text-xs text-muted-foreground">

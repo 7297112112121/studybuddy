@@ -5,6 +5,13 @@
 
 export const USERNAME_RE = /^[一-龥A-Za-z0-9_]{1,16}$/;
 
+/**
+ * 账户名字符集（无长度量词）——仅供规则浮层做「字符集/长度」两条正交
+ * 拆解；字符类括号表达式必须与 USERNAME_RE 逐字符一致（长度仅由
+ * USERNAME_RE 的量词单一约束），改动任一处须同步。
+ */
+const USERNAME_CHARSET_RE = /^[一-龥A-Za-z0-9_]+$/;
+
 export const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,20}$/;
 
 export type AccountCheck =
@@ -34,6 +41,41 @@ export function validatePassword(raw: string): {
     return { ok: false, messageKey: "auth.password.invalid" };
   }
   return { ok: true };
+}
+
+/**
+ * 字段规则清单项（AXY-8 UI 优化：聚焦浮层实时侦测）。label 为页面静态
+ * 文案（与 AccountField 的 Label/hint 同约定，不入 auth.json）。
+ */
+export type FieldRuleState = {
+  label: string;
+  passed: boolean;
+};
+
+/** 字母与数字同时存在（PASSWORD_RE 两段 look-ahead 的同源拆解）。 */
+const PASSWORD_MIX_RE = /^(?=.*[A-Za-z])(?=.*\d)/;
+
+/**
+ * 账户名规则实时拆解。不变量：每条 passed 全真 ⇔ validateAccount.ok
+ * （required 除外——空值时两条均为 false，由 required 文案兜底）。
+ * 正则为全仓单一来源，勿在此处另写规则。
+ */
+export function accountRuleStates(raw: string): FieldRuleState[] {
+  return [
+    { label: "长度 1—16 个字符", passed: raw.length >= 1 && raw.length <= 16 },
+    {
+      label: "仅含中文、字母、数字或下划线",
+      passed: USERNAME_CHARSET_RE.test(raw),
+    },
+  ];
+}
+
+/** 密码规则实时拆解。不变量：每条 passed 全真 ⇔ validatePassword.ok（required 除外）。 */
+export function passwordRuleStates(raw: string): FieldRuleState[] {
+  return [
+    { label: "长度 8—20 位", passed: raw.length >= 8 && raw.length <= 20 },
+    { label: "需同时含字母与数字", passed: PASSWORD_MIX_RE.test(raw) },
+  ];
 }
 
 export type RegisterFormErrors = Partial<{

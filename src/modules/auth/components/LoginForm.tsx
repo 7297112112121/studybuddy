@@ -8,6 +8,7 @@ import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
+import { passwordRuleStates } from "../validators";
 import type { AuthView } from "./AuthTabs";
 
 type LoginFormProps = {
@@ -41,6 +42,7 @@ export default function LoginForm(props: LoginFormProps) {
           invalid={props.passwordInvalid}
           autoComplete="current-password"
           placeholder="8 位以上，含字母与数字"
+          rules={passwordRuleStates(props.password)}
           onChange={props.onPasswordChange}
         />
 
