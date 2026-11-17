@@ -39,7 +39,7 @@ function rulePassed(label: string): string | null {
 
 describe("字段规则浮层", () => {
   it("聚焦账户名 → 浮层展开两条规则，空值双双未过；失焦收起", () => {
-    renderAuthScreen({ initialView: "register" });
+    renderAuthScreen("register");
 
     fireEvent.focus(screen.getByLabelText("账户名"));
     expect(screen.getByText("长度 1—16 个字符")).toBeTruthy();
@@ -52,7 +52,7 @@ describe("字段规则浮层", () => {
   });
 
   it("输入实时侦测：zhang san! → 长度过、字符集未过；改合法值全过", () => {
-    renderAuthScreen({ initialView: "register" });
+    renderAuthScreen("register");
     const account = screen.getByLabelText("账户名");
 
     fireEvent.focus(account);
@@ -82,7 +82,7 @@ describe("字段规则浮层", () => {
   });
 
   it("注册侧保留规则浮层：账户名聚焦展开并实时更新（zhang san! → 字符集未过）", () => {
-    renderAuthScreen({ initialView: "register" });
+    renderAuthScreen("register");
     const account = screen.getByLabelText("账户名");
 
     fireEvent.focus(account);
@@ -95,7 +95,7 @@ describe("字段规则浮层", () => {
   });
 
   it("注册确认密码只展示「与第一次输入一致」规则且实时更新", () => {
-    renderAuthScreen({ initialView: "register" });
+    renderAuthScreen("register");
 
     fireEvent.change(screen.getByLabelText("设置密码"), {
       target: { value: "study2026" },
