@@ -9,6 +9,10 @@
  * 纯展示组件：开合由父级字段的 focus-within 态驱动，规则由父级传入
  * （单一来源 validators 的 *RuleStates）；对读屏器隐藏——字段的
  * aria-invalid / hint 已承载同等信息，浮层是 sighted 专属增强。
+ *
+ * 容器必须 pointer-events-none：浮层锚定输入框正下方，会盖住后续
+ * 表单元素（如协议勾选框），拦截指针会让下方元素点不到（E2E R8
+ * 回归）；jsdom 不做命中测试，该约束由单测断言类名 + E2E 双通道守卫。
  */
 import { CheckIcon, XIcon } from "lucide-react";
 import type { FieldRuleState } from "../validators";
@@ -25,7 +29,7 @@ export default function FieldRulesPopover(props: FieldRulesPopoverProps) {
   return (
     <div
       aria-hidden="true"
-      className="absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-border bg-popover p-3 shadow-lg backdrop-blur-md animate-in fade-in slide-in-from-top-1 [animation-duration:180ms] [animation-fill-mode:both] motion-reduce:animate-none"
+      className="pointer-events-none absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-border bg-popover p-3 shadow-lg backdrop-blur-md animate-in fade-in slide-in-from-top-1 [animation-duration:180ms] [animation-fill-mode:both] motion-reduce:animate-none"
     >
       <ul className="space-y-1.5">
         {props.rules.map((rule) => (

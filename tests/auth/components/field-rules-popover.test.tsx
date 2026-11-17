@@ -111,6 +111,18 @@ describe("字段规则浮层", () => {
     expect(rulePassed("与第一次输入一致")).toBe("true");
   });
 
+  it("浮层容器 pointer-events-none：不拦截被覆盖区域（如协议勾选框）的指针事件", () => {
+    renderAuthScreen("register");
+
+    // 确认密码的浮层正下方即协议勾选框（E2E R8 曾被浮层拦截点击）
+    fireEvent.focus(screen.getByLabelText("确认密码"));
+    const popover = screen
+      .getByText("与第一次输入一致")
+      .closest('div[aria-hidden="true"]');
+    expect(popover).not.toBeNull();
+    expect(popover?.className).toContain("pointer-events-none");
+  });
+
   it("失焦后收起且不影响既有提交校验链（提交失败仍只有红框）", () => {
     const { container } = renderAuthScreen();
 
