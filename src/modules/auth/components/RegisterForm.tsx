@@ -8,6 +8,7 @@ import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
+import { accountRuleStates, passwordRuleStates } from "../validators";
 import type { AuthView } from "./AuthTabs";
 
 type RegisterFormProps = {
@@ -37,6 +38,7 @@ export default function RegisterForm(props: RegisterFormProps) {
           id="register-account"
           value={props.account}
           invalid={props.accountInvalid}
+          rules={accountRuleStates(props.account)}
           onChange={props.onAccountChange}
         />
 
@@ -48,9 +50,11 @@ export default function RegisterForm(props: RegisterFormProps) {
           autoComplete="new-password"
           placeholder="8 位以上，含字母与数字"
           hint="长度 8—20 位，需同时含字母与数字"
+          rules={passwordRuleStates(props.password)}
           onChange={props.onPasswordChange}
         />
 
+        {/* 确认密码的规则只有匹配一条（R8：强度由「与 password 一致」间接保证）。 */}
         <PasswordField
           id="register-confirm"
           label="确认密码"
@@ -58,6 +62,14 @@ export default function RegisterForm(props: RegisterFormProps) {
           invalid={props.confirmPasswordInvalid}
           autoComplete="new-password"
           placeholder="再输一次"
+          rules={[
+            {
+              label: "与第一次输入一致",
+              passed:
+                props.confirmPassword !== "" &&
+                props.confirmPassword === props.password,
+            },
+          ]}
           onChange={props.onConfirmPasswordChange}
         />
 

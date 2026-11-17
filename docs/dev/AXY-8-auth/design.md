@@ -422,7 +422,7 @@ SignOutButton (client：authClient.signOut() → router.replace(ROUTES.login))
 | auth.password.invalid | 密码为 8—20 位，需含字母与数字 |
 | auth.register.passwordMismatch | 两次输入的密码不一致 |
 | auth.agreement.required | 请阅读并勾选《用户协议》与《隐私政策》 |
-| auth.error.invalidCredentials | 账号或密码不对 |
+| auth.error.invalidCredentials | 用户名或密码不匹配 |
 | auth.error.tooManyAttempts | 操作过于频繁，请稍后再试 |
 | auth.error.usernameRegistered | 该账户已注册，去登录 |
 | auth.error.unknown | 出了点问题，请稍后再试 |
