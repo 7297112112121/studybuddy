@@ -4,8 +4,8 @@
 
 **Date:** <YYYY-MM-DD>
 
-**Spec:** docs/product/AXY-<N>-<slug>/proposal.md（需求规范，权威）
-**Design:** docs/dev/AXY-<N>-<slug>/design.md（架构设计，契约来源）
+**Spec:** docs/product/AXY-<N>-<slug>/proposal.md（需求规范；仅追溯指针，**不要求读取**——计划信息唯一来源是 Design）
+**Design:** docs/dev/AXY-<N>-<slug>/（design.md + contracts / testing / adr，唯一信息来源；标识符 AC / R / 演示态经 design 的需求承载对照与演示态映射取）
 
 ## Global Constraints
 
@@ -53,6 +53,14 @@
 **实现:** <落点与签名；签名与测试已能决定算法时不再写函数体>
 
 **提交:** <提交信息>
+
+## 执行链
+
+<合格判据：按任务卡 Interfaces 的 Consumes / Produces 与文件域划链，一行一链；**覆盖全部任务**，链间不共享文件域。链内串行，链间文件域不相交方可并行——执行交接的子代理按链打包以此为据。单链计划如实写「单链：Task 1→N 串行」，不硬造并行。>
+
+| 链 | 任务序列 | 文件域 | 并行性 |
+| ---- | ---- | ---- | ---- |
+| <链名> | Task <a→b→c> | <目录/文件范围> | <可与哪链并行 / 独占> |
 
 ## 裁决记录
 
