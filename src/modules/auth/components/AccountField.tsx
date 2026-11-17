@@ -12,7 +12,7 @@ import { useState } from "react";
 import type { FocusEvent } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { accountRuleStates } from "../validators";
+import type { FieldRuleState } from "../validators";
 import FieldRulesPopover from "./FieldRulesPopover";
 
 type AccountFieldProps = {
@@ -20,6 +20,8 @@ type AccountFieldProps = {
   value: string;
   invalid?: boolean;
   onChange: (value: string) => void;
+  /** 聚焦规则浮层的清单（accountRuleStates）；不传则无浮层（登录侧不用）。 */
+  rules?: FieldRuleState[];
 };
 
 export default function AccountField(props: AccountFieldProps) {
@@ -55,10 +57,9 @@ export default function AccountField(props: AccountFieldProps) {
           aria-invalid={props.invalid ? true : undefined}
           className="h-11 rounded-xl bg-muted/60 focus-visible:border-aurora-aqua focus-visible:ring-aurora-aqua/30"
         />
-        <FieldRulesPopover
-          rules={accountRuleStates(props.value)}
-          open={rulesOpen}
-        />
+        {props.rules !== undefined && (
+          <FieldRulesPopover rules={props.rules} open={rulesOpen} />
+        )}
       </div>
     </div>
   );

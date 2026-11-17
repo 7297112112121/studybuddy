@@ -8,7 +8,7 @@ import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
-import { passwordRuleStates } from "../validators";
+import { accountRuleStates, passwordRuleStates } from "../validators";
 import type { AuthView } from "./AuthTabs";
 
 type RegisterFormProps = {
@@ -38,6 +38,7 @@ export default function RegisterForm(props: RegisterFormProps) {
           id="register-account"
           value={props.account}
           invalid={props.accountInvalid}
+          rules={accountRuleStates(props.account)}
           onChange={props.onAccountChange}
         />
 

@@ -270,9 +270,11 @@ export default function AuthScreen(props: AuthScreenProps) {
 
             <AuthTabs active={activeView} onSwitch={switchView} />
 
-            {/* 顶部错误（R7/R10）：服务端/客户端提交失败统一置顶呈现；
-                撞号文案整体可点，切回登录视图并带入账户名（R10）。 */}
-            {topError === null ? null : (
+            {/* 顶部错误（R7/R10，AXY-8 UI 优化拆分呈现）：登录视图提交失败
+                不再置顶 Alert，改由 LoginForm 内联在密码框底部（errorText）；
+                注册视图保持顶部 Alert——撞号文案整体可点，切回登录视图并
+                带入账户名（R10）。 */}
+            {activeView === "login" || topError === null ? null : (
               <Alert variant="destructive" className="mb-4">
                 {topError === "auth.error.usernameRegistered" ? (
                   <Button
@@ -299,7 +301,13 @@ export default function AuthScreen(props: AuthScreenProps) {
                   account={values.account}
                   password={values.password}
                   accountInvalid={isInvalid("account")}
-                  passwordInvalid={isInvalid("password")}
+                  // R7（UI 优化）：凭据不匹配只对密码框报红（账户框不报红，
+                  // 不泄露探测面）；限流/未知错误仅内联文案，不报红。
+                  passwordInvalid={
+                    isInvalid("password") ||
+                    topError === "auth.error.invalidCredentials"
+                  }
+                  errorText={topError === null ? undefined : errorText(topError)}
                   submitting={submitting}
                   onSubmit={handleLoginSubmit}
                   onAccountChange={(value) => updateValue("account", value)}

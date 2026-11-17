@@ -28,7 +28,7 @@ describe("auth.json 文案与 design 文案表逐字一致", () => {
   });
 
   it("error：服务端错误映射（R7 统一文案）", () => {
-    expect(auth.error.invalidCredentials).toBe("账号或密码不对");
+    expect(auth.error.invalidCredentials).toBe("用户名或密码不匹配");
     expect(auth.error.tooManyAttempts).toBe("操作过于频繁，请稍后再试");
     expect(auth.error.usernameRegistered).toBe("该账户已注册，去登录");
     expect(auth.error.unknown).toBe("出了点问题，请稍后再试");

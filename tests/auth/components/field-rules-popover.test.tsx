@@ -39,7 +39,7 @@ function rulePassed(label: string): string | null {
 
 describe("字段规则浮层", () => {
   it("聚焦账户名 → 浮层展开两条规则，空值双双未过；失焦收起", () => {
-    renderAuthScreen();
+    renderAuthScreen({ initialView: "register" });
 
     fireEvent.focus(screen.getByLabelText("账户名"));
     expect(screen.getByText("长度 1—16 个字符")).toBeTruthy();
@@ -52,7 +52,7 @@ describe("字段规则浮层", () => {
   });
 
   it("输入实时侦测：zhang san! → 长度过、字符集未过；改合法值全过", () => {
-    renderAuthScreen();
+    renderAuthScreen({ initialView: "register" });
     const account = screen.getByLabelText("账户名");
 
     fireEvent.focus(account);
@@ -65,20 +65,33 @@ describe("字段规则浮层", () => {
     expect(rulePassed("仅含中文、字母、数字或下划线")).toBe("true");
   });
 
-  it("登录密码聚焦展开规则浮层并实时更新（abcdefgh → 组合未过）", () => {
+  it("登录侧不使用规则浮层：聚焦账户名与密码均不展开", () => {
     renderAuthScreen();
+    const account = screen.getByLabelText("账户名");
     const password = screen.getByLabelText("密码");
 
+    fireEvent.focus(account);
+    fireEvent.change(account, { target: { value: "zhang san!" } });
+    expect(screen.queryByText("长度 1—16 个字符")).toBeNull();
+
+    fireEvent.blur(account);
     fireEvent.focus(password);
-    expect(screen.getByText("长度 8—20 位")).toBeTruthy();
-    expect(rulePassed("需同时含字母与数字")).toBe("false");
-
     fireEvent.change(password, { target: { value: "abcdefgh" } });
-    expect(rulePassed("长度 8—20 位")).toBe("true");
-    expect(rulePassed("需同时含字母与数字")).toBe("false");
+    expect(screen.queryByText("长度 8—20 位")).toBeNull();
+    expect(screen.queryByText("需同时含字母与数字")).toBeNull();
+  });
 
-    fireEvent.change(password, { target: { value: "a1234567" } });
-    expect(rulePassed("需同时含字母与数字")).toBe("true");
+  it("注册侧保留规则浮层：账户名聚焦展开并实时更新（zhang san! → 字符集未过）", () => {
+    renderAuthScreen({ initialView: "register" });
+    const account = screen.getByLabelText("账户名");
+
+    fireEvent.focus(account);
+    fireEvent.change(account, { target: { value: "zhang san!" } });
+    expect(rulePassed("长度 1—16 个字符")).toBe("true");
+    expect(rulePassed("仅含中文、字母、数字或下划线")).toBe("false");
+
+    fireEvent.change(account, { target: { value: "zhang_san" } });
+    expect(rulePassed("仅含中文、字母、数字或下划线")).toBe("true");
   });
 
   it("注册确认密码只展示「与第一次输入一致」规则且实时更新", () => {

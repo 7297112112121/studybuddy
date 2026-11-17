@@ -186,8 +186,8 @@ describe("R10 已注册账户名", () => {
   });
 });
 
-describe("R7 客户端统一文案", () => {
-  it("signIn.username 返回 status 401 → 「账号或密码不对」", async () => {
+describe("R7 客户端统一文案（登录失败内联呈现，AXY-8 UI 优化）", () => {
+  it("signIn.username 返回 status 401 → 密码框报红 + 输入框底部「用户名或密码不匹配」；账户框不报红、无顶部 Alert", async () => {
     signInMock.mockResolvedValue({
       data: null,
       error: { status: 401, statusText: "Unauthorized", message: "" },
@@ -197,11 +197,19 @@ describe("R7 客户端统一文案", () => {
     fillLogin("zhang_san", "study2026");
     submitActiveForm(container);
 
-    expect(await screen.findByText("账号或密码不对")).toBeDefined();
+    expect(await screen.findByText("用户名或密码不匹配")).toBeDefined();
+    expect(
+      screen.getByLabelText("密码").getAttribute("aria-invalid"),
+    ).toBe("true");
+    // R7 纪律：不泄露探测面——账户框不因凭据失败报红
+    expect(
+      screen.getByLabelText("账户名").getAttribute("aria-invalid"),
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="alert"]')).toBeNull();
     expect(routerReplace).not.toHaveBeenCalled();
   });
 
-  it("signIn.username 返回 status 429 → 「操作过于频繁，请稍后再试」", async () => {
+  it("signIn.username 返回 status 429 → 底部「操作过于频繁，请稍后再试」，密码框不报红", async () => {
     signInMock.mockResolvedValue({
       data: null,
       error: { status: 429, statusText: "Too Many Requests", message: "" },
@@ -214,6 +222,10 @@ describe("R7 客户端统一文案", () => {
     expect(
       await screen.findByText("操作过于频繁，请稍后再试"),
     ).toBeDefined();
+    expect(
+      screen.getByLabelText("密码").getAttribute("aria-invalid"),
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="alert"]')).toBeNull();
     expect(routerReplace).not.toHaveBeenCalled();
   });
 });
