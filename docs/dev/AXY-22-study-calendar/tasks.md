@@ -82,7 +82,7 @@ R1→T3/T4/T5/T8；R2→T3/T4/T5/T8；R3→T4/T5/T6/T8；R4→T3/T8；R5→T1/T3
 
 **AC / 演示态:** 无（单元,支撑函数）
 
-**失败测试:** `buildMonthGrid`：2026-11 → 恰 42 格、首格 2026-10-26（周一）、11-01 补位 inMonth=false、11-30 inMonth=true、今日传 "2026-11-17" 时该格 isToday=true 且唯一；`monthRange`：2026-11 → {start:"2026-11-01", end:"2026-11-30"}、闰月 2028-02 → end "2028-02-29"；`addMonths`：(2026,1,-1)→{2025,12}、(2026,12,1)→{2027,1}；`isValidDateString`：接受 "2026-11-17"、拒 "2026-02-30"、"2026-13-01"、"20261117"、"2026-11-1"；`formatHhmm`："14:00:00"→"14:00"。
+**失败测试:** `buildMonthGrid`：2026-11 → 恰 42 格、首格 2026-10-26（周一）、11-01 补位 inMonth=false、11-30 inMonth=true、今日传 "2026-11-17" 时该格 isToday=true 且唯一；`monthRange`：2026-11 → `{start:"2026-11-01", end:"2026-11-30"}`、闰月 2028-02 → end "2028-02-29"；`addMonths`：(2026,1,-1)→`{2025,12}`、(2026,12,1)→`{2027,1}`；`isValidDateString`：接受 "2026-11-17"、拒 "2026-02-30"、"2026-13-01"、"20261117"、"2026-11-1"；`formatHhmm`："14:00:00"→"14:00"。
 
 **预期失败:** FAIL——`@/modules/calendar/month` 模块不存在（Cannot find module）。
 
@@ -276,4 +276,11 @@ R1→T3/T4/T5/T8；R2→T3/T4/T5/T8；R3→T4/T5/T6/T8；R4→T3/T8；R5→T1/T3
 - 裁决（计划期）: Task 6 补设 `DayPanel.test.tsx`（空态/标题/行文案/删除确认层四例）,超出 design 测试接缝表所列组件测试范围 — 组装层组件写产品代码须有先红测试,TDD 铁律优先于「接缝表未列」的留白 — 若不补,Task 6 全卡无红测试,违反硬门禁
 - 裁决（计划期）: `listMonthEntries` 与 service 三函数的「DB 异常向上抛」错误情形不设故障注入测试 — 读路径为直通传播、无处理代码（Next 错误边界兜底）,写路径运行时 SAVE_FAILED 已由 T8 ⑪ 路由拦截覆盖 — 强造库故障只会测到 drizzle/PG 自身行为
 - 裁决（T1 执行）: 修正任务卡断言「11-01 补位 inMonth=false」为「补位格止于 10-31,11-01 inMonth=true」 — 2026-11-01 是周日但属 11 月真实日期,计划期日历推算失误 — 不改则测试钉死错误日历语义
+- 裁决（T4 执行）: 会话桩机制为 vi.mock('@/modules/auth') 桩 getCurrentSession + vi.mock('next/cache') 桩 revalidatePath（并断言其入参） — 任务卡写「沿 auth actions.test 既有方式」,但 auth 集成测试无会话桩先例（registerAction 不需会话）,getCurrentSession 依赖 next/headers 请求上下文集成环境不可用 — 卡面表述落空,桩为唯一可行路径
+- 裁决（T5/T7 执行）: calendar.json 在 design 键表外补 form/entry/page(月导航)键组（字段标签、添加/保存/编辑/删除按钮、确认层、上一月/下一月/monthLabel） — design 只锁 E 表与空态/页题键,但组件用户可见文案按 ADR-0010 不得硬编码 — 键值无逐字约束,产品侧如后续定义以 design 修订为准
+- 裁决（T2 执行）: drizzle-orm 1.0 RC 列构建器无 .nullable() 链（可空为缺省,仅 .notNull()）,任务卡 Produces 行「time().nullable()」按实际 API 落为 time() — 训练数据与 RC API 差异,auth 先例 image: text() 同款 — 类型面不变,time 列仍可空
+- 裁决（T8 执行）: E2E 揭示两产品缺陷并回修 EntryForm/DayPanel（补单测各一例）——①传输层异常（fetch reject）未归一 E-02,proposal E-02 明含「网络异常」,design 仅写「SAVE_FAILED ← DB 异常」漏传输半边;②新建→编辑切换 EntryForm 已挂载,entry prop 后到不触发 useState 初始化器,预填为空 — 组合测试只测了「直接以编辑模式挂载」漏切换场景 — 缺陷若留至线上,网络故障呈未捕获异常、编辑打开空白表单覆盖原值
+- 裁决（T8 执行）: e2e 断言锚点收窄至 data-testid="day-panel"（组件新增测试锚点属性,session-account 先例同款） — 月格摘要与详情行天然同文案,页面级 getByText 必双匹配 — 不收窄则 R1/R2/R3/R11/R12 全部 strict violation 误报
+- 裁决（T9 执行）: EntryForm 传输层 catch 的返回标注由 `Awaited<ReturnType<typeof createEntryAction>>` 改引显式 `CalendarEntryActionResult` — 仓库 lint 规则 no-restricted-syntax 禁用服务端返回类型推断（沿调用链扩散、掩盖契约变化） — 不改则 lint 门禁阻断 CI
+- 裁决（T9 执行）: 随本特性 PR 修复 docs 构建两处坏链——AXY-22 design 的 proposal 链接改相对路径（AXY-8 先例格式）;AXY-8 review 墓碑的 FormSummary.tsx 死链（79a0132 删文件遗留,非本特性引入）去链接留注记 — docs:build 对坏链零容忍,不修则 T9 ⑤ 无法闭合
 - 裁决（计划期）: 防御性键 `titleTooLong`/`invalidDate`/`invalidTime` 文案值由本计划补定（design 仅锁键名）,取值见 Global Constraints — 实现需确切文案才能落 json 与测试 — 若产品侧后续逐字定义,以 design 修订为准回改

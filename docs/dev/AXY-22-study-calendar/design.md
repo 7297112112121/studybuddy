@@ -6,7 +6,7 @@ sidebar_position: 2
 
 # Design: AXY-22 个人日程日历
 
-| 对应 Proposal | [AXY-22](/dev/AXY-22-study-calendar/proposal) | 状态 | 已批准 |
+| 对应 Proposal | [AXY-22](../../product/AXY-22-study-calendar/proposal) | 状态 | 已批准 |
 | ---- | ---- | ---- | ---- |
 | 日期 | 2026-11-17 | 批准人 | 海渝(2026-11-17) |
 
