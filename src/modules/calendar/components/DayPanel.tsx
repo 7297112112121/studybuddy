@@ -39,7 +39,7 @@ export default function DayPanel({ date, entries, today }: DayPanelProps) {
     formatMonthDay(date) + (date === today ? " · 今天" : "");
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4" data-testid="day-panel">
       <h2 className="text-lg font-semibold">{title}</h2>
 
       {entries.length === 0 ? (
@@ -56,7 +56,10 @@ export default function DayPanel({ date, entries, today }: DayPanelProps) {
         </ul>
       )}
 
+      {/* key 绑定编辑目标：新建→编辑切换时重挂载，useState 初始化器
+          重跑完成预填（entry prop 后到不会触发已挂载组件的初始化） */}
       <EntryForm
+        key={editingId ?? "create"}
         date={date}
         entry={editingEntry}
         onSaved={() => setEditingId(null)}

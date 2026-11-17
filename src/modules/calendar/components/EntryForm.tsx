@@ -111,9 +111,18 @@ export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
     setFieldErrors({});
     setFormError(false);
     setIsPending(true);
-    const result = editing
-      ? await updateEntryAction(entry.id, parsed.data)
-      : await createEntryAction(parsed.data);
+    // E-02（网络/服务异常）：action 传输层失败（fetch reject）与服务端
+    // SAVE_FAILED 同归一为表单提示区文案，不向 React 边界抛未捕获异常
+    let result: Awaited<ReturnType<typeof createEntryAction>>;
+    try {
+      result = editing
+        ? await updateEntryAction(entry.id, parsed.data)
+        : await createEntryAction(parsed.data);
+    } catch {
+      setIsPending(false);
+      setFormError(true);
+      return;
+    }
     setIsPending(false);
 
     if (result.ok) {

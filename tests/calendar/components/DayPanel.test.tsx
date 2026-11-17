@@ -105,4 +105,21 @@ describe("DayPanel（tests/calendar/components/DayPanel）", () => {
       expect(deleteEntryActionMock).toHaveBeenCalledWith("e1"),
     );
   });
+
+  it("⑥ 编辑切换：新建模式先挂载后点「编辑」→ 表单预填被编辑条目（useState 初始化器须重跑）", async () => {
+    renderPanel({
+      entries: [
+        { id: "e1", date: "2026-11-16", title: "旧标题", startTime: "10:00", endTime: "11:00" },
+      ],
+    });
+    // 新建模式先在场（空表单）
+    expect((screen.getByLabelText("事项") as HTMLInputElement).value).toBe("");
+
+    fireEvent.click(screen.getByRole("button", { name: "编辑" }));
+
+    const title = screen.getByLabelText("事项") as HTMLInputElement;
+    await waitFor(() => expect(title.value).toBe("旧标题"));
+    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe("10:00");
+    expect((screen.getByLabelText("所属日期") as HTMLInputElement).value).toBe("2026-11-16");
+  });
 });
