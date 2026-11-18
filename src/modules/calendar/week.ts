@@ -5,6 +5,7 @@
  * 避免本地时区(DST)扰动;日期语义是字面日期 "YYYY-MM-DD"
  * (单时区假设,AXY-22 design 开放问题 #2 沿承)。
  */
+import type { CalendarEntryView } from "./queries";
 
 export type WeekdayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
@@ -87,4 +88,92 @@ export function addWeeks(weekStart: string, delta: number): string {
 export function isValidWeekStart(value: string): value is string {
   if (!isValidDate(value)) return false;
   return weekStartFor(value) === value;
+}
+
+/** "HH:MM" → 当日分钟数 0–1439(非法输入抛 RangeError,仅内部可信输入)。 */
+export function timeToMinutes(time: string): number {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+    throw new RangeError(`invalid HH:MM time: ${time}`);
+  }
+  const [h, m] = time.split(":").map(Number) as [number, number];
+  return h * 60 + m;
+}
+
+/** 分钟数 → "HH:MM"(零填充)。 */
+function minutesToHhmm(minutes: number): string {
+  const h = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const m = String(minutes % 60).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+/** 点击位置分钟数 → 所在 30 分钟槽起点 "HH:00"/"HH:30"(向下取整,F-05)。 */
+export function slotPrefillStart(minutes: number): string {
+  return minutesToHhmm(Math.floor(minutes / 30) * 30);
+}
+
+export type WeekBlock = {
+  entryId: string;
+  /** 列内横向偏移与宽度(百分比;同一重叠簇内并列均分,proposal 边界 #2)。 */
+  leftPercent: number;
+  widthPercent: number;
+  /** 距 00:00 分钟偏移与时长(时间点条目 durationMinutes 固定 30,D-12)。 */
+  startMinutes: number;
+  durationMinutes: number;
+};
+
+/**
+ * 单日带时间条目 → 网格布局块。
+ * 重叠簇 = 区间图连通分量(扫描线:按开始时间排序,开始 ≥ 当前簇最大结束
+ * 即开新簇);簇内按贪心车道(前块结束 ≤ 本块开始即复用车道)并列,
+ * 宽度 = 100 / 簇大小,leftPercent = 车道序 × 宽度。入参顺序无关:
+ * 先按 (startMinutes, entryId) 确定性排序再计算。
+ */
+export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
+  type Item = { id: string; start: number; end: number };
+  const items: Item[] = dayEntries
+    .filter((e) => e.startTime !== null)
+    .map((e) => ({
+      id: e.id,
+      start: timeToMinutes(e.startTime as string),
+      end: e.endTime === null
+        ? timeToMinutes(e.startTime as string) + 30 // D-12:时间点条目 30 分钟
+        : timeToMinutes(e.endTime),
+    }))
+    .sort((a, b) => a.start - b.start || a.id.localeCompare(b.id));
+
+  const blocks: WeekBlock[] = [];
+  let cluster: Item[] = [];
+  let clusterEnd = -1;
+  let lanes: number[] = [];
+
+  const flush = (): void => {
+    if (cluster.length === 0) return;
+    const width = 100 / cluster.length;
+    for (const item of cluster) {
+      const lane = lanes.findIndex((laneEnd) => laneEnd <= item.start);
+      const laneIndex = lane === -1 ? lanes.length : lane;
+      if (lane === -1) lanes.push(item.end);
+      else lanes[laneIndex] = item.end;
+      blocks.push({
+        entryId: item.id,
+        leftPercent: laneIndex * width,
+        widthPercent: width,
+        startMinutes: item.start,
+        durationMinutes: item.end - item.start,
+      });
+    }
+    cluster = [];
+    lanes = [];
+  };
+
+  for (const item of items) {
+    if (cluster.length > 0 && item.start >= clusterEnd) {
+      flush();
+    }
+    cluster.push(item);
+    clusterEnd = Math.max(clusterEnd, item.end);
+  }
+  flush();
+
+  return blocks;
 }
