@@ -68,7 +68,7 @@ export default async function CalendarPage({
   const next = addMonths(shown.year, shown.month, 1);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-6">
+    <main className="calendar-theme mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-6">
       <h1 className="text-2xl font-bold text-foreground">{t("page.title")}</h1>
       <nav className="flex items-center gap-1">
         <Button variant="ghost" size="icon" asChild>

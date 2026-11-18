@@ -234,7 +234,11 @@ export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
         </p>
       )}
 
-      <Button type="submit" disabled={isPending}>
+      <Button
+        type="submit"
+        disabled={isPending}
+        className="bg-linear-[100deg] from-aurora-aqua from-0% via-aurora-aqua-bright via-38% to-aurora-magenta shadow-lg shadow-aurora-aqua/30"
+      >
         {editing ? t("form.saveButton") : t("form.addButton")}
       </Button>
     </form>
