@@ -65,9 +65,29 @@ jobs:
           node-version: 26
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      # node_modules 直接缓存（绕过 npm ci 的全量重装）：npm ci 即使 ~/.npm
+      # 包缓存命中也要解包 1905 个包（实测 ~29s），缓存 node_modules 后命中
+      # 运行跳过安装、秒级通过；未命中回退 npm ci 并回填。
+      # save 拆为独立步骤且以 install 成功为前提——actions/cache 默认 post
+      # 保存不感知步骤成败，会把半成品 node_modules 写进缓存毒化后续运行。
+      # key 仅含 runner.os + lockfile：平台特定二进制（esbuild/@swc/core 等）
+      # 按 OS 区分，lockfile 变更自动重建。
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
+      - name: Install dependencies
+        run: npm ci --no-audit --prefer-offline
+
+      - name: Save node_modules cache
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Lint
         run: npm run lint
 
