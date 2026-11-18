@@ -222,3 +222,36 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     expect(screen.queryByText("结束时间需晚于开始时间")).toBeNull();
   });
 });
+
+// —— Task 6:showDateField(AXY-23 tasks.md Task 6「失败测试」行) ——
+
+describe("EntryForm showDateField(AXY-23)", () => {
+  const editEntry = {
+    id: "e1",
+    date: "2026-11-16",
+    title: "旧标题",
+    startTime: "10:00",
+    endTime: "11:00",
+  };
+
+  it("showDateField=false 编辑模式:不渲染所属日期控件,提交日期锁定 entry.date", async () => {
+    updateEntryActionMock.mockResolvedValue({ ok: true });
+    renderForm({ entry: editEntry, showDateField: false });
+
+    expect(screen.queryByLabelText("所属日期")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "保存" }));
+    await waitFor(() => expect(updateEntryActionMock).toHaveBeenCalledOnce());
+    expect(updateEntryActionMock).toHaveBeenCalledWith("e1", {
+      date: "2026-11-16",
+      title: "旧标题",
+      startTime: "10:00",
+      endTime: "11:00",
+    });
+  });
+
+  it("默认(不传 showDateField)编辑模式:所属日期控件在场(现状不变)", () => {
+    renderForm({ entry: editEntry });
+    expect(screen.getByLabelText("所属日期")).toBeTruthy();
+  });
+});
