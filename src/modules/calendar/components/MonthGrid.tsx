@@ -4,10 +4,9 @@
  * 月视图网格（AXY-22 design「UI 与组件」节；视觉重做——台历式日期章）。
  *
  * 星期表头（周一为首，与 buildMonthGrid 对齐）+ 消费 buildMonthGrid 渲染
- * 6×7 网格。今日格以「日期章」常亮（仅数字反白，青→紫品牌渐变章，格子
- * 底色不反转）；选中格 bg-accent + ring-primary 内环，与今日章可区分
- * （.calendar-theme 作用域内 primary/accent 即品牌色，见 globals.css）；
- * 条目渲染为格内灰摘要条（带时间「HH:MM title」、
+ * 6×7 网格。今日格以「日期章」常亮（仅数字反白 bg-primary，格子底色不
+ * 反转）；选中格 bg-accent + ring-primary 内环，与今日章可区分（语义
+ * token，ADR-0003）；条目渲染为格内灰摘要条（带时间「HH:MM title」、
  * 不带「title」），最多 2 条，超出以「+N」计数（E2E 断言详情面板而非
  * 月格截断）；点击日期格 → onSelect。
  */
@@ -97,7 +96,7 @@ export default function MonthGrid({
                 className={cn(
                   "grid size-7 place-items-center self-start rounded-md text-sm font-medium tabular-nums",
                   cell.isToday &&
-                    "bg-linear-[100deg] from-aurora-aqua from-0% via-aurora-aqua-bright via-38% to-aurora-magenta font-semibold text-primary-foreground",
+                    "bg-primary font-semibold text-primary-foreground",
                 )}
               >
                 {Number(cell.date.slice(8))}

@@ -234,10 +234,12 @@ export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
         </p>
       )}
 
+      {/* 纯色品牌主按钮(.calendar-theme 作用域内 primary 即 aurora-aqua),
+          外发光沿用 auth SubmitButton 手法;不用渐变(设计裁决:渐变不作按钮) */}
       <Button
         type="submit"
         disabled={isPending}
-        className="bg-linear-[100deg] from-aurora-aqua from-0% via-aurora-aqua-bright via-38% to-aurora-magenta shadow-lg shadow-aurora-aqua/30"
+        className="shadow-lg shadow-aurora-aqua/30"
       >
         {editing ? t("form.saveButton") : t("form.addButton")}
       </Button>

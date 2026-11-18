@@ -35,15 +35,19 @@ export default function CalendarScreen({
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+      {/* 月视图面板:半透明深色底透星空,1px 白 25% 细描边略高亮,
+          轮廓完整圆角(DayPanel 同款,见其组件头注) */}
       <div className="lg:w-3/5">
-        <MonthGrid
-          year={year}
-          month={month}
-          today={today}
-          entries={entries}
-          selectedDate={selectedDate}
-          onSelect={setSelectedDate}
-        />
+        <section className="rounded-2xl border border-white/25 bg-aurora-ink/40 p-3 md:p-4">
+          <MonthGrid
+            year={year}
+            month={month}
+            today={today}
+            entries={entries}
+            selectedDate={selectedDate}
+            onSelect={setSelectedDate}
+          />
+        </section>
       </div>
       <div className="lg:w-2/5">
         <DayPanel date={selectedDate} entries={dayEntries} today={today} />

@@ -167,9 +167,11 @@
   --ring: var(--aurora-aqua);
 }
 
-/* auth 页玻璃卡面(仅 .aurora-theme 内使用):155° 白色半透明渐变 +
-   顶部内描边高光 + 深投影,配合 backdrop-blur 构成玻璃质感。 */
-.aurora-theme .glass-card {
+/* 暗色玻璃卡面(.aurora-theme / .calendar-theme 作用域内使用):
+   155° 白色半透明渐变 + 顶部内描边高光 + 深投影,配合 backdrop-blur
+   构成玻璃质感;卡片元素不另设 bg-card 底色,渐变即卡面。 */
+.aurora-theme .glass-card,
+.calendar-theme .glass-card {
   background-image: linear-gradient(
     155deg,
     oklch(1 0 0 / 9%),
@@ -211,16 +213,68 @@
   );
 }
 
-/* calendar 页品牌色试验作用域(用户显式豁免前端设计规范的颜色消费规则):
-   亮色底上把 primary/ring 换成 aurora aqua、primary-foreground 换墨底,
-   accent 换薄荷洗色(hover/选中)。与 .aurora-theme 同为页面局部作用域
-   ——只挂在 /calendar 根节点,不影响全局亮色主题;若试验转正需按
-   色彩搭配记录「新页面用色指引」走 ADR 评估泛化。 */
+/* calendar 页深空品牌主题作用域(用户显式豁免前端设计规范的颜色消费
+   规则;沿 .aurora-theme 先例的页面局部暗色校准,只挂 /calendar 根节点,
+   不影响全局亮色主题)。内容面经语义 token 继承:前景近白、border 白
+   12%;primary/ring 指 aurora aqua、primary-foreground 换墨底;accent 为
+   aqua 薄荷洗色(hover/选中)。侧边面板底色为半透明深色 bg-aurora-ink/40
+   (组件内直书,无背景模糊,星点清晰透出)。全部纯色,渐变被设计裁决
+   禁止(按钮/日期章不用渐变;.stars-sky 的径向氛围属背景非控件)。若
+   试验转正需按色彩搭配记录「新页面用色指引」走 ADR 评估泛化。 */
 .calendar-theme {
+  --background: var(--aurora-ink);
+  --foreground: oklch(0.968 0.006 247);
+  --card: oklch(1 0 0 / 8%);
+  --card-foreground: oklch(0.968 0.006 247);
+  --popover: oklch(0.205 0.02 250);
+  --popover-foreground: oklch(0.968 0.006 247);
   --primary: var(--aurora-aqua);
   --primary-foreground: var(--aurora-ink);
+  --secondary: oklch(1 0 0 / 6%);
+  --secondary-foreground: oklch(0.968 0.006 247);
+  --muted: oklch(1 0 0 / 7%);
+  --muted-foreground: oklch(0.705 0.022 261);
+  --accent: color-mix(in oklab, var(--aurora-aqua) 15%, transparent);
+  --accent-foreground: oklch(0.968 0.006 247);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 14%);
   --ring: var(--aurora-aqua);
-  --accent: color-mix(in oklab, var(--aurora-aqua) 12%, white);
+  --destructive: oklch(0.704 0.191 22.216);
+}
+
+/* calendar 深空星层(StarsBackground 组件专用,见组件头注):
+   ink 深空底 + 底部 indigo-deep 氛围椭圆;星点白,三层视差漂移,
+   reduced-motion 时保留静态星点。 */
+.stars-sky {
+  background: radial-gradient(
+    ellipse at 50% 115%,
+    color-mix(in oklab, var(--aurora-indigo-deep) 60%, var(--aurora-ink)) 0%,
+    var(--aurora-ink) 62%
+  );
+}
+
+.stars-layer {
+  position: absolute;
+  left: 0;
+  background: transparent;
+  animation-name: star-drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes star-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-2000px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stars-layer {
+    animation: none;
+  }
 }
 
 @layer base {
