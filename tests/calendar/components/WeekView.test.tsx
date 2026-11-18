@@ -5,7 +5,7 @@
  * 色块文字与时段可读、实时线可见性(Review Focus 5)、槽位 aria-label
  * (createAt 插值)。actions 桩接(WeekEntryDialog→EntryForm 边界)。
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import WeekView from "@/modules/calendar/components/WeekView";

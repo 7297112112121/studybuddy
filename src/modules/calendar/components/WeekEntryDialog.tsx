@@ -68,8 +68,9 @@ export default function WeekEntryDialog({
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="calendar-theme sm:max-w-sm">
+    <>
+      <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="calendar-theme sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
             {editing ? t("week.dialogEdit") : t("week.dialogCreate")}
@@ -101,7 +102,8 @@ export default function WeekEntryDialog({
             </Button>
           </div>
         )}
-      </DialogContent>
+        </DialogContent>
+      </Dialog>
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
@@ -118,6 +120,6 @@ export default function WeekEntryDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Dialog>
+    </>
   );
 }
