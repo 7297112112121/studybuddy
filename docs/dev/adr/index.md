@@ -74,6 +74,37 @@ YYYY-MM-DD
 | [0024](telemetry-opentelemetry) | 2026-11-12 | 采集层：OpenTelemetry 标准（Next.js instrumentation + AI SDK 遥测） | 已接受 |
 | [0025](client-data-layer) | 2026-11-13 | 客户端数据层：TanStack Query + Server Actions（取代 ADR-0008 的 tRPC） | 已接受 |
 
+## 现行技术栈速查
+
+给架构设计期（architecture-design 第 2 步）主会话**内联核对**用：设计技术要点逐条对照本表，能判定的「一致 / 冲突」直接写进 design 的 adr.md；「需回读全文的信号」命中时才打开对应 ADR 原文。已取代的 ADR（0008）不列。新 ADR 接受时随同一 PR 在本表登记一行，并同步提炼硬约束。
+
+| ADR | 技术 | 硬约束（设计必须遵守） | 需回读全文的信号 |
+| --- | --- | --- | --- |
+| [0001](nextjs-fullstack-framework) | Next.js 16 | 实现细节以 `node_modules/next/dist/docs` 为准，不信训练记忆；cacheComponents 已启用 | 用到 Next 16 新 API 或缓存 / PPR 语义时 |
+| [0002](app-router) | App Router | 请求级介入用 proxy.ts（仅 Node runtime），不是 middleware | 异步 params 或迁移 middleware 方案时 |
+| [0003](tailwindcss-4) | Tailwind CSS 4 | 新增颜色 / 间距 / 圆角必须先进 `globals.css` 的 `@theme` 变量 | 手动切换暗色模式时 |
+| [0004](shadcn-ui) | shadcn/ui | 组件源码复制进仓库，不整体升级、只按需 diff 上游 | 新增组件或同步上游时 |
+| [0005](postgresql-pgvector) | PostgreSQL 17 + pgvector | 不引入独立向量库，向量与业务数据同库同事务 | 检索规模逼近百万级时 |
+| [0006](drizzle-orm) | Drizzle ORM | 迁移经 drizzle-kit 生成 SQL 入库评审，禁手改 | rename 等破坏性变更需核对 SQL 时 |
+| [0007](redis) | Redis 7 | 只存可重建 / 可过期数据，持久化事实以 PG 为准 | 涉队列、过期或可否丢失的判断时 |
+| [0009](zustand) | zustand v5 | 服务端数据不进 store，持久偏好走 URL / localStorage | 拆分 store 切片或高频状态时 |
+| [0010](i18n) | next-intl | 单语言无路由前缀，缓存键必须含语言维度防串语言 | 需迁 `[lang]` 前缀或升级 Next 时 |
+| [0011](eslint-prettier) | ESLint + Prettier | 格式全归 Prettier，ESLint 关格式类规则，CI 分步检查 | 引新 lint 工具或规则冲突时 |
+| [0012](vitest) | Vitest | 异步 Server Components 不做单测，留 E2E 补位 | mock next/* 或测 RSC 时 |
+| [0013](better-auth) | Better Auth | 会话 / 用户表落自有 PG（drizzleAdapter 同库迁移），守卫经 `auth.api.getSession` | 启新插件或改安全配置时 |
+| [0014](vercel-ai-sdk) | Vercel AI SDK | 流式对话走 Route Handler，消息按 UIMessage 结构落库 | Anthropic 特有能力或新模型适配时 |
+| [0015](seaweedfs) | SeaweedFS | 只走 S3 兼容 API + 预签名直传，内部端口仅绑内网 | 需高级 S3 特性（加密 / 对象锁）时 |
+| [0016](docker-compose) | Docker Compose | 镜像钉版本禁 latest，应用服务保持无状态 | 多机扩容或反向代理选型时 |
+| [0017](playwright-e2e) | Playwright | 只测关键旅程，LLM 调用一律 mock，对生产构建跑 | cacheComponents 导航断言或独立测试库时 |
+| [0018](cicd-github-actions) | GitHub Actions | PR 作业零机密不部署；生产仅 v* tag 触发 + 人工放行 | 改流水线触发或部署通道时 |
+| [0019](observability-grafana-stack) | Grafana 栈 | 观测栈独立部署勿与生产同机；日志 7 天 / 指标 30 天 | 调资源限额或告警规则时 |
+| [0020](tencent-tcr-registry) | 腾讯云 TCR | 镜像 tag = 短 SHA，发版附加 semver | 配额受限或需内网拉取时 |
+| [0021](trivy-dependabot) | Trivy + Dependabot | 推送前 Trivy 阻断 HIGH/CRITICAL，豁免须注明原因 | 需豁免漏洞或改扫描面时 |
+| [0022](ci-secrets) | CI 机密管理 | 应用运行时机密零过 CI 只存服务器；action 钉完整 SHA | 新增 CI 机密或引第三方 action 时 |
+| [0023](error-reporting-glitchtip) | GlitchTip | SDK = @sentry/nextjs，DSN 指自托管 | 升级 SDK 或遇协议缝隙时 |
+| [0024](telemetry-opentelemetry) | OpenTelemetry | OTel 唯一埋点；涉敏链路关 recordInputs/Outputs | 新增采集点或涉敏链路决策时 |
+| [0025](client-data-layer) | TanStack Query + Server Actions | 错误经判别联合返回不抛裸异常；首屏数据走 RSC 直读 | 并行分发、乐观更新或 GET 缓存语义时 |
+
 ## 待决策清单
 
 本轮选型清单（0001–0024）已全部完成；0020–0022 由 ADR-0018 拆分而来，0023–0024 由 ADR-0019 拆分而来（2026-11-13）。0025 是首次选型复盘的产物：以 TanStack Query + Server Actions 取代 ADR-0008 的 tRPC（2026-11-13）。后续出现新决策时按同一模板新增 ADR 并登记于决策日志。

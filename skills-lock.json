@@ -38,6 +38,13 @@
       "skillPath": "better-auth/organization/SKILL.md",
       "computedHash": "e5b1238c3b62c789918fe397ed52787742e50944343de33f459629f29b0fe922"
     },
+    "prompt-alchemist": {
+      "source": "Cherish133/prompt-alchemist",
+      "commit": "a14ab0f1157b0d5cfbc024b6c63993cb24713ce4",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "efd6436f239eb7fd9fc268ee94bbf060b0bcb8269f01c997a66ca3b218101f95"
+    },
     "two-factor-authentication-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",

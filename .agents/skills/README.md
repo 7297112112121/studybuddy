@@ -32,6 +32,7 @@
 | --- | --- | --- |
 | `better-auth-best-practices/` 等 6 个 | [better-auth/skills](https://github.com/better-auth/skills) | Better Auth 集成、安全、组织、2FA 等场景的最佳实践 |
 | `frontend-design/` | [anthropics/skills](https://github.com/anthropics/skills) | UI 视觉设计手法（美学方向、排版、去模板化默认）；token 纪律与组件选型仍以 [前端设计规范](../../docs/dev/前端设计规范.md) 为准 |
+| `prompt-alchemist/` | [Cherish133/prompt-alchemist](https://github.com/Cherish133/prompt-alchemist) | 提示词蒸馏优化（四元蒸馏框架：诊断 → 结构 → 思考 → 压缩，自动改写用户 Prompt） |
 
 外部技能不得手改（改动会与锁文件 hash 冲突）；升级或卸载走 skills-lock.json 对应的安装流程。
 
@@ -45,8 +46,8 @@
 | --- | --- | --- | --- |
 | `proposal-writing/` | 用户故事 | 全文（故事很短，五大组成部分）+「依赖」一层 | 更深的引用物 |
 | `architecture-design/` | proposal | 头部表、需求条目、边界与约束、性能与质量要求、原型契约 | 目标背景等叙述节 |
-| `plan-writing/` | design + proposal | design 契约与需求承载对照、proposal 需求条目与边界与约束 | 数据模型细节、UI 小节 |
-| `spec-review/` | proposal + design + tasks | proposal 头部/需求条目/非目标/边界（Q 条目不在终审范围），design 需求承载对照与契约总表，tasks Global Constraints 与裁决记录 | design 其余小节、任务卡细节 |
+| `plan-writing/` | design | design 的 contracts（契约）与需求承载对照（design.md）、testing（测试接缝）——计划信息唯一来源，不读 proposal | 数据模型细节、UI 小节 |
+| `spec-review/` | proposal + design + tasks | proposal 头部/需求条目/非目标/边界（Q 条目不在终审范围），design 需求承载对照与 contracts 契约总表，tasks Global Constraints 与裁决记录 | design 其余小节、任务卡细节 |
 
 ## 新增技能的规则
 
