@@ -11,7 +11,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/routes";
 import { getCurrentSession } from "@/modules/auth";
 import CalendarScreen from "@/modules/calendar/components/CalendarScreen";
@@ -66,26 +68,29 @@ export default async function CalendarPage({
   const next = addMonths(shown.year, shown.month, 1);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-      <h1 className="text-2xl font-bold text-foreground">
-        {t("page.title")}
-      </h1>
-      <nav className="flex items-center gap-4">
-        <Link
-          href={`/calendar?month=${monthParam(prev.year, prev.month)}`}
-          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-        >
-          {t("page.prevMonth")}
-        </Link>
-        <span className="text-lg font-semibold">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-6">
+      <h1 className="text-2xl font-bold text-foreground">{t("page.title")}</h1>
+      <nav className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" asChild>
+          <Link
+            href={`/calendar?month=${monthParam(prev.year, prev.month)}`}
+            aria-label={t("page.prevMonth")}
+          >
+            <ChevronLeft />
+          </Link>
+        </Button>
+        {/* 月份数字是本页的排版主角：大号、tabular-nums */}
+        <span className="px-2 text-3xl font-semibold tracking-tight tabular-nums">
           {t("page.monthLabel", { year: shown.year, month: shown.month })}
         </span>
-        <Link
-          href={`/calendar?month=${monthParam(next.year, next.month)}`}
-          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-        >
-          {t("page.nextMonth")}
-        </Link>
+        <Button variant="ghost" size="icon" asChild>
+          <Link
+            href={`/calendar?month=${monthParam(next.year, next.month)}`}
+            aria-label={t("page.nextMonth")}
+          >
+            <ChevronRight />
+          </Link>
+        </Button>
       </nav>
       <CalendarScreen
         year={shown.year}

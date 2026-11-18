@@ -59,37 +59,45 @@ export default function EntryRow({ entry, onEdit }: EntryRowProps) {
   const time = timePrefix(entry);
 
   return (
-    <li className="flex items-center justify-between gap-2 py-1">
-      <div className="flex min-w-0 items-baseline gap-2">
-        {time && <span className="text-muted-foreground shrink-0">{time}</span>}
-        <span className="truncate">{entry.title}</span>
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <Button variant="ghost" size="sm" onClick={onEdit}>
-          {t("entry.edit")}
-        </Button>
-        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={isDeleting}
-            onClick={() => setConfirmOpen(true)}
-          >
-            {t("entry.delete")}
+    <li className="flex items-start gap-2 py-1.5">
+      <span className="w-24 shrink-0 pt-0.5 text-sm tabular-nums text-muted-foreground">
+        {time}
+      </span>
+      {/* 时间轨：竖线贯通行高，节点对齐行首——无时间条目留空时间格，
+          但仍占轨上节点（条目在场即有事项，与时间无关） */}
+      <span aria-hidden="true" className="relative w-3 shrink-0 self-stretch">
+        <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border" />
+        <span className="absolute left-1/2 top-2 size-1.5 -translate-x-1/2 rounded-full bg-primary" />
+      </span>
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 py-0.5">
+        <span className="truncate text-sm font-medium">{entry.title}</span>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={onEdit}>
+            {t("entry.edit")}
           </Button>
-          <AlertDialogContent>
-            <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{entry.title}</AlertDialogDescription>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setConfirmOpen(false)}>
-                {t("entry.cancel")}
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmDelete}>
-                {t("entry.delete")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isDeleting}
+              onClick={() => setConfirmOpen(true)}
+            >
+              {t("entry.delete")}
+            </Button>
+            <AlertDialogContent>
+              <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>{entry.title}</AlertDialogDescription>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setConfirmOpen(false)}>
+                  {t("entry.cancel")}
+                </AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmDelete}>
+                  {t("entry.delete")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
     </li>
   );

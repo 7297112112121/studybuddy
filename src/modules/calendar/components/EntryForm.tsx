@@ -153,7 +153,11 @@ export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="flex flex-col gap-3 border-t border-border pt-4"
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="calendar-entry-title">{t("form.titleLabel")}</Label>
         <Input
