@@ -215,11 +215,12 @@
 
 /* calendar 页深空品牌主题作用域(用户显式豁免前端设计规范的颜色消费
    规则;沿 .aurora-theme 先例的页面局部暗色校准,只挂 /calendar 根节点,
-   不影响全局亮色主题)。内容面经语义 token 继承:前景近白、card 玻璃、
-   border 白 12%;primary/ring 指 aurora aqua、primary-foreground 换墨底;
-   accent 为 aqua 薄荷洗色(hover/选中)。全部纯色,渐变被设计裁决禁止
-   (按钮/日期章不用渐变;.stars-sky 的径向氛围属背景非控件)。若试验
-   转正需按色彩搭配记录「新页面用色指引」走 ADR 评估泛化。 */
+   不影响全局亮色主题)。内容面经语义 token 继承:前景近白、border 白
+   12%;primary/ring 指 aurora aqua、primary-foreground 换墨底;accent 为
+   aqua 薄荷洗色(hover/选中)。侧边面板底色为半透明深色 bg-aurora-ink/40
+   (组件内直书,无背景模糊,星点清晰透出)。全部纯色,渐变被设计裁决
+   禁止(按钮/日期章不用渐变;.stars-sky 的径向氛围属背景非控件)。若
+   试验转正需按色彩搭配记录「新页面用色指引」走 ADR 评估泛化。 */
 .calendar-theme {
   --background: var(--aurora-ink);
   --foreground: oklch(0.968 0.006 247);
