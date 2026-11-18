@@ -51,7 +51,7 @@
     "loadFailed": "加载失败,请重试",
     "retry": "重试",
     "nowLine": "当前时间 {time}",
-    "createAt": "{weekday} {time} 新建条目",
+    "createAt": "周{weekday} {time} 新建条目",
     "dialogCreate": "新建条目",
     "dialogEdit": "编辑条目"
   }
