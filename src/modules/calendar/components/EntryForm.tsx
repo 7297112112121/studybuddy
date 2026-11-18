@@ -153,7 +153,11 @@ export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="flex flex-col gap-3 border-t border-border pt-4"
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="calendar-entry-title">{t("form.titleLabel")}</Label>
         <Input
@@ -230,7 +234,11 @@ export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
         </p>
       )}
 
-      <Button type="submit" disabled={isPending}>
+      <Button
+        type="submit"
+        disabled={isPending}
+        className="bg-linear-[100deg] from-aurora-aqua from-0% via-aurora-aqua-bright via-38% to-aurora-magenta shadow-lg shadow-aurora-aqua/30"
+      >
         {editing ? t("form.saveButton") : t("form.addButton")}
       </Button>
     </form>

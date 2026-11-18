@@ -7,7 +7,9 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import MonthGrid from "@/modules/calendar/components/MonthGrid";
+import calendarMessages from "@/locales/zh-CN/calendar.json";
 
 const entries = [
   {
@@ -33,14 +35,16 @@ function renderGrid(
 ) {
   const onSelect = overrides.onSelect ?? vi.fn();
   render(
-    <MonthGrid
-      year={2026}
-      month={11}
-      today={overrides.today ?? "2026-11-17"}
-      entries={overrides.entries ?? entries}
-      selectedDate={overrides.selectedDate ?? "2026-11-20"}
-      onSelect={onSelect}
-    />,
+    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+      <MonthGrid
+        year={2026}
+        month={11}
+        today={overrides.today ?? "2026-11-17"}
+        entries={overrides.entries ?? entries}
+        selectedDate={overrides.selectedDate ?? "2026-11-20"}
+        onSelect={onSelect}
+      />
+    </NextIntlClientProvider>,
   );
   return { onSelect };
 }
@@ -95,5 +99,13 @@ describe("MonthGrid（tests/calendar/components/MonthGrid）", () => {
       document.querySelector('[data-date="2026-11-20"]') as HTMLElement,
     );
     expect(onSelect).toHaveBeenCalledWith("2026-11-20");
+  });
+
+  it("⑥ 星期表头：周一至周日（一…日）按序渲染在月格之前", () => {
+    renderGrid();
+    const labels = [
+      ...document.querySelectorAll("[data-weekday]"),
+    ].map((el) => el.textContent);
+    expect(labels).toEqual(["一", "二", "三", "四", "五", "六", "日"]);
   });
 });

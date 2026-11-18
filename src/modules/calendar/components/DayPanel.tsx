@@ -39,13 +39,16 @@ export default function DayPanel({ date, entries, today }: DayPanelProps) {
     formatMonthDay(date) + (date === today ? " · 今天" : "");
 
   return (
-    <section className="flex flex-col gap-4" data-testid="day-panel">
-      <h2 className="text-lg font-semibold">{title}</h2>
+    <section
+      className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5 lg:sticky lg:top-6"
+      data-testid="day-panel"
+    >
+      <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
 
       {entries.length === 0 ? (
         <p className="text-muted-foreground text-sm">{t("empty.day")}</p>
       ) : (
-        <ul className="divide-y">
+        <ul className="flex flex-col">
           {entries.map((entry) => (
             <EntryRow
               key={entry.id}

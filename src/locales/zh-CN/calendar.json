@@ -5,6 +5,15 @@
     "prevMonth": "上一月",
     "nextMonth": "下一月"
   },
+  "weekday": {
+    "mon": "一",
+    "tue": "二",
+    "wed": "三",
+    "thu": "四",
+    "fri": "五",
+    "sat": "六",
+    "sun": "日"
+  },
   "entryPoint": "日程日历",
   "empty": {
     "day": "这天还没有安排"
