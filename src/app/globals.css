@@ -211,6 +211,19 @@
   );
 }
 
+/* calendar 页品牌色作用域(用户显式豁免前端设计规范的颜色消费规则):
+   亮色底上把 primary/ring 换成 aurora aqua、primary-foreground 换墨底,
+   accent 换薄荷洗色(hover/选中)。与 .aurora-theme 同为页面局部作用域
+   ——只挂在 /calendar 根节点,不影响全局亮色主题;全部纯色,渐变被
+   设计裁决禁止(按钮/日期章不用渐变)。若试验转正需按色彩搭配记录
+   「新页面用色指引」走 ADR 评估泛化。 */
+.calendar-theme {
+  --primary: var(--aurora-aqua);
+  --primary-foreground: var(--aurora-ink);
+  --ring: var(--aurora-aqua);
+  --accent: color-mix(in oklab, var(--aurora-aqua) 12%, white);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
