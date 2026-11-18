@@ -40,7 +40,7 @@ export default function DayPanel({ date, entries, today }: DayPanelProps) {
 
   return (
     <section
-      className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5 lg:sticky lg:top-6"
+      className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5 backdrop-blur-sm lg:sticky lg:top-6"
       data-testid="day-panel"
     >
       <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
