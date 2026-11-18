@@ -10,6 +10,7 @@ import { db } from "@/db/client";
 
 import { formatHhmm, monthRange } from "./month";
 import { calendarEntry } from "./schema";
+import { weekRange } from "./week";
 
 export type CalendarEntryView = {
   id: string;
@@ -38,6 +39,38 @@ export async function listMonthEntries(
   month: number,
 ): Promise<CalendarEntryView[]> {
   const { start, end } = monthRange(year, month);
+  const rows = await db
+    .select({
+      id: calendarEntry.id,
+      date: calendarEntry.entryDate,
+      title: calendarEntry.title,
+      startTime: calendarEntry.startTime,
+      endTime: calendarEntry.endTime,
+    })
+    .from(calendarEntry)
+    .where(
+      and(
+        eq(calendarEntry.userId, userId),
+        gte(calendarEntry.entryDate, start),
+        lte(calendarEntry.entryDate, end),
+      ),
+    );
+
+  return rows
+    .map((r) => ({
+      ...r,
+      startTime: r.startTime === null ? null : formatHhmm(r.startTime),
+      endTime: r.endTime === null ? null : formatHhmm(r.endTime),
+    }))
+    .sort(compareEntries);
+}
+
+/** 按账号 + 周区间读条目(AXY-23);排序与 listMonthEntries 一致;恒带 userId 条件。 */
+export async function listWeekEntries(
+  userId: string,
+  weekStart: string,
+): Promise<CalendarEntryView[]> {
+  const { start, end } = weekRange(weekStart);
   const rows = await db
     .select({
       id: calendarEntry.id,
