@@ -43,6 +43,8 @@ type EntryFormProps = {
   onSaved?: () => void;
   /** 是否渲染所属日期控件(AXY-23:周视图编辑卡传 false,日期锁定所在列)。 */
   showDateField?: boolean;
+  /** create 模式开始时间初值(AXY-23:周视图点击槽预填,F-05)。 */
+  initialStartTime?: string;
 };
 
 export default function EntryForm({
@@ -50,13 +52,14 @@ export default function EntryForm({
   entry,
   onSaved,
   showDateField = true,
+  initialStartTime = "",
 }: EntryFormProps) {
   const t = useTranslations("calendar");
   const tRoot = useTranslations();
   const router = useRouter();
 
   const [title, setTitle] = useState(entry?.title ?? "");
-  const [startTime, setStartTime] = useState(entry?.startTime ?? "");
+  const [startTime, setStartTime] = useState(entry?.startTime ?? initialStartTime);
   const [endTime, setEndTime] = useState(entry?.endTime ?? "");
   const [entryDate, setEntryDate] = useState(entry?.date ?? date);
   const [fieldErrors, setFieldErrors] = useState<CalendarFieldErrors>({});

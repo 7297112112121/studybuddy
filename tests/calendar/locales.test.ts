@@ -47,3 +47,13 @@ describe("calendar.week 文案键(AXY-23)", () => {
     expect(week.createAt).toContain("{time}");
   });
 });
+
+// —— Task 7 补口:编辑卡标题键(裁决记录:Task 3 键清单遗漏,随 Task 7 补) ——
+
+describe("calendar.week 编辑卡标题键(AXY-23 Task 7 补口)", () => {
+  it("dialogCreate / dialogEdit 存在且非空", () => {
+    const week = readCalendarJson().week ?? {};
+    expect(week.dialogCreate).toBe("新建条目");
+    expect(week.dialogEdit).toBe("编辑条目");
+  });
+});

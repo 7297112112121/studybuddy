@@ -1,0 +1,117 @@
+/**
+ * WeekEntryDialog 组件测试(AXY-23 tasks.md Task 7「失败测试」行)。
+ *
+ * 覆盖:create 预填(prefillStart→开始时间、结束留空、日期锁定)、edit 预填
+ * 原值、保存成功调 action 并 onClose、删除 AlertDialog 二次确认(确认调
+ * deleteEntryAction / 取消不调)。action 经 vi.mock 桩接;文案用真实 calendar.json。
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import WeekEntryDialog from "@/modules/calendar/components/WeekEntryDialog";
+import calendarMessages from "@/locales/zh-CN/calendar.json";
+import type { WeekEntryDialogProps } from "@/modules/calendar/components/WeekEntryDialog";
+
+const createEntryActionMock = vi.hoisted(() => vi.fn());
+const updateEntryActionMock = vi.hoisted(() => vi.fn());
+const deleteEntryActionMock = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+}));
+vi.mock("@/modules/calendar/actions", () => ({
+  createEntryAction: createEntryActionMock,
+  updateEntryAction: updateEntryActionMock,
+  deleteEntryAction: deleteEntryActionMock,
+}));
+
+afterEach(cleanup);
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+const entry = {
+  id: "e1",
+  date: "2026-11-18",
+  title: "组会",
+  startTime: "14:30",
+  endTime: null,
+};
+
+function renderDialog(props: Partial<WeekEntryDialogProps>) {
+  return render(
+    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+      <WeekEntryDialog
+        state={
+          props.state ?? {
+            mode: "create",
+            date: "2026-11-18",
+            prefillStart: "14:30",
+          }
+        }
+        onClose={props.onClose ?? vi.fn()}
+      />
+    </NextIntlClientProvider>,
+  );
+}
+
+describe("WeekEntryDialog(AXY-23 Task 7)", () => {
+  it("create 模式:开始时间预填 prefillStart、结束留空、日期锁定(日期控件不渲染)", () => {
+    renderDialog({});
+
+    expect((screen.getByLabelText("事项") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe("14:30");
+    expect((screen.getByLabelText("结束时间") as HTMLInputElement).value).toBe("");
+    expect(screen.queryByLabelText("所属日期")).toBeNull();
+  });
+
+  it("edit 模式:预填原值", () => {
+    renderDialog({ state: { mode: "edit", entry } });
+
+    expect((screen.getByLabelText("事项") as HTMLInputElement).value).toBe("组会");
+    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe("14:30");
+    expect((screen.getByLabelText("结束时间") as HTMLInputElement).value).toBe("");
+  });
+
+  it("create 保存成功 → createEntryAction 以锁定日期+预填开始时间被调,onClose 回调", async () => {
+    createEntryActionMock.mockResolvedValue({ ok: true });
+    const onClose = vi.fn();
+    renderDialog({ onClose });
+
+    fireEvent.change(screen.getByLabelText("事项"), { target: { value: "组会" } });
+    fireEvent.click(screen.getByRole("button", { name: "添加" }));
+
+    await waitFor(() => expect(createEntryActionMock).toHaveBeenCalledOnce());
+    expect(createEntryActionMock).toHaveBeenCalledWith({
+      date: "2026-11-18",
+      title: "组会",
+      startTime: "14:30",
+      endTime: null,
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  });
+
+  it("edit 模式删除 → AlertDialog 确认层出现,取消不调 deleteEntryAction", async () => {
+    renderDialog({ state: { mode: "edit", entry } });
+
+    fireEvent.click(screen.getByRole("button", { name: "删除" }));
+    expect(await screen.findByText("确定删除这条安排吗？")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    expect(deleteEntryActionMock).not.toHaveBeenCalled();
+  });
+
+  it("edit 模式确认删除 → deleteEntryAction 被调且 onClose 回调", async () => {
+    deleteEntryActionMock.mockResolvedValue({ ok: true });
+    const onClose = vi.fn();
+    renderDialog({ state: { mode: "edit", entry }, onClose });
+
+    fireEvent.click(screen.getByRole("button", { name: "删除" }));
+    const dialog = await screen.findByRole("alertdialog");
+    fireEvent.click(screen.getByRole("button", { name: "删除" }));
+
+    await waitFor(() => expect(deleteEntryActionMock).toHaveBeenCalledWith("e1"));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    void dialog;
+  });
+});
