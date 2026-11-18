@@ -24,7 +24,7 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 
 1. **用户故事未经人工批准，不得进入开发落地。** proposal-writing 以「已批准的用户故事」为输入前提；未批准的故事状态标记为「草案」。
 2. **原型一律不入库。** 澄清期的 spike 原型看完即弃；原型的入库资产是 proposal 的「原型契约」节（由 proposal-writing 维护）。
-3. **AXY 编号由项目管理平台生成。** 技能与 AI 不得自行分配、顺延或复用编号。新故事先产出名单（名称 + 一句话内容 + 依赖）向提出者申请编号，取号后在同一动作里迁入 `docs/product/AXY-<N>-<slug>/story.md`（目录由本技能创建）并回填编号与索引。
+3. **AXY 编号由项目管理平台生成。** 技能与 AI 不得自行分配、顺延或复用编号。新故事先产出名单（名称 + 一句话内容 + 依赖）向提出者申请编号；取号后的落盘动作见流程 5。
 4. **单故事迭代。** 一次只澄清与落盘一个故事；发现多个独立故事时先切割、逐个处理，禁止批量产出。
 
 ## 流程
@@ -60,7 +60,11 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 
 ### 5. 落盘故事
 
-落盘两段式：编号未下发时，按 [templates/user-story.md](templates/user-story.md) 以「待编号」平铺写入 `docs/product/<feature>.md`；**编号下发的同一动作里**迁入 `docs/product/AXY-<N>-<slug>/story.md`（目录由本技能在此步创建），回填编号并在 `docs/product/index.md` 总览表登记一行。DoD 不复制样板：唯一真源是 `docs/product/dod.md`，故事只登记「工作项（本故事特有）」（见硬门禁 3）。
+落盘两段式：
+- **编号未下发**：按 [templates/user-story.md](templates/user-story.md) 以「待编号」平铺写入 `docs/product/<feature>.md`。
+- **取号后同一动作**：创建 `docs/product/AXY-<N>-<slug>/` 目录（目录由本技能创建），迁入 `story.md`，回填编号，并在 `docs/product/index.md` 总览表登记一行。
+
+DoD 不复制样板：唯一真源是 `docs/product/dod.md`，故事只登记「工作项（本故事特有）」。
 
 ### 6. DOR 自检与提请批准
 
@@ -82,6 +86,6 @@ description: 当出现未经结构化的产品想法,需要将其澄清为用户
 
 ## 产出物
 
-- `docs/product/<feature>.md` — 用户故事平铺暂存（待编号）；编号回填时迁入 `docs/product/AXY-<N>-<slug>/story.md`（目录由本技能创建）
+- `docs/product/AXY-<N>-<slug>/story.md` — 用户故事（目录由本技能创建；编号未下发时先按流程 5 平铺暂存于 `docs/product/<feature>.md`，取号后同一动作迁入）
 - `docs/product/index.md` — 用户故事总览表新增一行（编号来自项目管理平台）
 - （临时）spike 一次性 HTML — 不入库，看完即弃
