@@ -201,4 +201,13 @@ R1→T1/T10 · R2→T8/T10 · R3→T7/T10 · R4→T2/T7/T10 · R5→T8/T10 · R6
 
 ## 裁决记录
 
-(执行期偏离在此登记:`裁决: <决定> — <原因> — <代价>`)
+- 裁决: 全部任务内联执行,未用子代理 — 单链上下文已热,逐任务 TDD token 最省;链间并行收益不抵冷启动 — 无并行墙钟收益。
+- 裁决: 单测调用统一走 `npm run test` — 裸 `npx vitest run` 在本仓库因 configLoader 兼容问题整套炸掉(runner 层,非测试问题) — 无代价,统一脚本入口。
+- 裁决: Task 3 键清单补口——新增 `week.dialogCreate/dialogEdit`(编辑卡标题)、`createAt` 值改为「周{weekday} {time}」 — Task 7 实现需要,计划键清单遗漏 — locale 文件由 T7/T8 触碰(内联执行无并行冲突)。
+- 裁决: Task 3 断言仅覆盖 zh-CN — locale 目录实际只有 zh-CN(ADR-0010 单语言),无 en 文件 — 计划「en 侧键齐全」行作废。
+- 裁决: EntryForm 追加 `initialStartTime?: string` prop — create 模式预填通道(T7 契约要求预填,既有组件无初值入口) — design contracts 的 EntryForm 改动仅列 showDateField,此项随 spec-review 一并核对。
+- 裁决: WeekEntryDialog 的 AlertDialog 移出 Dialog JSX 嵌套(fragment 兄弟结构) — E2E 调试;经 MCP 实机验证 Radix 卸载行为正常(取消后遮罩干净卸载,产品无 bug),重构保留为防御性简化 — 无行为变化,组件测试 5/5 绿。
+- 裁决: AXY-22 `e2e/calendar.spec.ts` 适配(C-02 连带修订) — 默认视图变更使既有「进入即月视图」断言翻红,计划漏列此任务 — 月视图用例统一经 `?view=month` 进入,R10 用例补默认周视图断言。
+- 裁决: E2E 取消分支用确定性等待——先 `expect(alertdialog).toHaveCount(0)` 再按 Escape — 实测关闭动画期间 Escape 会被尚在卸载的 alert 层吞掉(固定 sleep 不可靠) — 消除动画竞速,演示态 3 稳定绿。
+- 裁决: `auth.spec.ts` R11/R12 与 B6 在**基线(改动 stash 后)同样失败**——master 既有问题,与 AXY-23 无关 — 本特性不修 — 待另行排查(已向提出者报告)。
+- 观察: 首次全量单测出现 1 例未复现的偶发失败(连跑两次 214/223→全绿),保留观察,未定位到具体用例。
