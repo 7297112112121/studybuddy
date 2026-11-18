@@ -32,6 +32,7 @@
 | --- | --- | --- |
 | `better-auth-best-practices/` 等 6 个 | [better-auth/skills](https://github.com/better-auth/skills) | Better Auth 集成、安全、组织、2FA 等场景的最佳实践 |
 | `frontend-design/` | [anthropics/skills](https://github.com/anthropics/skills) | UI 视觉设计手法（美学方向、排版、去模板化默认）；token 纪律与组件选型仍以 [前端设计规范](../../docs/dev/前端设计规范.md) 为准 |
+| `prompt-alchemist/` | [Cherish133/prompt-alchemist](https://github.com/Cherish133/prompt-alchemist) | 提示词蒸馏优化（四元蒸馏框架：诊断 → 结构 → 思考 → 压缩，自动改写用户 Prompt） |
 
 外部技能不得手改（改动会与锁文件 hash 冲突）；升级或卸载走 skills-lock.json 对应的安装流程。
 
