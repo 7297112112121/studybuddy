@@ -1,10 +1,14 @@
-# 部署流水线第二层（ADR-0018 触发晋升）：
-#   push master → 构建 standalone 镜像 → Trivy 镜像门禁（ADR-0021，HIGH/CRITICAL 阻断）
+# 部署流水线第二层（ADR-0018 触发晋升；变更裁剪见 ADR-0026）：
+#   push master → 变更检测（docs-only 跳过全链，判定见 .github/paths-filter.yml）
+#   → 构建 standalone 镜像 → Trivy 镜像门禁（ADR-0021，HIGH/CRITICAL 阻断）
 #   → 推 TCR（ADR-0020，tag = 短 SHA）→ 自动部署开发环境 → 健康检查
 #   → 自动部署测试环境 → 健康检查。
 # 机密分界（ADR-0022）：本流水线只接触 TCR 推送凭证与部署 SSH key（environment secret），
 # 应用运行时机密只存服务器本地 .env，零过 CI；PR 校验（ci.yml）零机密，两层互不重叠。
-# 回滚 = 在 Actions 页面重跑历史成功的 Deploy 运行（重放历史 tag 部署作业，ADR-0018）。
+# 回滚 = 在 Actions 页面重跑历史成功的 Deploy 运行（重放历史 tag 部署作业，ADR-0018）；
+# workflow_dispatch 手动通道不受路径裁剪影响（无 push diff 可判定，一律全跑）。
+# ADR-0026 漂移防线：跳过的 push 由 changes 作业在 job summary 留痕；
+# docs 变更不进 standalone 镜像（ADR-0016），任何 app 相关提交必然触发全量部署。
 
 name: Deploy
 
@@ -31,8 +35,77 @@ env:
   DEPLOY_DIR: /opt/studybuddy
 
 jobs:
+  # ADR-0026 变更检测作业:最先执行,零机密、只读权限。过滤器单源
+  # .github/paths-filter.yml,跳过判定取合取 docs==true && code==false
+  # (兜底原则:未命中显式「镜像产物无差异」清单一律全跑)。
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      code: ${{ steps.filter.outputs.code || steps.force.outputs.code }}
+      docs: ${{ steps.filter.outputs.docs || steps.force.outputs.docs }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Detect changes
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4(ADR-0022 例外,ADR-0026 钉完整 SHA)
+        with:
+          filters: .github/paths-filter.yml
+          list-files: json
+          # 默认 some 模式是纯 OR,取反模式不生效(钉版源码 filter.ts:createRuleItem
+          # 只在该量化器下区分极性);code 过滤器的 catch-all + 排除语义必须显式声明
+          predicate-quantifier: some-with-excludes
+
+      # 手动触发 = 回滚重放通道(ADR-0018):无 push diff 可判定,强制全跑,
+      # 不依赖 dorny 对 dispatch 事件的默认行为
+      - name: Dispatch forces full run
+        id: force
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "code=true" >> "$GITHUB_OUTPUT"
+          echo "docs=false" >> "$GITHUB_OUTPUT"
+
+      # 决策留痕(ADR-0026 决策 4):每次 push 都会运行本作业,
+      # code=false 的跳过决策在此可见可审计——部署层跳过不留「凭空消失」记录
+      - name: Record decision in job summary
+        if: always()
+        env:
+          CODE: ${{ steps.filter.outputs.code || steps.force.outputs.code }}
+          DOCS: ${{ steps.filter.outputs.docs || steps.force.outputs.docs }}
+          CODE_FILES: ${{ steps.filter.outputs.code_files }}
+          DOCS_FILES: ${{ steps.filter.outputs.docs_files }}
+        run: |
+          {
+            echo "## 变更检测(ADR-0026)"
+            echo ""
+            echo "| 过滤器 | 命中 |"
+            echo "| --- | --- |"
+            echo "| code(app 相关,catch-all) | $CODE |"
+            echo "| docs(无影响清单) | $DOCS |"
+            echo ""
+            if [ "$CODE" = "false" ]; then
+              echo "**判定:docs-only,本次 push 跳过部署全链。** 需强制部署时走 workflow_dispatch 手动触发(回滚重放通道)。"
+            else
+              echo "判定:code=true → 全量晋升(build → scan → push → dev → test)。"
+            fi
+            echo ""
+            echo "docs 命中文件: $DOCS_FILES"
+            echo ""
+            echo "code 命中文件: $CODE_FILES"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   build:
     name: Build & scan & push
+    needs: changes
+    # ADR-0026:仅 docs-only 变更跳过;任何 app 相关路径(src、Dockerfile、
+    # package*.json、.trivyignore、scripts/、.github/workflows/deploy.yml 自身等)
+    # 都命中 catch-all code → 全量晋升
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     # TCR 推送凭证存于 dev 环境（ADR-0022 分环境隔离；dev/test 共居一台服务器）
     environment: dev
@@ -84,7 +157,10 @@ jobs:
 
   deploy-dev:
     name: Deploy dev
-    needs: build
+    # needs 同时含 changes 与 build:build 跳过时本作业自动级联跳过,
+    # if 判定 code 是双保险(与 build 同源条件,ADR-0026)
+    needs: [changes, build]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     environment: dev
     steps:
@@ -120,8 +196,10 @@ jobs:
     name: Deploy test
     # needs 必须同时含 build：job outputs 只传给直接依赖者，
     # 仅 needs deploy-dev 时 needs.build.outputs.short-sha 为空（SHA 错位传参
-    # 会被 deploy.sh 参数校验拦下，2026-11-14 首次 test 部署即此症状）
-    needs: [build, deploy-dev]
+    # 会被 deploy.sh 参数校验拦下，2026-11-14 首次 test 部署即此症状）。
+    # changes 亦在列（ADR-0026 裁剪判定 + build 跳过时级联跳过的双保险）
+    needs: [changes, build, deploy-dev]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     environment: test
     steps:

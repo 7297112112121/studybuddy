@@ -1,0 +1,38 @@
+# ADR-0026 变更检测过滤器——ci.yml 与 deploy.yml 共用,单源定义。
+# 前提:调用方必须传 predicate-quantifier: some-with-excludes(两处 dorny 步骤已声明)——
+# dorny 默认 some 量化器是纯 OR,取反模式不生效,code 过滤器的排除语义将整体失效。
+#
+# 语义(dorny/paths-filter):
+#   docs = 命中「对 app 产物无影响」路径清单(PR 校验层)/「镜像产物无差异」清单(部署晋升层)。
+#          清单只收确认不进 standalone 镜像(ADR-0016)、不被运行时读取的路径;
+#          新路径入清单须经核实,红线:.trivyignore(镜像门禁输入)、scripts/(服务器执行)、
+#          Dockerfile、compose*、package*.json、next.config.ts 一律不得入清单。
+#   code = catch-all 排他式兜底:'**' 命中一切,再逐条取反 docs 清单。
+#          新增顶层目录、.github/**(含本文件自身)、任何未入清单的路径都天然命中 code → 全跑。
+#
+# 跳过判定必须取合取 docs == true && code == false,禁止只看 docs == true:
+# dorny 对「不匹配任何过滤器的文件」输出 false,若只定义 docs 过滤器,
+# 触碰 docs + 未入清单新路径的变更会被误判为 docs-only 而跳过(部署层即真实漂移)。
+docs:
+  - 'docs/**'
+  - 'website/**'
+  - '*.md'
+  - '.agents/**'
+  - '.claude/**'
+  - '.codex/**'
+  - '.codegraph/**'
+  - '.githooks/**'
+  - '.mcp.json'
+  - 'skills-lock.json'
+code:
+  - '**'
+  - '!docs/**'
+  - '!website/**'
+  - '!*.md'
+  - '!.agents/**'
+  - '!.claude/**'
+  - '!.codex/**'
+  - '!.codegraph/**'
+  - '!.githooks/**'
+  - '!.mcp.json'
+  - '!skills-lock.json'

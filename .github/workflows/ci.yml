@@ -1,9 +1,12 @@
-# PR 校验流水线（ADR-0018 第一层触发晋升）
-# 范围：lint + type-check + Vitest 单测（ADR-0012）+ Vitest 集成测试（真实 PG/Redis）
-# + Playwright E2E 冒烟（ADR-0017）+ 生产构建。
-# 不推镜像、不部署、零机密接触（ADR-0022 分界）：services 凭据与 BETTER_AUTH_SECRET
-# 均为 CI 专用占位值（同 compose.dev.yaml 本地开发凭据），不引用任何 environment secret；
-# fork PR 同样可触发，机密接触面为零。
+# PR 校验流水线(ADR-0018 第一层触发晋升;变更裁剪见 ADR-0026)
+# 范围:lint + type-check + Vitest 单测(ADR-0012)+ Vitest 集成测试(真实 PG/Redis)
+# + Playwright E2E 冒烟(ADR-0017)+ 生产构建。
+# 不推镜像、不部署、零机密接触(ADR-0022 分界):services 凭据与 BETTER_AUTH_SECRET
+# 均为 CI 专用占位值(同 compose.dev.yaml 本地开发凭据),不引用任何 environment secret;
+# fork PR 同样可触发,机密接触面为零。
+# ADR-0026:docs-only 变更(code=false)时 verify / docker 以 job 级 if 跳过——
+# 跳过的必需检查计为通过(需在分支保护实测,ADR-0026 风险项);兜底原则:未命中
+# 显式「无影响」清单一律全跑(宁漏跳、不漏跑),判定见 .github/paths-filter.yml。
 name: CI
 
 on:
@@ -18,8 +21,70 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ADR-0026 变更检测作业:最先执行,零机密、只读权限。过滤器单源
+  # .github/paths-filter.yml,跳过判定取合取 docs==true && code==false
+  # (兜底原则:未命中显式「无影响」清单一律全跑)。
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      code: ${{ steps.filter.outputs.code || steps.force.outputs.code }}
+      docs: ${{ steps.filter.outputs.docs || steps.force.outputs.docs }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Detect changes
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4(ADR-0022 例外,ADR-0026 钉完整 SHA)
+        with:
+          filters: .github/paths-filter.yml
+          list-files: json
+          # 默认 some 模式是纯 OR,取反模式不生效(钉版源码 filter.ts:createRuleItem
+          # 只在该量化器下区分极性);code 过滤器的 catch-all + 排除语义必须显式声明
+          predicate-quantifier: some-with-excludes
+
+      # 手动触发无 push diff 可判定,直接全跑(本 workflow 无 dispatch 入口,
+      # 此步为防御性兜底;deploy.yml 的同名逻辑是回滚重放通道的真依赖)
+      - name: Dispatch forces full run
+        id: force
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "code=true" >> "$GITHUB_OUTPUT"
+          echo "docs=false" >> "$GITHUB_OUTPUT"
+
+      # 决策留痕(ADR-0026 决策 4):输出与命中文件清单进 job summary,可审计可复盘
+      - name: Record decision in job summary
+        if: always()
+        env:
+          CODE: ${{ steps.filter.outputs.code || steps.force.outputs.code }}
+          DOCS: ${{ steps.filter.outputs.docs || steps.force.outputs.docs }}
+          CODE_FILES: ${{ steps.filter.outputs.code_files }}
+          DOCS_FILES: ${{ steps.filter.outputs.docs_files }}
+        run: |
+          {
+            echo "## 变更检测(ADR-0026)"
+            echo ""
+            echo "| 过滤器 | 命中 |"
+            echo "| --- | --- |"
+            echo "| code(app 相关,catch-all) | $CODE |"
+            echo "| docs(无影响清单) | $DOCS |"
+            echo ""
+            echo "判定:code=true → 全量校验;code=false(docs-only,合取 docs=true && code=false)→ 跳过 verify/docker"
+            echo ""
+            echo "docs 命中文件: $DOCS_FILES"
+            echo ""
+            echo "code 命中文件: $CODE_FILES"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   verify:
     name: Lint & Type-check & Test & Build
+    needs: changes
+    # ADR-0026:仅 docs-only 变更跳过;任何 app 相关路径(含未入清单的新路径)都命中 code → 全跑
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     # services 容器与 compose.dev.yaml 同镜像同凭据（Task 13）。
     # VM runner 上 steps 直接跑在宿主，service 容器别名 DNS 不可从宿主解析，
@@ -155,6 +220,9 @@ jobs:
   # cache-to 留给 master 部署运行统一维护）。
   docker:
     name: Docker build
+    needs: changes
+    # ADR-0026:与 verify 同判定,docs-only 变更跳过(镜像可构建性与 docs 无关)
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
