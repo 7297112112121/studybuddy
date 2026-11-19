@@ -39,7 +39,9 @@
 
 ## 流程接力约定
 
-流程技能通过「引用上游已批准文档」串联，每个技能 frontmatter 的 `description` 都声明了自己的输入前提，以此强制执行流程顺序。总流程图见 [docs/研发流程.md](../../docs/研发流程.md)（唯一一份，本文件不重复）。
+流程技能通过「引用上游已批准文档」串联，每个技能 frontmatter 的 `description` 都声明了自己的输入前提，以此强制执行流程顺序。总流程图与分支生命周期见 [docs/研发流程.md](../../docs/研发流程.md)（唯一一份，本文件不重复）。
+
+**分支衔接**：流程与分支一一对应——产品设计走 `docs/<slug>` 分支（product-design 开启、proposal 批准后经 branch-wrapup 收束），开发落地走 `feat/AXY-<N>-<slug>` 分支（architecture-design 开启、spec-review 通过后经 branch-wrapup 收束）；各过渡点技能的 SKILL.md 均有「分支衔接」节，细则以 [docs/研发流程.md](../../docs/研发流程.md)「分支生命周期」为唯一真源。
 
 **交接最小集**：下游技能默认只读下表「必读」列，不通读上游全文；需要细节时按各技能 SKILL.md 的条件句展开「按需」列——交接契约是子代理 prompt 自包含原则的原料，不是全文：
 

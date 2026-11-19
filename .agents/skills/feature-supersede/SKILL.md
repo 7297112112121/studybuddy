@@ -26,6 +26,7 @@ description: 当一个已走完完整开发流程并合并主分支的特性需�
 - **A 级轻量路径**：A 级表述变化只做阶段 1、3、6 的轻量版（更新 story + proposal Changelog + 变更记录），不强制重走 design / plan / review；**但仍须重新批准**——批准覆盖文档当前内容的纪律不因轻量而豁免。
 - **与 spec-review 的关系**：被推翻 / 废弃特性的旧 review 加墓碑后**不参与**新实现的终审判定，新 review 只审新实现；变更记录（`change-record.md`）是 spec-review 判断「哪些代码是活的」的依据。
 - **下游特性**：本技能只负责评估与通知下游，不替下游做变更；下游各自走本技能或自己的修订流程。
+- **分支衔接**：横切两侧分支——阶段 1–4（定级、冻结、story / proposal 重写与重新批准）与 `change-record.md` 落盘、product 侧墓碑走 `docs/<slug>` 分支并 PR；阶段 5 代码处置与阶段 6 重走下游客、dev 侧（design / tasks / review）墓碑走 `feat/AXY-<N>-<slug>` 分支并 PR。细则见 [docs/研发流程.md](../../docs/研发流程.md)「分支生命周期」。
 
 ## 流程（六阶段）
 
