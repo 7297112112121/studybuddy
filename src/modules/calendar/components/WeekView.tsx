@@ -170,17 +170,27 @@ export default function WeekView({ days, entries }: WeekViewProps) {
               className="relative grid grid-cols-[3rem_repeat(7,1fr)]"
               style={{ height: GRID_HEIGHT }}
             >
-              {/* 纵轴刻度(小时) */}
+              {/* 纵轴刻度(小时):实时线到达整点时该小时标签高亮(destructive,
+                  与线同色;随每分钟状态自动切换) */}
               <div className="relative">
-                {Array.from({ length: 24 }, (_, h) => (
-                  <div
-                    key={h}
-                    className="absolute right-1 -translate-y-1/2 text-xs tabular-nums text-muted-foreground"
-                    style={{ top: h * 60 * PX_PER_MINUTE }}
-                  >
-                    {hhmm(h * 60)}
-                  </div>
-                ))}
+                {Array.from({ length: 24 }, (_, h) => {
+                  const isNowHour = hasToday && nowMinutes === h * 60;
+                  return (
+                    <div
+                      key={h}
+                      data-testid={`week-hour-${h}`}
+                      className={cn(
+                        "absolute right-1 -translate-y-1/2 text-xs tabular-nums",
+                        isNowHour
+                          ? "font-semibold text-destructive"
+                          : "text-muted-foreground",
+                      )}
+                      style={{ top: h * 60 * PX_PER_MINUTE }}
+                    >
+                      {hhmm(h * 60)}
+                    </div>
+                  );
+                })}
               </div>
               {days.map((d) => {
                 const dayEntries = byDate.get(d.date) ?? [];

@@ -87,6 +87,26 @@ describe("WeekView(AXY-23 Task 8)", () => {
     expect(screen.queryByTestId("now-line")).toBeNull();
   });
 
+  it("实时线到达整点 → 时间轴该小时标签高亮(destructive);非整点不高亮", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(2026, 10, 18, 11, 0, 0));
+      renderView([], days);
+      expect(
+        screen.getByTestId("week-hour-11").classList.contains("text-destructive"),
+      ).toBe(true);
+      cleanup();
+
+      vi.setSystemTime(new Date(2026, 10, 18, 11, 1, 0));
+      renderView([], days);
+      expect(
+        screen.getByTestId("week-hour-11").classList.contains("text-destructive"),
+      ).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("槽位按钮 aria-label:createAt 插值『周三 14:30 新建条目』", () => {
     renderView([]);
     expect(
