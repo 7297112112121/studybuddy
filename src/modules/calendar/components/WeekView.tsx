@@ -272,6 +272,15 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                     data-testid="now-line-base"
                     className="absolute inset-x-0 top-0 h-px -translate-y-1/2 bg-destructive/40"
                   />
+                  {/* 左端时间轴内的当前实时时间;整点时由高亮刻度承担,不重复显示 */}
+                  {nowMinutes % 60 !== 0 && (
+                    <span
+                      data-testid="now-line-time"
+                      className="absolute right-full top-0 -translate-y-1/2 pr-1 text-[11px] font-semibold tabular-nums text-destructive"
+                    >
+                      {hhmm(nowMinutes)}
+                    </span>
+                  )}
                   <div
                     data-testid="now-line-today"
                     className="absolute top-0 h-0.5 -translate-y-1/2 rounded-full bg-destructive"

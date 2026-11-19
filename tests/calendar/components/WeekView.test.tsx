@@ -87,6 +87,22 @@ describe("WeekView(AXY-23 Task 8)", () => {
     expect(screen.queryByTestId("now-line")).toBeNull();
   });
 
+  it("实时线左端显示当前实时时间;整点时不重复显示(由高亮刻度承担)", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(2026, 10, 18, 11, 28, 0));
+      renderView([], days);
+      expect(screen.getByTestId("now-line-time").textContent).toBe("11:28");
+      cleanup();
+
+      vi.setSystemTime(new Date(2026, 10, 18, 11, 0, 0));
+      renderView([], days);
+      expect(screen.queryByTestId("now-line-time")).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("实时线分段:今天列段亮红加粗,其余列段淡红暗淡", () => {
     renderView([], days); // today 2026-11-18 → 第 3 列(index 2)
     const bright = screen.getByTestId("now-line-today");
