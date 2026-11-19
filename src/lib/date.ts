@@ -7,6 +7,12 @@
  * （DST）扰动。month 入参 1–12（产品口径）。
  */
 
+/** 一天的 UTC 毫秒数（字面日期运算的公共底座）。 */
+export const MS_PER_DAY = 86_400_000;
+
+/** "HH:MM" 分钟粒度格式（时刻契约单一来源：schema 校验与 timeToMinutes 共用）。 */
+export const TIME_HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 /** 服务端本地时区的今日字面日期 "YYYY-MM-DD"。 */
 export function todayString(): string {
   const now = new Date();
@@ -20,7 +26,7 @@ export function todayString(): string {
 export function rangeDayCount(rangeStart: string, rangeEnd: string): number {
   const startMs = Date.parse(`${rangeStart}T00:00:00Z`);
   const endMs = Date.parse(`${rangeEnd}T00:00:00Z`);
-  return Math.floor((endMs - startMs) / 86_400_000) + 1;
+  return Math.floor((endMs - startMs) / MS_PER_DAY) + 1;
 }
 
 /** 平闰年该月天数（month 为 1–12）。 */
@@ -55,7 +61,7 @@ export function formatHhmm(time: string): string {
 
 /** "HH:MM" → 当日分钟数 0–1439（非法输入抛 RangeError，仅内部可信输入）。 */
 export function timeToMinutes(time: string): number {
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+  if (!TIME_HHMM_RE.test(time)) {
     throw new RangeError(`invalid HH:MM time: ${time}`);
   }
   const [h, m] = time.split(":").map(Number) as [number, number];

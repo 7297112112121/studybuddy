@@ -7,11 +7,9 @@
  *
  * 约定：month 入参 1–12（产品口径），非 JS Date 的 0–11。
  */
-import { daysInMonth, formatUtcDate } from "@/lib/date";
+import { daysInMonth, formatUtcDate, MS_PER_DAY } from "@/lib/date";
 
 export type MonthCell = { date: string; inMonth: boolean; isToday: boolean };
-
-const MS_PER_DAY = 86_400_000;
 
 /** 6 行 × 7 列月网格，周一为每周首日；含邻月补位格（inMonth=false）。 */
 export function buildMonthGrid(

@@ -5,15 +5,18 @@
  * 避免本地时区(DST)扰动;日期语义是字面日期 "YYYY-MM-DD"
  * (单时区假设,AXY-22 design 开放问题 #2 沿承)。
  */
-import { formatUtcDate, isValidDateString, timeToMinutes } from "@/lib/date";
+import {
+  formatUtcDate,
+  isValidDateString,
+  MS_PER_DAY,
+  timeToMinutes,
+} from "@/lib/date";
 
 import type { CalendarEntryView } from "./queries";
 
 export type WeekdayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 export type WeekDay = { date: string; weekdayKey: WeekdayKey; isToday: boolean };
-
-const MS_PER_DAY = 86_400_000;
 
 const WEEKDAY_KEYS: WeekdayKey[] = [
   "mon",
