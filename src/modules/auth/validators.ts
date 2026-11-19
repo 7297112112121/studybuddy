@@ -1,9 +1,12 @@
 /**
  * 登录/注册表单校验纯函数。零 IO、零副作用，仅依赖传入字符串。
- * 校验正则为全仓单一来源（R2/R3/F-01/F-03），值逐字符固定，勿在此处改动。
+ * USERNAME_RE 真源在 @/lib/username（依赖方向：lib 不得反向 import
+ * modules，故真源上浮轻量 lib 文件，此处 re-export 保持既有导入路径）；
+ * PASSWORD_RE 为密码域单一来源（R3/F-02），值逐字符固定，勿在此处改动。
  */
+import { USERNAME_RE } from "@/lib/username";
 
-export const USERNAME_RE = /^[一-龥A-Za-z0-9_]{1,16}$/;
+export { USERNAME_RE };
 
 /**
  * 账户名字符集（无长度量词）——仅供规则浮层做「字符集/长度」两条正交
