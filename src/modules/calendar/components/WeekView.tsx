@@ -282,7 +282,13 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                       left: `${(days.findIndex((d) => d.isToday) * 100) / 7}%`,
                       width: `${100 / 7}%`,
                     }}
-                  />
+                  >
+                    {/* 左端实心圆点锚点(居中于段起点) */}
+                    <span
+                      data-testid="now-line-dot"
+                      className="absolute left-0 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-destructive"
+                    />
+                  </div>
                 </div>
               )}
             </div>

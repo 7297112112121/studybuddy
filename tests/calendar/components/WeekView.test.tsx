@@ -96,6 +96,10 @@ describe("WeekView(AXY-23 Task 8)", () => {
     expect(
       screen.getByTestId("now-line-base").classList.contains("bg-destructive/40"),
     ).toBe(true);
+    // 高亮段左端实心圆点锚点(如图样式)
+    const dot = screen.getByTestId("now-line-dot");
+    expect(dot.classList.contains("bg-destructive")).toBe(true);
+    expect(dot.classList.contains("rounded-full")).toBe(true);
   });
 
   it("实时线到达整点 → 时间轴该小时标签高亮(destructive);非整点不高亮", () => {
