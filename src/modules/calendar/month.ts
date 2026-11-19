@@ -61,7 +61,5 @@ export function addMonths(
 /** 严格校验 "YYYY-MM-DD"：实现收拢在 @/lib/date，re-export 保住模块内既有导出面。 */
 export { isValidDateString } from "@/lib/date";
 
-/** "HH:MM:SS" → "HH:MM"（time 列查询结果归一）。 */
-export function formatHhmm(time: string): string {
-  return time.slice(0, 5);
-}
+/** "HH:MM:SS" → "HH:MM"：实现收拢在 @/lib/date，re-export 保住模块内既有导出面。 */
+export { formatHhmm } from "@/lib/date";

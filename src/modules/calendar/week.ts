@@ -5,7 +5,7 @@
  * 避免本地时区(DST)扰动;日期语义是字面日期 "YYYY-MM-DD"
  * (单时区假设,AXY-22 design 开放问题 #2 沿承)。
  */
-import { formatUtcDate, isValidDateString } from "@/lib/date";
+import { formatUtcDate, isValidDateString, timeToMinutes } from "@/lib/date";
 
 import type { CalendarEntryView } from "./queries";
 
@@ -67,14 +67,8 @@ export function isValidWeekStart(value: string): value is string {
   return weekStartFor(value) === value;
 }
 
-/** "HH:MM" → 当日分钟数 0–1439(非法输入抛 RangeError,仅内部可信输入)。 */
-export function timeToMinutes(time: string): number {
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
-    throw new RangeError(`invalid HH:MM time: ${time}`);
-  }
-  const [h, m] = time.split(":").map(Number) as [number, number];
-  return h * 60 + m;
-}
+/** "HH:MM" → 当日分钟数 0–1439：实现收拢在 @/lib/date，re-export 保住既有导出面。 */
+export { timeToMinutes };
 
 /** 分钟数 → "HH:MM"(零填充)。 */
 function minutesToHhmm(minutes: number): string {

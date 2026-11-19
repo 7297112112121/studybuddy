@@ -1,9 +1,10 @@
 /**
- * src/lib/date.ts——无业务日期工具函数。
+ * src/lib/date.ts——无业务日期与时刻工具函数。
  *
  * 约定（calendar/month.ts 同源沿用）：日期一律是字面日期 "YYYY-MM-DD" 字符串
- * （单时区假设，calendar_entry date mode:'string' 同口径），零日期库；
- * 区间/格式化运算基于 UTC 毫秒，避免本地时区（DST）扰动。month 入参 1–12（产品口径）。
+ * （单时区假设，calendar_entry date mode:'string' 同口径），时刻一律 "HH:MM"/
+ * "HH:MM:SS" 字符串，零日期库；区间/格式化运算基于 UTC 毫秒，避免本地时区
+ * （DST）扰动。month 入参 1–12（产品口径）。
  */
 
 /** 服务端本地时区的今日字面日期 "YYYY-MM-DD"。 */
@@ -45,4 +46,18 @@ export function isValidDateString(value: string): value is string {
   const [y, m, d] = value.split("-").map(Number);
   if (m < 1 || m > 12 || d < 1) return false;
   return d <= daysInMonth(y, m);
+}
+
+/** "HH:MM:SS" → "HH:MM"（time 列查询结果归一）。 */
+export function formatHhmm(time: string): string {
+  return time.slice(0, 5);
+}
+
+/** "HH:MM" → 当日分钟数 0–1439（非法输入抛 RangeError，仅内部可信输入）。 */
+export function timeToMinutes(time: string): number {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+    throw new RangeError(`invalid HH:MM time: ${time}`);
+  }
+  const [h, m] = time.split(":").map(Number) as [number, number];
+  return h * 60 + m;
 }
