@@ -48,6 +48,9 @@ async function registerAndOpenCalendar(page: Page): Promise<void> {
   }
   await page.getByTestId("calendar-entry").click();
   await expect(page).toHaveURL(/\/calendar$/);
+  // AXY-23 D-02(C-02):/calendar 默认周视图;本 spec 全部月视图用例
+  // 经 ?view=month 进入(进入 /calendar 的默认视图规则已归属 AXY-23 承载)。
+  await page.goto("/calendar?view=month");
 }
 
 /** 当日详情面板（断言锚点：月格摘要与详情行并存时收窄作用域）。 */
@@ -77,10 +80,15 @@ test.describe("AXY-22 日程日历", () => {
     await expect(page.getByText("日程日历")).toHaveCount(0);
   });
 
-  test("R10 + 演示态 1：工作台入口 → 当前月、今日高亮、空态文案", async ({ page }) => {
+  test("R10 + 演示态 1：工作台入口 → 默认周视图(AXY-23 D-02);月视图当前月、今日高亮、空态文案", async ({ page }) => {
     await registerAndOpenCalendar(page);
 
     const now = new Date();
+    // 默认视图现为周视图(AXY-23 D-02):实时线在场即周视图证据
+    await page.goto("/calendar");
+    await expect(page.getByTestId("now-line")).toBeVisible();
+
+    await page.goto("/calendar?view=month");
     await expect(page.getByText(`${now.getFullYear()}年${now.getMonth() + 1}月`)).toBeVisible();
     // 今日格常亮（MonthGrid data-today）
     await expect(page.locator(`[data-date="${fmt(now)}"]`)).toHaveAttribute(
@@ -278,7 +286,7 @@ test.describe("AXY-22 日程日历", () => {
     const now = new Date();
 
     for (const bad of ["9999-99", "2026-13", "not-a-month"]) {
-      await page.goto(`/calendar?month=${bad}`);
+      await page.goto(`/calendar?view=month&month=${bad}`);
       await expect(
         page.getByText(`${now.getFullYear()}年${now.getMonth() + 1}月`),
       ).toBeVisible();

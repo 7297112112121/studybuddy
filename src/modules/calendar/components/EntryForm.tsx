@@ -41,15 +41,25 @@ type EntryFormProps = {
   entry?: CalendarEntryView;
   /** 保存成功回调（父组件据此切换视图/刷新）。 */
   onSaved?: () => void;
+  /** 是否渲染所属日期控件(AXY-23:周视图编辑卡传 false,日期锁定所在列)。 */
+  showDateField?: boolean;
+  /** create 模式开始时间初值(AXY-23:周视图点击槽预填,F-05)。 */
+  initialStartTime?: string;
 };
 
-export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
+export default function EntryForm({
+  date,
+  entry,
+  onSaved,
+  showDateField = true,
+  initialStartTime = "",
+}: EntryFormProps) {
   const t = useTranslations("calendar");
   const tRoot = useTranslations();
   const router = useRouter();
 
   const [title, setTitle] = useState(entry?.title ?? "");
-  const [startTime, setStartTime] = useState(entry?.startTime ?? "");
+  const [startTime, setStartTime] = useState(entry?.startTime ?? initialStartTime);
   const [endTime, setEndTime] = useState(entry?.endTime ?? "");
   const [entryDate, setEntryDate] = useState(entry?.date ?? date);
   const [fieldErrors, setFieldErrors] = useState<CalendarFieldErrors>({});
@@ -211,7 +221,7 @@ export default function EntryForm({ date, entry, onSaved }: EntryFormProps) {
         </div>
       </div>
 
-      {editing && (
+      {editing && showDateField && (
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="calendar-entry-date">{t("form.dateLabel")}</Label>
           <Input

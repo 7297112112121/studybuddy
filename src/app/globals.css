@@ -242,6 +242,26 @@
   --destructive: oklch(0.704 0.191 22.216);
 }
 
+/* calendar 主题化细滚动条:thumb 半透明白与卡面描边(border-white/25)
+   同一视觉语言,hover 提亮;轨道全透明。仅用 ::-webkit-scrollbar(Chrome/Edge);
+   不设 scrollbar-color 标准属性——Chromium 121+ 一旦设置它即忽略 webkit 定制
+   回退原生带箭头渲染。Firefox 不支持 webkit 伪元素,由系统深色原生滚动条兜底。
+   作用域限 .calendar-theme,不影响他页。 */
+.calendar-theme *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.calendar-theme *::-webkit-scrollbar-track {
+  background: transparent;
+}
+.calendar-theme *::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background-color: oklch(1 0 0 / 20%);
+}
+.calendar-theme *::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(1 0 0 / 35%);
+}
+
 /* calendar 深空星层(StarsBackground 组件专用,见组件头注):
    ink 深空底 + 底部 indigo-deep 氛围椭圆;星点白,三层视差漂移,
    reduced-motion 时保留静态星点。 */
