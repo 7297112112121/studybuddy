@@ -252,19 +252,14 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                   </div>
                 );
               })}
-              {/* 实时线(D-05/F-06):仅今天所在周渲染;左端可见时间胶囊
-                  (房屋风格:destructive 15% 红底 + 红字,同 Button destructive) */}
+              {/* 实时线(D-05/F-06):仅今天所在周渲染 */}
               {hasToday && (
                 <div
                   data-testid="now-line"
                   aria-label={t("week.nowLine", { time: hhmm(nowMinutes) })}
                   className="pointer-events-none absolute right-0 z-20 border-t-2 border-destructive"
                   style={{ left: "3rem", top: nowMinutes * PX_PER_MINUTE }}
-                >
-                  <span className="absolute left-0 top-0 -translate-y-1/2 whitespace-nowrap rounded-full bg-destructive/15 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-destructive tabular-nums">
-                    {hhmm(nowMinutes)}
-                  </span>
-                </div>
+                />
               )}
             </div>
           </div>

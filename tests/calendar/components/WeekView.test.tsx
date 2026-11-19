@@ -87,11 +87,6 @@ describe("WeekView(AXY-23 Task 8)", () => {
     expect(screen.queryByTestId("now-line")).toBeNull();
   });
 
-  it("实时线带可见时间胶囊文字(HH:MM)", () => {
-    renderView([], days);
-    expect(screen.getByTestId("now-line").textContent).toMatch(/\b\d{2}:\d{2}\b/);
-  });
-
   it("槽位按钮 aria-label:createAt 插值『周三 14:30 新建条目』", () => {
     renderView([]);
     expect(
