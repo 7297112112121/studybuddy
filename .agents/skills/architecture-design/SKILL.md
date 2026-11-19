@@ -15,6 +15,10 @@ description: 当 proposal 已获人工批准,需要产出架构设计(design)时
 
 **design 主文件与全部拆出文件未获人工批准，不得拆分任务、不得写任何产品代码。**（这是第二道批准门；第一道在 proposal。）
 
+## 分支衔接
+
+本技能是 feat 分支的开启点：开工前确认 proposal 已随 docs 分支合并进 master（未合并时先走 branch-wrapup 收尾 docs 分支），再从最新 `master` 新建 `feat/AXY-<N>-<slug>`。design 四件套落盘与批准、后续实现与终审全部在该分支上进行。完整生命周期见 [docs/研发流程.md](../../docs/研发流程.md)「分支生命周期」。
+
 ## 流程
 
 ### 1. 读 proposal 并盘点约束

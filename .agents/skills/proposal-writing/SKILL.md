@@ -75,7 +75,11 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 - [ ] 冲突与不确定项已进入「待确认 / 冲突清单」，未静默改写
 - [ ] 修订进 Changelog，正文只保留当前有效状态
 
-自查通过后提请人工批准。批准前状态为「草案」，批准后改为「已批准」并附批准日期。
+自查通过后提请人工批准。批准前状态为「草案」，批准后改为「已批准」并附批准日期。**批准通过即产品侧完工：触发 branch-wrapup 技能，把 docs 分支 PR 合并回 master**——开发侧（architecture-design）在 proposal 进入 master 后才开工。
+
+## 分支衔接
+
+proposal 在 product-design 开出的 `docs/<slug>` 分支上编写与修订，不另开分支。完整生命周期见 [docs/研发流程.md](../../docs/研发流程.md)「分支生命周期」。
 
 ## 合理化对照表
 
