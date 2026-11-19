@@ -57,13 +57,21 @@ function toFieldErrors(error: z.ZodError): CalendarFieldErrors {
 
 type WriteResult = boolean | void;
 
+/**
+ * 四 action 共用的会话守卫（R7 接口半边）：userId 一律取自会话的
+ * 单一收拢点；null = 无有效会话，由调用点按各自结果类型归一 UNAUTHORIZED。
+ */
+async function requireSession() {
+  return getCurrentSession();
+}
+
 /** 三 action 共用的归一流（会话 → 复验 → service → revalidate）。 */
 async function runAction(
   input: CalendarEntryInput,
   entryId: string | null,
   write: (userId: string, input: CalendarEntryInput, entryId: string | null) => Promise<WriteResult>,
 ): Promise<CalendarEntryActionResult> {
-  const session = await getCurrentSession();
+  const session = await requireSession();
   if (!session) {
     return { ok: false, error: "UNAUTHORIZED" };
   }
@@ -105,7 +113,7 @@ export async function updateEntryAction(
 export async function deleteEntryAction(
   entryId: string,
 ): Promise<CalendarEntryActionResult> {
-  const session = await getCurrentSession();
+  const session = await requireSession();
   if (!session) {
     return { ok: false, error: "UNAUTHORIZED" };
   }
@@ -141,7 +149,7 @@ export async function requestProposalAction(
   entryId: string,
   userRangeAnswer: string | null,
 ): Promise<ProposalActionResult> {
-  const session = await getCurrentSession();
+  const session = await requireSession();
   if (!session) {
     return { ok: false, error: "UNAUTHORIZED" };
   }
@@ -183,7 +191,7 @@ export type ProposalWriteResult =
 export async function confirmProposalAction(
   proposal: unknown,
 ): Promise<ProposalWriteResult> {
-  const session = await getCurrentSession();
+  const session = await requireSession();
   if (!session) {
     return { ok: false, error: "UNAUTHORIZED" };
   }

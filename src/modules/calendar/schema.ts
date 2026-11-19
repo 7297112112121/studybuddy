@@ -23,6 +23,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
+import { TIME_HHMM_RE } from "@/lib/date";
 import { isValidDateString } from "./month";
 
 const pgTable = snakeCase.table;
@@ -47,7 +48,8 @@ export const calendarEntry = pgTable(
   (t) => [index("calendar_entry_user_date").on(t.userId, t.entryDate)],
 );
 
-export const TIME_HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** "HH:MM" 分钟粒度：真源在 @/lib/date，re-export 保住模块内既有导出面。 */
+export { TIME_HHMM_RE };
 
 /**
  * entry_resource 单表(AXY-24:条目附属资料,唯一状态「已留存」——

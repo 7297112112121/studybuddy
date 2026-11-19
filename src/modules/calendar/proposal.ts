@@ -32,6 +32,7 @@ import {
   type WebSearchSource,
 } from "@/agent/runtime/deepseek-web-search";
 import { calendarEntry, calendarEntryInputSchema, entryResource } from "./schema";
+import { rangeDayCount, todayString } from "@/lib/date";
 
 type ProposalResource = { title: string; url: string };
 
@@ -60,22 +61,6 @@ export class AiUnavailableError extends Error {
   constructor() {
     super("ai unavailable");
   }
-}
-
-function todayString(): string {
-  // 服务端本地时区的字面日期(与 calendar_entry date mode:'string' 同口径)
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-/** 条目范围内天数(含首尾)。 */
-function rangeDayCount(rangeStart: string, rangeEnd: string): number {
-  const startMs = Date.parse(`${rangeStart}T00:00:00Z`);
-  const endMs = Date.parse(`${rangeEnd}T00:00:00Z`);
-  return Math.floor((endMs - startMs) / 86_400_000) + 1;
 }
 
 type RawPlanDay = { date: string; text: string; resources: ProposalResource[] };

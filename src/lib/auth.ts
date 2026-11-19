@@ -19,9 +19,7 @@ import { username } from "better-auth/plugins";
 import { db } from "@/db/client";
 import { account, session, user, verification } from "@/db/schema";
 import { redis } from "@/lib/redis";
-
-/** 与 modules/auth/validators 的 USERNAME_RE 保持一致（同步性由单元测试守护） */
-const USERNAME_RE = /^[一-龥A-Za-z0-9_]{1,16}$/;
+import { USERNAME_RE } from "@/lib/username";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -52,7 +50,7 @@ export const auth = betterAuth({
   },
   plugins: [
     username({
-      // 账户名合法域单一来源（F-01）：内联 USERNAME_RE 副本，默认正则拒中文，必须覆盖
+      // 账户名合法域单一来源（F-01）：真源 @/lib/username，默认正则拒中文，必须覆盖
       usernameValidator: (u: string) => USERNAME_RE.test(u),
       minUsernameLength: 1, // 插件默认 3
       maxUsernameLength: 16, // 插件默认 30
