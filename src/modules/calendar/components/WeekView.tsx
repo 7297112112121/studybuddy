@@ -200,10 +200,7 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                 return (
                   <div
                     key={d.date}
-                    className={cn(
-                      "relative border-l border-border/60",
-                      d.isToday && "bg-primary/5",
-                    )}
+                    className="relative border-l border-border/60"
                   >
                     {/* 48 槽(F-05):点击打开创建卡,时间预填槽起点 */}
                     {Array.from({ length: SLOTS_PER_DAY }, (_, i) => (
