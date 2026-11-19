@@ -22,6 +22,7 @@ import {
   slotPrefillStart,
   type WeekDay,
 } from "../week";
+import ProposalDialog from "./ProposalDialog";
 import WeekEntryDialog, {
   type WeekEntryDialogState,
 } from "./WeekEntryDialog";
@@ -65,6 +66,9 @@ export default function WeekView({ days, entries }: WeekViewProps) {
   const [dialogState, setDialogState] = useState<WeekEntryDialogState | null>(
     null,
   );
+  const [proposalEntry, setProposalEntry] = useState<
+    CalendarEntryView | null
+  >(null);
   const [nowMinutes, setNowMinutes] = useState<number>(clientNowMinutes);
   const hasToday = days.some((d) => d.isToday);
 
@@ -302,7 +306,18 @@ export default function WeekView({ days, entries }: WeekViewProps) {
       <WeekEntryDialog
         state={dialogState}
         onClose={() => setDialogState(null)}
+        onAssist={(assistTarget) => {
+          setProposalEntry(assistTarget);
+          setDialogState(null);
+        }}
       />
+      {proposalEntry !== null && (
+        <ProposalDialog
+          entryId={proposalEntry.id}
+          entryTitle={proposalEntry.title}
+          onClose={() => setProposalEntry(null)}
+        />
+      )}
     </div>
   );
 }

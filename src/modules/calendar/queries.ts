@@ -4,12 +4,12 @@
  * 仅本人——R6/R7 的数据半边：查询恒带 userId 条件，不收客户端未过滤集。
  * DB 异常向上抛（页面渲染失败由 Next 错误边界兜底），本层不做归一。
  */
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, inArray, lte } from "drizzle-orm";
 
 import { db } from "@/db/client";
 
 import { formatHhmm, monthRange } from "./month";
-import { calendarEntry } from "./schema";
+import { calendarEntry, entryResource } from "./schema";
 import { weekRange } from "./week";
 
 export type CalendarEntryView = {
@@ -95,4 +95,45 @@ export async function listWeekEntries(
       endTime: r.endTime === null ? null : formatHhmm(r.endTime),
     }))
     .sort(compareEntries);
+}
+
+/** 条目附属资料视图(AXY-24):仅标题与 URL。 */
+export type EntryResourceView = { title: string; url: string };
+
+/**
+ * 按条目 id 分组读本人条目资料(AXY-24 T7):经条目 join 传导账号隔离
+ * (资料表无 user_id,归属由条目 user_id 决定,R11);dates 为空直接短路。
+ */
+export async function listEntryResources(
+  userId: string,
+  dates: string[],
+): Promise<Map<string, EntryResourceView[]>> {
+  if (dates.length === 0) {
+    return new Map();
+  }
+  const rows = await db
+    .select({
+      entryId: entryResource.entryId,
+      title: entryResource.title,
+      url: entryResource.url,
+    })
+    .from(entryResource)
+    .innerJoin(calendarEntry, eq(entryResource.entryId, calendarEntry.id))
+    .where(
+      and(
+        eq(calendarEntry.userId, userId),
+        inArray(calendarEntry.entryDate, dates),
+      ),
+    );
+
+  const grouped = new Map<string, EntryResourceView[]>();
+  for (const row of rows) {
+    const list = grouped.get(row.entryId);
+    if (list) {
+      list.push({ title: row.title, url: row.url });
+    } else {
+      grouped.set(row.entryId, [{ title: row.title, url: row.url }]);
+    }
+  }
+  return grouped;
 }

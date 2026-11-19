@@ -22,7 +22,11 @@ import { getCurrentSession } from "@/modules/auth";
 import CalendarScreen from "@/modules/calendar/components/CalendarScreen";
 import WeekView from "@/modules/calendar/components/WeekView";
 import { addMonths } from "@/modules/calendar/month";
-import { listMonthEntries, listWeekEntries } from "@/modules/calendar/queries";
+import {
+  listEntryResources,
+  listMonthEntries,
+  listWeekEntries,
+} from "@/modules/calendar/queries";
 import {
   addWeeks,
   buildWeekDays,
@@ -101,6 +105,14 @@ export default async function CalendarPage({
       : listMonthEntries(session.user.id, shown.year, shown.month),
     getTranslations("calendar"),
   ]);
+  // AXY-24 T7:条目附属资料(仅月视图当日详情展示),账号隔离由查询传导
+  const resources =
+    shown.view === "month"
+      ? await listEntryResources(
+          session.user.id,
+          [...new Set(entries.map((e) => e.date))],
+        )
+      : undefined;
 
   // 周/月切换(路由行为 #3):月默认当前月并携带周锚点;周回到锚点所在周。
   const carriedWeek =
@@ -193,6 +205,7 @@ export default async function CalendarPage({
           month={shown.month}
           today={today}
           entries={entries}
+          resources={resources}
         />
       )}
     </main>

@@ -12,12 +12,16 @@ import DayPanel from "@/modules/calendar/components/DayPanel";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 
 const deleteEntryActionMock = vi.hoisted(() => vi.fn());
+const requestProposalMock = vi.hoisted(() => vi.fn());
+const confirmProposalMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
 }));
 vi.mock("@/modules/calendar/actions", () => ({
   deleteEntryAction: deleteEntryActionMock,
+  requestProposalAction: requestProposalMock,
+  confirmProposalAction: confirmProposalMock,
 }));
 
 afterEach(cleanup);
@@ -35,6 +39,7 @@ function renderPanel(
         date={props.date ?? "2026-11-17"}
         entries={props.entries ?? []}
         today={props.today ?? "2026-11-17"}
+        resources={props.resources}
       />
     </NextIntlClientProvider>,
   );
@@ -120,5 +125,34 @@ describe("DayPanel（tests/calendar/components/DayPanel）", () => {
     await waitFor(() => expect(title.value).toBe("旧标题"));
     expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe("10:00");
     expect((screen.getByLabelText("所属日期") as HTMLInputElement).value).toBe("2026-11-16");
+  });
+});
+
+describe("DayPanel 资料展示与发起入口(AXY-24 T7)", () => {
+  const baseEntries = [
+    { id: "e9", date: "2026-11-17", title: "学习next框架", startTime: null, endTime: null },
+  ];
+
+  it("资源经 props 合并渲染资料链接(target=_blank)", () => {
+    renderPanel({
+      entries: baseEntries,
+      resources: new Map([
+        ["e9", [{ title: "Next.js 官方文档", url: "https://nextjs.org/docs" }]],
+      ]),
+    });
+    const link = screen.getByRole("link", { name: "Next.js 官方文档" });
+    expect(link.getAttribute("href")).toBe("https://nextjs.org/docs");
+    expect(link.getAttribute("target")).toBe("_blank");
+  });
+
+  it("点条目「帮我找资料」挂载 ProposalDialog 并以条目 id 发起", async () => {
+    requestProposalMock.mockResolvedValue({
+      ok: true,
+      proposal: { kind: "NEEDS_RANGE" },
+    });
+    renderPanel({ entries: baseEntries });
+    fireEvent.click(screen.getByRole("button", { name: "帮我找资料" }));
+    expect(await screen.findByText("AI 资料提案")).toBeTruthy();
+    expect(requestProposalMock).toHaveBeenCalledWith("e9", null);
   });
 });

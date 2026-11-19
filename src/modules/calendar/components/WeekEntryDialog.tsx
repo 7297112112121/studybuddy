@@ -41,11 +41,14 @@ export type WeekEntryDialogState =
 export type WeekEntryDialogProps = {
   state: WeekEntryDialogState | null;
   onClose: () => void;
+  /** 编辑态传入才渲染「帮我找资料」(AXY-24 T7,D-06);点击后关闭编辑卡。 */
+  onAssist?: (entry: CalendarEntryView) => void;
 };
 
 export default function WeekEntryDialog({
   state,
   onClose,
+  onAssist,
 }: WeekEntryDialogProps) {
   const t = useTranslations("calendar");
   const router = useRouter();
@@ -92,7 +95,18 @@ export default function WeekEntryDialog({
           />
         )}
         {editing && (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {onAssist !== undefined && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  onAssist(state.entry);
+                  onClose();
+                }}
+              >
+                {t("proposal.assistButton")}
+              </Button>
+            )}
             <Button
               variant="ghost"
               className="text-destructive"
