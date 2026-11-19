@@ -244,7 +244,7 @@ export default function EntryForm({
         </p>
       )}
 
-      {/* 纯色品牌主按钮(.calendar-theme 作用域内 primary 即 aurora-aqua),
+      {/* 纯色品牌主按钮(全局主题内 primary 即 aurora-aqua),
           外发光沿用 auth SubmitButton 手法;不用渐变(设计裁决:渐变不作按钮) */}
       <Button
         type="submit"

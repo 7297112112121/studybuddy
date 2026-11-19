@@ -9,7 +9,7 @@
  * D-12)→ 实时线(客户端本地时钟,60s 更新 F-06;仅今天所在周渲染 D-05)。
  * 表头/全天区/网格同处一个横滚容器,窄屏横向滚动不互相错位(D-09);
  * 纵向滚动容器初始锚定当前时段,非今天所在周锚 08:00(D-10)。
- * 全部配色走 calendar-theme 语义 token,零新色值。
+ * 全部配色走全局语义 token,零新色值。
  */
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";

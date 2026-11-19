@@ -2,9 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* 暗色模式策略遵循 ADR-0003:dark: 变体走 prefers-color-scheme 媒体查询,
-   不声明 @custom-variant dark(引入手动主题切换时再按 ADR-0003 条款评估 class 策略)。
-   下方 .dark 块为将来 class 策略预留的 token 结构,当前未启用且暗色值未校准。 */
+/* 暗色模式策略(ADR-0003 / ADR-0027):全站固定深空暗色主题,:root 即暗色
+   校准值,不声明 @custom-variant dark、无 .dark 块。shadcn 组件自带的
+   dark: 微调类走 prefers-color-scheme 媒体查询(浅色 OS 下不触发,语义
+   token 已按暗色校准,视觉可接受)。将来引入亮色模式或手动切换时,按
+   ADR-0003 条款评估 class 策略并另立 ADR。 */
 
 @theme inline {
   --color-background: var(--background);
@@ -60,28 +62,10 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  /* warning 系:shadcn 默认 token 集外的补充语义色(FormSummary 校验汇总),
-     取 Tailwind amber-600/800 的 oklch 近似值;暗色未校准。 */
-  --warning: oklch(0.666 0.179 58);
-  --warning-foreground: oklch(0.476 0.114 61);
-  /* aurora 装饰色:auth 页「aurora glass」暗色视觉方向的 token 组,仅 auth 页
-     消费(.aurora-theme 局部作用域,见下方说明)。取值为设计规格色 hex 直书,
-     与视觉规格一一对应;deep 端供光斑浓墨层,不进入组件默认态。 */
+  /* 品牌色板(aurora 组):全局品牌色,语义导读见 docs/dev/色彩搭配记录.md。
+     深空暗色主题(ADR-0027)的底色与语义色均从本组派生;ink 为深空底,
+     aqua 为主色,aqua-bright 供渐变高光,magenta/indigo 及 deep 端供装饰
+     光斑,不进入组件默认态。全部纯色,控件禁渐变(设计裁决)。 */
   --aurora-ink: #0b0f14;
   --aurora-aqua: #2dd4bf;
   --aurora-aqua-bright: #5eead4;
@@ -89,64 +73,10 @@
   --aurora-magenta-deep: #a21caf;
   --aurora-indigo: #6366f1;
   --aurora-indigo-deep: #312e81;
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
 
-/* 暗色 token:未校准(首期仅校准亮色)。当前无 @custom-variant dark 声明,此块不会生效。 */
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
-/* auth 页「aurora glass」局部暗色取景:.aurora-theme 只挂在 auth 屏根节点,
-   在其子树内重定义语义 token(本页专用的暗色校准值),全局亮色主题与其余
-   页面不受影响——这不是全局暗色策略,不改变 ADR-0003 的既有条款。 */
-.aurora-theme {
+  /* 语义 token:深空暗色校准(ADR-0027,值沿 .calendar-theme 试验转正)。
+     卡面/悬浮层为白色半透明,底色透星点;primary/ring 指 aqua,shadcn
+     组件全站自然继承品牌色;accent 为 aqua 薄荷洗色(hover/选中)。 */
   --background: var(--aurora-ink);
   --foreground: oklch(0.968 0.006 247);
   --card: oklch(1 0 0 / 8%);
@@ -159,19 +89,38 @@
   --secondary-foreground: oklch(0.968 0.006 247);
   --muted: oklch(1 0 0 / 7%);
   --muted-foreground: oklch(0.705 0.022 261);
-  --accent: oklch(1 0 0 / 8%);
+  --accent: color-mix(in oklab, var(--aurora-aqua) 15%, transparent);
   --accent-foreground: oklch(0.968 0.006 247);
   --destructive: oklch(0.704 0.191 22.216);
+  /* warning 系:shadcn 默认 token 集外的补充语义色,取 Tailwind amber 的
+     oklch 近似值;数值沿亮色时代快照保留,暗色底上的对比度未重新校准。 */
+  --warning: oklch(0.666 0.179 58);
+  --warning-foreground: oklch(0.476 0.114 61);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 14%);
   --ring: var(--aurora-aqua);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  /* sidebar 系:当前无消费方,按暗色主题同构预留(半透明卡面同款语言)。 */
+  --sidebar: oklch(1 0 0 / 6%);
+  --sidebar-foreground: oklch(0.968 0.006 247);
+  --sidebar-primary: var(--aurora-aqua);
+  --sidebar-primary-foreground: var(--aurora-ink);
+  --sidebar-accent: oklch(1 0 0 / 7%);
+  --sidebar-accent-foreground: oklch(0.968 0.006 247);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: var(--aurora-aqua);
 }
 
-/* 暗色玻璃卡面(.aurora-theme / .calendar-theme 作用域内使用):
-   155° 白色半透明渐变 + 顶部内描边高光 + 深投影,配合 backdrop-blur
-   构成玻璃质感;卡片元素不另设 bg-card 底色,渐变即卡面。 */
-.aurora-theme .glass-card,
-.calendar-theme .glass-card {
+/* 暗色玻璃卡面(.glass-card,auth 签名卡等消费):155° 白色半透明渐变 +
+   顶部内描边高光 + 深投影,配合 backdrop-blur 构成玻璃质感;卡片元素不
+   另设 bg-card 底色,渐变即卡面。(原 .aurora-theme/.calendar-theme 作用域
+   选择器随 ADR-0027 作用域移除而全局化,卡面视觉不变。) */
+.glass-card {
   background-image: linear-gradient(
     155deg,
     oklch(1 0 0 / 9%),
@@ -182,9 +131,10 @@
     0 30px 80px -20px oklch(0 0 0 / 75%);
 }
 
-/* auth 页 aurora 纱幕(仅 .aurora-theme 内使用,纯装饰):aqua/magenta 双色
-   细网格 + 前景细颗粒点阵,椭圆 mask 自中心向边缘衰减。 */
-.aurora-theme .aurora-veil {
+/* auth 页 aurora 纱幕(仅 AuthScreen 内使用,纯装饰):aqua/magenta 双色
+   细网格 + 前景细颗粒点阵,椭圆 mask 自中心向边缘衰减。(原挂
+   .aurora-theme 作用域下,随 ADR-0027 全局化后直接以类名消费。) */
+.aurora-veil {
   background-image:
     linear-gradient(
       to right,
@@ -213,58 +163,29 @@
   );
 }
 
-/* calendar 页深空品牌主题作用域(用户显式豁免前端设计规范的颜色消费
-   规则;沿 .aurora-theme 先例的页面局部暗色校准,只挂 /calendar 根节点,
-   不影响全局亮色主题)。内容面经语义 token 继承:前景近白、border 白
-   12%;primary/ring 指 aurora aqua、primary-foreground 换墨底;accent 为
-   aqua 薄荷洗色(hover/选中)。侧边面板底色为半透明深色 bg-aurora-ink/40
-   (组件内直书,无背景模糊,星点清晰透出)。全部纯色,渐变被设计裁决
-   禁止(按钮/日期章不用渐变;.stars-sky 的径向氛围属背景非控件)。若
-   试验转正需按色彩搭配记录「新页面用色指引」走 ADR 评估泛化。 */
-.calendar-theme {
-  --background: var(--aurora-ink);
-  --foreground: oklch(0.968 0.006 247);
-  --card: oklch(1 0 0 / 8%);
-  --card-foreground: oklch(0.968 0.006 247);
-  --popover: oklch(0.205 0.02 250);
-  --popover-foreground: oklch(0.968 0.006 247);
-  --primary: var(--aurora-aqua);
-  --primary-foreground: var(--aurora-ink);
-  --secondary: oklch(1 0 0 / 6%);
-  --secondary-foreground: oklch(0.968 0.006 247);
-  --muted: oklch(1 0 0 / 7%);
-  --muted-foreground: oklch(0.705 0.022 261);
-  --accent: color-mix(in oklab, var(--aurora-aqua) 15%, transparent);
-  --accent-foreground: oklch(0.968 0.006 247);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: var(--aurora-aqua);
-  --destructive: oklch(0.704 0.191 22.216);
-}
-
-/* calendar 主题化细滚动条:thumb 半透明白与卡面描边(border-white/25)
-   同一视觉语言,hover 提亮;轨道全透明。仅用 ::-webkit-scrollbar(Chrome/Edge);
-   不设 scrollbar-color 标准属性——Chromium 121+ 一旦设置它即忽略 webkit 定制
-   回退原生带箭头渲染。Firefox 不支持 webkit 伪元素,由系统深色原生滚动条兜底。
-   作用域限 .calendar-theme,不影响他页。 */
-.calendar-theme *::-webkit-scrollbar {
+/* 细滚动条(全站,ADR-0027):thumb 半透明白与卡面描边(border-white/25)
+   同一视觉语言,hover 提亮;轨道全透明。仅用 ::-webkit-scrollbar
+   (Chrome/Edge);不设 scrollbar-color 标准属性——Chromium 121+ 一旦设置
+   它即忽略 webkit 定制回退原生带箭头渲染。Firefox 不支持 webkit 伪元素,
+   由系统深色原生滚动条兜底。 */
+*::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-.calendar-theme *::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
 }
-.calendar-theme *::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   border-radius: 9999px;
   background-color: oklch(1 0 0 / 20%);
 }
-.calendar-theme *::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
   background-color: oklch(1 0 0 / 35%);
 }
 
-/* calendar 深空星层(StarsBackground 组件专用,见组件头注):
-   ink 深空底 + 底部 indigo-deep 氛围椭圆;星点白,三层视差漂移,
-   reduced-motion 时保留静态星点。 */
+/* 全站深空星层(StarsBackground 组件专用,根布局挂载,ADR-0027;组件头注
+   见组件文件):ink 深空底 + 底部 indigo-deep 氛围椭圆;星点白,三层视差
+   漂移,reduced-motion 时保留静态星点。 */
 .stars-sky {
   background: radial-gradient(
     ellipse at 50% 115%,

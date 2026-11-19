@@ -1,5 +1,5 @@
 /**
- * StarsBackground 组件测试(品牌深空背景,视差星层)。
+ * StarsBackground 组件测试(全站品牌深空背景,视差星层——ADR-0027)。
  *
  * 覆盖:三层星层结构、星点 shadow 确定性(SSR 水合一致的关键——
  * 种子随机而非 Math.random)、speed 对漂移时长的反比缩放、
@@ -7,7 +7,7 @@
  */
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react";
-import StarsBackground from "@/modules/calendar/components/StarsBackground";
+import StarsBackground from "@/components/StarsBackground";
 
 afterEach(cleanup);
 
