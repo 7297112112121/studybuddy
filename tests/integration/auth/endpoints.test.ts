@@ -32,7 +32,9 @@ import {
 } from "../../../src/modules/auth/service";
 
 /** expect 断言不改类型，判别联合经 throw 收窄（与 service.test.ts 同法） */
-function expectRegisteredOk(outcome: RegisterOutcome): asserts outcome is Extract<RegisterOutcome, { ok: true }> {
+function expectRegisteredOk(
+  outcome: RegisterOutcome,
+): asserts outcome is Extract<RegisterOutcome, { ok: true }> {
   if (!outcome.ok) {
     throw new Error("unreachable: 注册应成功");
   }
@@ -65,7 +67,10 @@ afterAll(async () => {
 describe("R7：/sign-in/username 三失败情形同文案（Review Focus #1）", () => {
   it("未注册账户名/错密码/空密码：同状态码 + 同 code + 同 message，无差异字样", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({ username, password: PASSWORD });
+    const registered = await registerWithUsername({
+      username,
+      password: PASSWORD,
+    });
     expectRegisteredOk(registered);
 
     const cases = [
@@ -123,7 +128,10 @@ describe("hook 403：三路径直连禁用（B2/非目标 #4）", () => {
 describe("immutable 守卫：/update-user 携 username 改名拒绝（负空间无改名语义）", () => {
   it("已登录会话 POST /update-user（含新 username）→ 4xx，库内 username 不变", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({ username, password: PASSWORD });
+    const registered = await registerWithUsername({
+      username,
+      password: PASSWORD,
+    });
     expectRegisteredOk(registered);
 
     const cookie = await signInAndGetCookie(username, PASSWORD);
@@ -149,7 +157,10 @@ describe("immutable 守卫：/update-user 携 username 改名拒绝（负空间�
 describe("登录成功双写（B5）", () => {
   it("200 + set-cookie；PG session 行与 Redis 会话键同时存在", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({ username, password: PASSWORD });
+    const registered = await registerWithUsername({
+      username,
+      password: PASSWORD,
+    });
     expectRegisteredOk(registered);
 
     const res = await directPost("/sign-in/username", {
@@ -177,7 +188,10 @@ describe("登录成功双写（B5）", () => {
 describe("退出失效（R11 服务端半边）", () => {
   it("sign-out 后旧 cookie get-session 无用户，Redis 键与 PG 行均删", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({ username, password: PASSWORD });
+    const registered = await registerWithUsername({
+      username,
+      password: PASSWORD,
+    });
     expectRegisteredOk(registered);
 
     const cookie = await signInAndGetCookie(username, PASSWORD);

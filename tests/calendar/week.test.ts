@@ -64,9 +64,9 @@ describe("buildWeekDays:周一锚点 → 周内 7 天", () => {
   });
 
   it("today 不在本周时全部 isToday=false", () => {
-    expect(buildWeekDays("2026-11-16", "2026-11-30").every((d) => !d.isToday)).toBe(
-      true,
-    );
+    expect(
+      buildWeekDays("2026-11-16", "2026-11-30").every((d) => !d.isToday),
+    ).toBe(true);
   });
 });
 
@@ -131,8 +131,18 @@ import {
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 /** 构造带时间条目视图(startTime 恒非 null,全天条目不进 layoutDayBlocks)。 */
-function entry(id: string, start: string, end: string | null): CalendarEntryView {
-  return { id, date: "2026-11-18", title: `条目${id}`, startTime: start, endTime: end };
+function entry(
+  id: string,
+  start: string,
+  end: string | null,
+): CalendarEntryView {
+  return {
+    id,
+    date: "2026-11-18",
+    title: `条目${id}`,
+    startTime: start,
+    endTime: end,
+  };
 }
 
 describe("timeToMinutes:HH:MM → 当日分钟数", () => {
@@ -174,7 +184,10 @@ describe("layoutDayBlocks:重叠簇并列均分(proposal 边界 #2 / D-12)", () 
   });
 
   it("无重叠两块各满列宽", () => {
-    const blocks = layoutDayBlocks([entry("a", "09:00", "10:00"), entry("b", "14:00", "15:00")]);
+    const blocks = layoutDayBlocks([
+      entry("a", "09:00", "10:00"),
+      entry("b", "14:00", "15:00"),
+    ]);
     for (const b of blocks) {
       expect(b.leftPercent).toBe(0);
       expect(b.widthPercent).toBe(100);
@@ -183,10 +196,21 @@ describe("layoutDayBlocks:重叠簇并列均分(proposal 边界 #2 / D-12)", () 
   });
 
   it("两块重叠 → 簇内均分:leftPercent 0/50,widthPercent 各 50", () => {
-    const blocks = layoutDayBlocks([entry("a", "14:00", "15:30"), entry("b", "14:30", "15:00")]);
+    const blocks = layoutDayBlocks([
+      entry("a", "14:00", "15:30"),
+      entry("b", "14:30", "15:00"),
+    ]);
     const sorted = [...blocks].sort((x, y) => x.leftPercent - y.leftPercent);
-    expect(sorted[0]).toMatchObject({ entryId: "a", leftPercent: 0, widthPercent: 50 });
-    expect(sorted[1]).toMatchObject({ entryId: "b", leftPercent: 50, widthPercent: 50 });
+    expect(sorted[0]).toMatchObject({
+      entryId: "a",
+      leftPercent: 0,
+      widthPercent: 50,
+    });
+    expect(sorted[1]).toMatchObject({
+      entryId: "b",
+      leftPercent: 50,
+      widthPercent: 50,
+    });
   });
 
   it("三块互叠 → 各 1/3;与不重叠块互不影响", () => {
@@ -208,10 +232,18 @@ describe("layoutDayBlocks:重叠簇并列均分(proposal 边界 #2 / D-12)", () 
   });
 
   it("入参顺序无关:同一集合不同顺序产出相同布局", () => {
-    const a = layoutDayBlocks([entry("a", "14:00", "15:30"), entry("b", "14:30", "15:00")]);
-    const b = layoutDayBlocks([entry("b", "14:30", "15:00"), entry("a", "14:00", "15:30")]);
+    const a = layoutDayBlocks([
+      entry("a", "14:00", "15:30"),
+      entry("b", "14:30", "15:00"),
+    ]);
+    const b = layoutDayBlocks([
+      entry("b", "14:30", "15:00"),
+      entry("a", "14:00", "15:30"),
+    ]);
     const byId = (list: WeekBlock[]) =>
-      Object.fromEntries(list.map((x) => [x.entryId, [x.leftPercent, x.widthPercent]]));
+      Object.fromEntries(
+        list.map((x) => [x.entryId, [x.leftPercent, x.widthPercent]]),
+      );
     expect(byId(a)).toEqual(byId(b));
   });
 });

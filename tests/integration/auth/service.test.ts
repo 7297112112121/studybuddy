@@ -97,8 +97,12 @@ describe("registerWithUsername（tests/integration/auth/service）", () => {
       expect(s.status).toBe("fulfilled");
     }
     const outcomes = settled.map(
-      (s) => (s as PromiseFulfilledResult<Awaited<ReturnType<typeof registerWithUsername>>>)
-        .value,
+      (s) =>
+        (
+          s as PromiseFulfilledResult<
+            Awaited<ReturnType<typeof registerWithUsername>>
+          >
+        ).value,
     );
     const succeeded = outcomes.filter((o) => o.ok);
     expect(succeeded).toHaveLength(1);
@@ -132,8 +136,12 @@ describe("registerWithUsername（tests/integration/auth/service）", () => {
       expect(s.status).toBe("fulfilled");
     }
     const outcomes = settled.map(
-      (s) => (s as PromiseFulfilledResult<Awaited<ReturnType<typeof registerWithUsername>>>)
-        .value,
+      (s) =>
+        (
+          s as PromiseFulfilledResult<
+            Awaited<ReturnType<typeof registerWithUsername>>
+          >
+        ).value,
     );
     expect(outcomes.filter((o) => o.ok)).toHaveLength(2);
 

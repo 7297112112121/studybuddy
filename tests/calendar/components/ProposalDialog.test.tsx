@@ -41,7 +41,9 @@ const PLAN = {
       {
         date: "2026-11-20",
         text: "阅读官方文档",
-        resources: [{ title: "Next.js 官方文档", url: "https://nextjs.org/docs" }],
+        resources: [
+          { title: "Next.js 官方文档", url: "https://nextjs.org/docs" },
+        ],
       },
       {
         date: "2026-11-21",
@@ -56,7 +58,10 @@ function renderDialog(
   props: { onClose?: () => void } = {},
 ): ReturnType<typeof render> {
   return render(
-    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+    <NextIntlClientProvider
+      locale="zh-CN"
+      messages={{ calendar: calendarMessages }}
+    >
       <ProposalDialog
         entryId="entry-1"
         entryTitle="学习next框架"
@@ -85,9 +90,7 @@ async function expectDayText(text: string, index = 0): Promise<void> {
 describe("ProposalDialog 状态机", () => {
   it("挂载即发起:先呈现生成中文案,成功后呈现按天清单", async () => {
     let resolve!: (v: unknown) => void;
-    requestMock.mockImplementationOnce(
-      () => new Promise((r) => (resolve = r)),
-    );
+    requestMock.mockImplementationOnce(() => new Promise((r) => (resolve = r)));
     renderDialog();
     expect(await screen.findByText("正在生成提案…"));
     resolve(PLAN);
@@ -130,7 +133,10 @@ describe("ProposalDialog 状态机", () => {
   });
 
   it("F-01 留空提交被拦,呈现 E-01 于输入框下方,不发请求", async () => {
-    requestMock.mockResolvedValueOnce({ ok: true, proposal: { kind: "NEEDS_RANGE" } });
+    requestMock.mockResolvedValueOnce({
+      ok: true,
+      proposal: { kind: "NEEDS_RANGE" },
+    });
     renderDialog();
     await screen.findByText("打算学到哪天?");
 
@@ -172,15 +178,11 @@ describe("ProposalDialog 状态机", () => {
 
     // 重新生成走第二种结果
     fireEvent.click(screen.getByRole("button", { name: "重新生成" }));
-    expect(
-      await screen.findByText("没找到合适的资料:该主题缺少系统公开教程"),
-    );
+    expect(await screen.findByText("没找到合适的资料:该主题缺少系统公开教程"));
 
     // 再走第三种
     fireEvent.click(screen.getByRole("button", { name: "重新生成" }));
-    expect(
-      await screen.findByText("AI 服务暂时不可用,请稍后重试"),
-    );
+    expect(await screen.findByText("AI 服务暂时不可用,请稍后重试"));
     expect(screen.getByRole("button", { name: "重试" }));
   });
 
@@ -202,9 +204,9 @@ describe("ProposalDialog 状态机", () => {
     await expectDayText("阅读官方文档");
 
     change(screen.getAllByLabelText("安排")[0], "改过的安排");
-    expect((screen.getAllByLabelText("安排")[0] as HTMLInputElement).value).toBe(
-      "改过的安排",
-    );
+    expect(
+      (screen.getAllByLabelText("安排")[0] as HTMLInputElement).value,
+    ).toBe("改过的安排");
 
     fireEvent.click(screen.getAllByRole("button", { name: "删除" })[0]);
     expect(screen.getAllByLabelText("安排")).toHaveLength(1);
@@ -252,12 +254,15 @@ describe("ProposalDialog 状态机", () => {
     await expectDayText("阅读官方文档");
 
     fireEvent.click(screen.getByRole("button", { name: "确认写入" }));
-    expect(
-      await screen.findByText("写入日程失败,你的日程未改动,请重试"),
-    );
+    expect(await screen.findByText("写入日程失败,你的日程未改动,请重试"));
     // 清单仍在,确认按钮恢复可用(提案保留可重试)
-    expect((screen.getByRole("button", { name: "确认写入" }) as HTMLButtonElement).disabled).toBe(false);
-    expect((screen.getAllByLabelText("安排")[0] as HTMLInputElement).value).toBe("阅读官方文档");
+    expect(
+      (screen.getByRole("button", { name: "确认写入" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(false);
+    expect(
+      (screen.getAllByLabelText("安排")[0] as HTMLInputElement).value,
+    ).toBe("阅读官方文档");
   });
 
   it("确认写入中置灰不可重复提交", async () => {
@@ -295,27 +300,29 @@ describe("ProposalDialog 状态机", () => {
   });
 
   it("重新生成(R9):以新响应整体替换清单", async () => {
-    requestMock
-      .mockResolvedValueOnce(PLAN)
-      .mockResolvedValueOnce({
-        ok: true,
-        proposal: {
-          kind: "PLAN",
-          days: [
-            {
-              date: "2026-11-25",
-              text: "新提案的一天",
-              resources: [{ title: "New", url: "https://nextjs.org/docs" }],
-            },
-          ],
-        },
-      });
+    requestMock.mockResolvedValueOnce(PLAN).mockResolvedValueOnce({
+      ok: true,
+      proposal: {
+        kind: "PLAN",
+        days: [
+          {
+            date: "2026-11-25",
+            text: "新提案的一天",
+            resources: [{ title: "New", url: "https://nextjs.org/docs" }],
+          },
+        ],
+      },
+    });
     renderDialog();
     await expectDayText("阅读官方文档");
 
     fireEvent.click(screen.getByRole("button", { name: "重新生成" }));
     await expectDayText("新提案的一天");
-    expect((screen.getAllByLabelText("安排") as HTMLInputElement[]).some((i) => i.value === "阅读官方文档")).toBe(false);
+    expect(
+      (screen.getAllByLabelText("安排") as HTMLInputElement[]).some(
+        (i) => i.value === "阅读官方文档",
+      ),
+    ).toBe(false);
     expect(requestMock).toHaveBeenCalledTimes(2);
   });
 });

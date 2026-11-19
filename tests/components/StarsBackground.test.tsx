@@ -39,9 +39,9 @@ describe("StarsBackground(tests/calendar/components/StarsBackground)", () => {
 
   it("③ speed 反比缩放漂移时长:默认 50/100/150s,speed=2 时减半", () => {
     const { container } = render(<StarsBackground speed={2} />);
-    const durations = [
-      ...container.querySelectorAll("[data-star-layer]"),
-    ].map((el) => (el as HTMLElement).style.animationDuration);
+    const durations = [...container.querySelectorAll("[data-star-layer]")].map(
+      (el) => (el as HTMLElement).style.animationDuration,
+    );
     expect(durations).toEqual(["25s", "50s", "75s"]);
   });
 });

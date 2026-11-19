@@ -48,15 +48,24 @@ function input(
 describe("calendar 读写链路（tests/integration/calendar/service）", () => {
   it("R4 重叠并存：同账号同日 14:00–15:30 与 14:30–15:00 两行均写入成功", async () => {
     const userId = await makeUser("overlap");
-    await createEntry(userId, input("2026-11-17", "高数复习", "14:00", "15:30"));
-    await createEntry(userId, input("2026-11-17", "英语听力", "14:30", "15:00"));
+    await createEntry(
+      userId,
+      input("2026-11-17", "高数复习", "14:00", "15:30"),
+    );
+    await createEntry(
+      userId,
+      input("2026-11-17", "英语听力", "14:30", "15:00"),
+    );
 
     const rows = await listMonthEntries(userId, 2026, 11);
     expect(rows).toHaveLength(2);
   });
 
   it("R6/R7 隔离：listMonthEntries 仅返回本人条目，甲乙互不可见", async () => {
-    const [userA, userB] = await Promise.all([makeUser("iso-a"), makeUser("iso-b")]);
+    const [userA, userB] = await Promise.all([
+      makeUser("iso-a"),
+      makeUser("iso-b"),
+    ]);
     await createEntry(userA, input("2026-11-17", "甲的条目", null, null));
     await createEntry(userB, input("2026-11-17", "乙的条目", null, null));
 
@@ -67,12 +76,19 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
   });
 
   it("R7 越权写：以乙 userId 调 updateEntry/deleteEntry（甲的 entryId）→ false 且甲条目原样", async () => {
-    const [userA, userB] = await Promise.all([makeUser("xw-a"), makeUser("xw-b")]);
+    const [userA, userB] = await Promise.all([
+      makeUser("xw-a"),
+      makeUser("xw-b"),
+    ]);
     await createEntry(userA, input("2026-11-17", "甲的条目", "14:00", "15:30"));
     const entryId = (await listMonthEntries(userA, 2026, 11))[0].id;
 
     expect(
-      await updateEntry(userB, entryId, input("2026-11-17", "乙的篡改", null, null)),
+      await updateEntry(
+        userB,
+        entryId,
+        input("2026-11-17", "乙的篡改", null, null),
+      ),
     ).toBe(false);
     expect(await deleteEntry(userB, entryId)).toBe(false);
 
@@ -106,7 +122,10 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
 
   it("视图形状：startTime/endTime 归一为 'HH:MM'（time 列秒位不泄漏，Review Focus #2）", async () => {
     const userId = await makeUser("shape");
-    await createEntry(userId, input("2026-11-17", "高数复习", "14:00", "15:30"));
+    await createEntry(
+      userId,
+      input("2026-11-17", "高数复习", "14:00", "15:30"),
+    );
 
     const rows = await listMonthEntries(userId, 2026, 11);
     expect(rows[0]).toMatchObject({ startTime: "14:00", endTime: "15:30" });
@@ -130,7 +149,11 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
     const entryId = (await listMonthEntries(userId, 2026, 11))[0].id;
 
     expect(
-      await updateEntry(userId, entryId, input("2026-11-18", "新标题", "09:00", "10:00")),
+      await updateEntry(
+        userId,
+        entryId,
+        input("2026-11-18", "新标题", "09:00", "10:00"),
+      ),
     ).toBe(true);
 
     const rows = await listMonthEntries(userId, 2026, 11);

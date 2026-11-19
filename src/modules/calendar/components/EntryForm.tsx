@@ -59,7 +59,9 @@ export default function EntryForm({
   const router = useRouter();
 
   const [title, setTitle] = useState(entry?.title ?? "");
-  const [startTime, setStartTime] = useState(entry?.startTime ?? initialStartTime);
+  const [startTime, setStartTime] = useState(
+    entry?.startTime ?? initialStartTime,
+  );
   const [endTime, setEndTime] = useState(entry?.endTime ?? "");
   const [entryDate, setEntryDate] = useState(entry?.date ?? date);
   const [fieldErrors, setFieldErrors] = useState<CalendarFieldErrors>({});
@@ -201,9 +203,7 @@ export default function EntryForm({
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="calendar-entry-end">
-              {t("form.endTimeLabel")}
-            </Label>
+            <Label htmlFor="calendar-entry-end">{t("form.endTimeLabel")}</Label>
             <Input
               id="calendar-entry-end"
               type="time"

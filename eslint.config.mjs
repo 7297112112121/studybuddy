@@ -39,13 +39,16 @@ const moduleBoundaryPatterns = [
 
 // 类型禁推断：禁 Awaited<ReturnType<…>>（src/db/** 天然豁免——本规则只出现在
 // modules/components 两个块的 files 范围内）。
-const noInferredServerTypeRule = ["error", {
-  selector:
-    "TSTypeReference[typeName.name='Awaited'] > TSTypeParameterInstantiation > TSTypeReference[typeName.name='ReturnType']",
-  message:
-    "禁止用 Awaited<ReturnType<…>> 推断服务端返回类型：推断结果会沿调用链扩散、掩盖契约变化；" +
-    "请在服务端函数处显式声明返回类型后再引用。",
-}];
+const noInferredServerTypeRule = [
+  "error",
+  {
+    selector:
+      "TSTypeReference[typeName.name='Awaited'] > TSTypeParameterInstantiation > TSTypeReference[typeName.name='ReturnType']",
+    message:
+      "禁止用 Awaited<ReturnType<…>> 推断服务端返回类型：推断结果会沿调用链扩散、掩盖契约变化；" +
+      "请在服务端函数处显式声明返回类型后再引用。",
+  },
+];
 
 // 枚举 src/modules 下的模块目录，为每个模块生成「禁自引用顶入口」块，
 // 防止 barrel 循环（模块内部 import @/modules/<自己>）。
@@ -62,17 +65,20 @@ const moduleDirs = fs
 const moduleSelfImportBlocks = moduleDirs.map((moduleName) => ({
   files: [`src/modules/${moduleName}/**/*.{ts,tsx}`],
   rules: {
-    "no-restricted-imports": ["error", {
-      paths: [
-        {
-          name: `@/modules/${moduleName}`,
-          message:
-            `模块内部禁止自引用顶入口 @/modules/${moduleName}（经 index.ts 转一圈会形成 barrel 循环）；` +
-            "模块内部文件一律相对导入。",
-        },
-      ],
-      patterns: moduleBoundaryPatterns,
-    }],
+    "no-restricted-imports": [
+      "error",
+      {
+        paths: [
+          {
+            name: `@/modules/${moduleName}`,
+            message:
+              `模块内部禁止自引用顶入口 @/modules/${moduleName}（经 index.ts 转一圈会形成 barrel 循环）；` +
+              "模块内部文件一律相对导入。",
+          },
+        ],
+        patterns: moduleBoundaryPatterns,
+      },
+    ],
     "no-restricted-syntax": noInferredServerTypeRule,
   },
 }));
@@ -112,58 +118,61 @@ const eslintConfig = defineConfig([
   {
     files: ["src/agent/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": ["error", {
-        // `@/db` 顶入口必须走 paths 精确匹配：gitignore 语义下，
-        // group 里出现「禁目录本体」的 pattern 会让取反 `!` 全部失效
-        //（父目录被排除后子路径不可再 re-include，ESLint 底层 ignore 包行为）。
-        paths: [
-          {
-            name: "@/db",
-            message:
-              "agent 只可读 @/db/schema（全项目公共契约层）；" +
-              "运行时 client 与数据访问属各模块 queries/service，请在业务层完成后以数据形式交给 agent。",
-          },
-        ],
-        patterns: [
-          {
-            group: ["@/app", "@/app/**"],
-            message:
-              "agent 是能力子系统，零业务知识，禁止依赖路由层；" +
-              "业务知识只经模块 tools.ts（api/chat/route.ts 组装时注册）或 persona/prompt 数据流入。",
-          },
-          {
-            group: ["@/modules", "@/modules/**"],
-            message:
-              "agent 是能力子系统，零业务知识，禁止 import 业务模块；" +
-              "业务只能经各模块 tools.ts 注入，或作为数据传入 prompts 构造函数。",
-          },
-          {
-            group: ["@/components/**"],
-            message:
-              "agent 子系统不依赖 UI 组件；如需产出可展示结果，请返回结构化数据由模块/组件层渲染。",
-          },
-          {
-            group: ["@/stores/**"],
-            message:
-              "agent 在服务端单执行位运行，禁止依赖客户端 zustand store；纯 UI 状态与 agent 无关。",
-          },
-          {
-            group: ["@/locales/**"],
-            message:
-              "agent 不直接读 i18n 文案；需要语言适配时由调用方把文案作为数据传入。",
-          },
-          {
-            // 取反走 gitignore 语义（ESLint 用 ignore 包匹配 group）：
-            // 禁 @/db 下所有内容，白名单放行 @/db/schema 子树
-            // （`!@/db/schema` 先放行目录本体，`!@/db/schema/**` 再放行其下文件）。
-            // 新增 @/db 顶层入口（如 @/db/client 换名）时须同步此清单。
-            group: ["@/db/**", "!@/db/schema", "!@/db/schema/**"],
-            message:
-              "agent 只可读 @/db/schema（全项目公共契约层）；" +
-              "运行时 client 与数据访问属各模块 queries/service，请在业务层完成后以数据形式交给 agent。",
-          },
-        ],
-      }],
+      "no-restricted-imports": [
+        "error",
+        {
+          // `@/db` 顶入口必须走 paths 精确匹配：gitignore 语义下，
+          // group 里出现「禁目录本体」的 pattern 会让取反 `!` 全部失效
+          //（父目录被排除后子路径不可再 re-include，ESLint 底层 ignore 包行为）。
+          paths: [
+            {
+              name: "@/db",
+              message:
+                "agent 只可读 @/db/schema（全项目公共契约层）；" +
+                "运行时 client 与数据访问属各模块 queries/service，请在业务层完成后以数据形式交给 agent。",
+            },
+          ],
+          patterns: [
+            {
+              group: ["@/app", "@/app/**"],
+              message:
+                "agent 是能力子系统，零业务知识，禁止依赖路由层；" +
+                "业务知识只经模块 tools.ts（api/chat/route.ts 组装时注册）或 persona/prompt 数据流入。",
+            },
+            {
+              group: ["@/modules", "@/modules/**"],
+              message:
+                "agent 是能力子系统，零业务知识，禁止 import 业务模块；" +
+                "业务只能经各模块 tools.ts 注入，或作为数据传入 prompts 构造函数。",
+            },
+            {
+              group: ["@/components/**"],
+              message:
+                "agent 子系统不依赖 UI 组件；如需产出可展示结果，请返回结构化数据由模块/组件层渲染。",
+            },
+            {
+              group: ["@/stores/**"],
+              message:
+                "agent 在服务端单执行位运行，禁止依赖客户端 zustand store；纯 UI 状态与 agent 无关。",
+            },
+            {
+              group: ["@/locales/**"],
+              message:
+                "agent 不直接读 i18n 文案；需要语言适配时由调用方把文案作为数据传入。",
+            },
+            {
+              // 取反走 gitignore 语义（ESLint 用 ignore 包匹配 group）：
+              // 禁 @/db 下所有内容，白名单放行 @/db/schema 子树
+              // （`!@/db/schema` 先放行目录本体，`!@/db/schema/**` 再放行其下文件）。
+              // 新增 @/db 顶层入口（如 @/db/client 换名）时须同步此清单。
+              group: ["@/db/**", "!@/db/schema", "!@/db/schema/**"],
+              message:
+                "agent 只可读 @/db/schema（全项目公共契约层）；" +
+                "运行时 client 与数据访问属各模块 queries/service，请在业务层完成后以数据形式交给 agent。",
+            },
+          ],
+        },
+      ],
     },
   },
 
@@ -173,9 +182,12 @@ const eslintConfig = defineConfig([
   {
     files: ["src/modules/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": ["error", {
-        patterns: moduleBoundaryPatterns,
-      }],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: moduleBoundaryPatterns,
+        },
+      ],
       "no-restricted-syntax": noInferredServerTypeRule,
     },
   },
@@ -184,15 +196,18 @@ const eslintConfig = defineConfig([
   {
     files: ["src/components/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": ["error", {
-        patterns: [
-          {
-            group: ["@/modules/*/**"],
-            message:
-              "公共层组件不得深入模块内部；请改用 @/modules/<m> 顶入口（index.ts）导出的类型与数据。",
-          },
-        ],
-      }],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/modules/*/**"],
+              message:
+                "公共层组件不得深入模块内部；请改用 @/modules/<m> 顶入口（index.ts）导出的类型与数据。",
+            },
+          ],
+        },
+      ],
       "no-restricted-syntax": noInferredServerTypeRule,
     },
   },
@@ -201,15 +216,18 @@ const eslintConfig = defineConfig([
   {
     files: ["src/stores/**/*.{ts,tsx}", "src/locales/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": ["error", {
-        patterns: [
-          {
-            group: ["@/modules/*/**"],
-            message:
-              "公共层不得深入模块内部；请改用 @/modules/<m> 顶入口（index.ts）导出的类型与数据。",
-          },
-        ],
-      }],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/modules/*/**"],
+              message:
+                "公共层不得深入模块内部；请改用 @/modules/<m> 顶入口（index.ts）导出的类型与数据。",
+            },
+          ],
+        },
+      ],
     },
   },
 

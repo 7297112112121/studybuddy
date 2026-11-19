@@ -27,7 +27,10 @@ export default function AuthTabs(props: AuthTabsProps) {
         <TabsTrigger value="login" onClick={() => props.onSwitch("login")}>
           登录
         </TabsTrigger>
-        <TabsTrigger value="register" onClick={() => props.onSwitch("register")}>
+        <TabsTrigger
+          value="register"
+          onClick={() => props.onSwitch("register")}
+        >
           注册
         </TabsTrigger>
       </TabsList>

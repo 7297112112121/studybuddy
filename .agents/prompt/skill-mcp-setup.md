@@ -10,13 +10,13 @@
 
 ### 接入目标
 
-| 链接 | 类型 | 指向(相对链接所在目录) | 必要性 |
-| --- | --- | --- | --- |
-| `.claude/skills` | 目录链接 | `../.agents/skills` | 必建 |
-| `.claude/prompt` | 目录链接 | `../.agents/prompt` | 必建 |
-| `.mcp.json`(仓库根) | 文件链接 | `.agents/mcp/.mcp.json` | 必建 |
-| `.codex/skills`、`.dsh/skills` | 目录链接 | `../.agents/skills` | 已入库,损坏时按同法重建 |
-| `.codex/prompt`、`.dsh/prompt` | 目录链接 | `../.agents/prompt` | 可选,使用对应工具时再建 |
+| 链接                           | 类型     | 指向(相对链接所在目录)  | 必要性                  |
+| ------------------------------ | -------- | ----------------------- | ----------------------- |
+| `.claude/skills`               | 目录链接 | `../.agents/skills`     | 必建                    |
+| `.claude/prompt`               | 目录链接 | `../.agents/prompt`     | 必建                    |
+| `.mcp.json`(仓库根)            | 文件链接 | `.agents/mcp/.mcp.json` | 必建                    |
+| `.codex/skills`、`.dsh/skills` | 目录链接 | `../.agents/skills`     | 已入库,损坏时按同法重建 |
+| `.codex/prompt`、`.dsh/prompt` | 目录链接 | `../.agents/prompt`     | 可选,使用对应工具时再建 |
 
 ### 按操作系统执行
 

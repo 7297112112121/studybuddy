@@ -3,17 +3,11 @@
   "version": "9",
   "dialect": "postgres",
   "id": "4dab841b-922f-41ac-a20a-40dcb5fd14dd",
-  "prevIds": [
-    "3ca7c1f6-a7ac-40a7-abc0-77efab986187"
-  ],
+  "prevIds": ["3ca7c1f6-a7ac-40a7-abc0-77efab986187"],
   "footprints": [
     {
       "statementType": "create_table",
-      "statementTarget": [
-        "table",
-        "public",
-        "entry_resource"
-      ],
+      "statementTarget": ["table", "public", "entry_resource"],
       "writes": [
         "s|tbl|public.entry_resource",
         "n|tbl|public.entry_resource",
@@ -22,9 +16,7 @@
         "n|type|public.entry_resource",
         "n|rel|public.entry_resource_pkey"
       ],
-      "reads": [
-        "n|sch|public"
-      ]
+      "reads": ["n|sch|public"]
     },
     {
       "statementType": "create_index",
@@ -48,11 +40,7 @@
     },
     {
       "statementType": "create_fk",
-      "statementTarget": [
-        "table",
-        "public",
-        "entry_resource"
-      ],
+      "statementTarget": ["table", "public", "entry_resource"],
       "writes": [
         "s|fk|public.entry_resource.entry_resource_entry_id_calendar_entry_id_fkey",
         "n|fk|public.entry_resource.entry_resource_entry_id_calendar_entry_id_fkey",
@@ -191,14 +179,10 @@
         "table": "entry_resource",
         "name": "entry_resource_entry_id_calendar_entry_id_fkey",
         "nameExplicit": false,
-        "columns": [
-          "entry_id"
-        ],
+        "columns": ["entry_id"],
         "schemaTo": "public",
         "tableTo": "calendar_entry",
-        "columnsTo": [
-          "id"
-        ],
+        "columnsTo": ["id"],
         "onUpdate": "NO ACTION",
         "onDelete": "CASCADE",
         "entityType": "fks"
@@ -210,9 +194,7 @@
         "schema": "public",
         "table": "entry_resource",
         "name": "entry_resource_pkey",
-        "columns": [
-          "id"
-        ],
+        "columns": ["id"],
         "nameExplicit": false,
         "entityType": "pks"
       }

@@ -27,7 +27,9 @@ export default function AgreementCheckbox(props: AgreementCheckboxProps) {
           onChange={(event) => props.onChange(event.target.checked)}
           aria-invalid={props.invalid ? true : undefined}
           className={`mt-0.5 size-4 accent-primary ${
-            props.invalid ? "outline-2 outline-offset-0 outline-destructive" : ""
+            props.invalid
+              ? "outline-2 outline-offset-0 outline-destructive"
+              : ""
           }`}
         />
         <span>我已阅读并同意《用户协议》与《隐私政策》</span>

@@ -10,7 +10,9 @@ import calendar from "@/locales/zh-CN/calendar.json";
 describe("auth.json 文案与 design 文案表逐字一致", () => {
   it("account：登录账号字段", () => {
     expect(auth.account.required).toBe("请输入账户名");
-    expect(auth.account.invalid).toBe("格式不对：1—16 位中文、字母、数字或下划线");
+    expect(auth.account.invalid).toBe(
+      "格式不对：1—16 位中文、字母、数字或下划线",
+    );
   });
 
   it("password：密码字段", () => {
@@ -42,7 +44,14 @@ describe("auth.json 文案与 design 文案表逐字一致", () => {
 
   it("结构：共 12 个叶子键，命名空间齐全", () => {
     expect(Object.keys(auth).sort()).toEqual(
-      ["account", "agreement", "error", "password", "register", "submit"].sort(),
+      [
+        "account",
+        "agreement",
+        "error",
+        "password",
+        "register",
+        "submit",
+      ].sort(),
     );
     const leafCount = Object.values(auth).reduce(
       (sum, group) => sum + Object.keys(group as object).length,

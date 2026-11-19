@@ -31,12 +31,14 @@ export function validateAccount(raw: string): AccountCheck {
   return { ok: true };
 }
 
-export function validatePassword(raw: string): {
-  ok: true;
-} | {
-  ok: false;
-  messageKey: "auth.password.required" | "auth.password.invalid";
-} {
+export function validatePassword(raw: string):
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      messageKey: "auth.password.required" | "auth.password.invalid";
+    } {
   if (raw === "") {
     return { ok: false, messageKey: "auth.password.required" };
   }

@@ -74,13 +74,17 @@ async function createEntry(
 }
 
 test.describe("AXY-22 日程日历", () => {
-  test("R9：未登录直达 /calendar → 重定向 /login，响应不含日历内容", async ({ page }) => {
+  test("R9：未登录直达 /calendar → 重定向 /login，响应不含日历内容", async ({
+    page,
+  }) => {
     await page.goto("/calendar");
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByText("日程日历")).toHaveCount(0);
   });
 
-  test("R10 + 演示态 1：工作台入口 → 默认周视图(AXY-23 D-02);月视图当前月、今日高亮、空态文案", async ({ page }) => {
+  test("R10 + 演示态 1：工作台入口 → 默认周视图(AXY-23 D-02);月视图当前月、今日高亮、空态文案", async ({
+    page,
+  }) => {
     await registerAndOpenCalendar(page);
 
     const now = new Date();
@@ -89,7 +93,9 @@ test.describe("AXY-22 日程日历", () => {
     await expect(page.getByTestId("now-line")).toBeVisible();
 
     await page.goto("/calendar?view=month");
-    await expect(page.getByText(`${now.getFullYear()}年${now.getMonth() + 1}月`)).toBeVisible();
+    await expect(
+      page.getByText(`${now.getFullYear()}年${now.getMonth() + 1}月`),
+    ).toBeVisible();
     // 今日格常亮（MonthGrid data-today）
     await expect(page.locator(`[data-date="${fmt(now)}"]`)).toHaveAttribute(
       "data-today",
@@ -99,12 +105,18 @@ test.describe("AXY-22 日程日历", () => {
     await expect(page.getByText("这天还没有安排")).toBeVisible();
   });
 
-  test("R1 演示态 2：创建带时间条目 → 详情与月格摘要即时更新，无秒位泄漏", async ({ page }) => {
+  test("R1 演示态 2：创建带时间条目 → 详情与月格摘要即时更新，无秒位泄漏", async ({
+    page,
+  }) => {
     await registerAndOpenCalendar(page);
     const today = fmt(new Date());
     await page.locator(`[data-date="${today}"]`).click();
 
-    await createEntry(page, { title: "高数复习", start: "14:00", end: "15:30" });
+    await createEntry(page, {
+      title: "高数复习",
+      start: "14:00",
+      end: "15:30",
+    });
 
     // 详情面板：时间段行（HH:MM–HH:MM，无秒位——Review Focus #2）
     await expect(page.getByText("14:00–15:30")).toBeVisible();
@@ -121,7 +133,11 @@ test.describe("AXY-22 日程日历", () => {
     const today = fmt(new Date());
     await page.locator(`[data-date="${today}"]`).click();
 
-    await createEntry(page, { title: "高数复习", start: "14:00", end: "15:30" });
+    await createEntry(page, {
+      title: "高数复习",
+      start: "14:00",
+      end: "15:30",
+    });
     await expect(page.getByText("14:00–15:30")).toBeVisible();
 
     await createEntry(page, { title: "交英语作业" });
@@ -129,10 +145,14 @@ test.describe("AXY-22 日程日历", () => {
     // 不带时间行无时间前缀：同一面板内不应出现第二个时间前缀
     const rows = dayPanel(page).locator("ul > li");
     await expect(rows).toHaveCount(2);
-    await expect(rows.filter({ hasText: "交英语作业" })).not.toContainText("14:00");
+    await expect(rows.filter({ hasText: "交英语作业" })).not.toContainText(
+      "14:00",
+    );
   });
 
-  test("R8 演示态 2：留空提交 E-01；开始=结束 E-03；开始留空结束禁用", async ({ page }) => {
+  test("R8 演示态 2：留空提交 E-01；开始=结束 E-03；开始留空结束禁用", async ({
+    page,
+  }) => {
     await registerAndOpenCalendar(page);
     const today = fmt(new Date());
     await page.locator(`[data-date="${today}"]`).click();
@@ -156,12 +176,18 @@ test.describe("AXY-22 日程日历", () => {
     await expect(page.getByText("这天还没有安排")).toBeVisible();
   });
 
-  test("R3 演示态 3：编辑即时生效；删除取消保留、确认消失（确认层无输入）", async ({ page }) => {
+  test("R3 演示态 3：编辑即时生效；删除取消保留、确认消失（确认层无输入）", async ({
+    page,
+  }) => {
     await registerAndOpenCalendar(page);
     const today = fmt(new Date());
     await page.locator(`[data-date="${today}"]`).click();
 
-    await createEntry(page, { title: "高数复习", start: "14:00", end: "15:30" });
+    await createEntry(page, {
+      title: "高数复习",
+      start: "14:00",
+      end: "15:30",
+    });
     await expect(dayPanel(page).getByText("高数复习")).toBeVisible();
 
     // 编辑：改文字与时间
@@ -196,16 +222,26 @@ test.describe("AXY-22 日程日历", () => {
     const today = fmt(new Date());
     await page.locator(`[data-date="${today}"]`).click();
 
-    await createEntry(page, { title: "高数复习", start: "14:00", end: "15:30" });
+    await createEntry(page, {
+      title: "高数复习",
+      start: "14:00",
+      end: "15:30",
+    });
     await expect(page.getByText("14:00–15:30")).toBeVisible();
-    await createEntry(page, { title: "英语听力", start: "14:30", end: "15:00" });
+    await createEntry(page, {
+      title: "英语听力",
+      start: "14:30",
+      end: "15:00",
+    });
 
     await expect(dayPanel(page).getByText("14:00–15:30")).toBeVisible();
     await expect(dayPanel(page).getByText("14:30–15:00")).toBeVisible();
     await expect(dayPanel(page).getByText(/冲突/)).toHaveCount(0);
   });
 
-  test("R5 演示态 5：过去日期补记 → 归入昨日、月格摘要同步", async ({ page }) => {
+  test("R5 演示态 5：过去日期补记 → 归入昨日、月格摘要同步", async ({
+    page,
+  }) => {
     await registerAndOpenCalendar(page);
 
     const yesterdayDate = new Date(Date.now() - 86_400_000);
@@ -218,17 +254,25 @@ test.describe("AXY-22 日程日历", () => {
     await page.locator(`[data-date="${yesterday}"]`).click();
     // 详情标题为所选过去日期（非「今天」）
     await expect(
-      page.getByText(`${yesterdayDate.getMonth() + 1}月${yesterdayDate.getDate()}日`),
+      page.getByText(
+        `${yesterdayDate.getMonth() + 1}月${yesterdayDate.getDate()}日`,
+      ),
     ).toBeVisible();
 
-    await createEntry(page, { title: "昨日补记", start: "09:00", end: "10:00" });
+    await createEntry(page, {
+      title: "昨日补记",
+      start: "09:00",
+      end: "10:00",
+    });
     await expect(dayPanel(page).getByText("09:00–10:00")).toBeVisible();
     await expect(page.locator(`[data-date="${yesterday}"]`)).toContainText(
       "昨日补记",
     );
   });
 
-  test("R11 演示态 3：编辑改所属日期 → 原日期消失、新日期出现", async ({ page }) => {
+  test("R11 演示态 3：编辑改所属日期 → 原日期消失、新日期出现", async ({
+    page,
+  }) => {
     await registerAndOpenCalendar(page);
     const now = new Date();
     const today = fmt(now);
@@ -255,7 +299,9 @@ test.describe("AXY-22 日程日历", () => {
     await expect(dayPanel(page).getByText("待改期条目")).toBeVisible();
   });
 
-  test("R12 演示态 2：提交中重复点击不产生重复条目；保存失败呈 E-02 且原列表不变", async ({ page }) => {
+  test("R12 演示态 2：提交中重复点击不产生重复条目；保存失败呈 E-02 且原列表不变", async ({
+    page,
+  }) => {
     await registerAndOpenCalendar(page);
     const today = fmt(new Date());
     await page.locator(`[data-date="${today}"]`).click();
@@ -277,12 +323,16 @@ test.describe("AXY-22 日程日历", () => {
     await interceptActions(page, (route) => route.abort());
     await page.locator("#calendar-entry-title").fill("注定失败");
     await page.getByRole("button", { name: "添加" }).click();
-    await expect(dayPanel(page).getByText("保存失败,请重试")).toBeVisible({ timeout: 10_000 });
+    await expect(dayPanel(page).getByText("保存失败,请重试")).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(dayPanel(page).locator("ul > li")).toHaveCount(1); // 原列表不变
     await expect(dayPanel(page).getByText("注定失败")).toHaveCount(0);
   });
 
-  test("Review Focus #3：?month= 非法值回退当前月正常渲染", async ({ page }) => {
+  test("Review Focus #3：?month= 非法值回退当前月正常渲染", async ({
+    page,
+  }) => {
     await registerAndOpenCalendar(page);
     const now = new Date();
 

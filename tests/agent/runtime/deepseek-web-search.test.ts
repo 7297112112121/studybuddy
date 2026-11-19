@@ -21,7 +21,9 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-const messages = [{ role: "user" as const, content: "学习next框架 11.20–11.30" }];
+const messages = [
+  { role: "user" as const, content: "学习next框架 11.20–11.30" },
+];
 
 /** Chat Completions 响应:来源走 server_tool_calls.sources + annotations.url_citation。 */
 function searchResponse(
@@ -66,9 +68,11 @@ function searchResponse(
 
 describe("runWebSearchCompletion 请求形态", () => {
   it("POST deepseek-flash + deepseek_web_search 声明,无 response_format,Bearer 鉴权", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse(searchResponse([{ url: "https://a.com", title: "A" }])),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(searchResponse([{ url: "https://a.com", title: "A" }])),
+      );
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("DEEPSEEK_API_KEY", "sk-test");
 
@@ -89,7 +93,10 @@ describe("runWebSearchCompletion 请求形态", () => {
 
 describe("runWebSearchCompletion 错误归一(Review Focus 1)", () => {
   it.each([
-    ["200+error 块", () => jsonResponse({ error: { message: "generation failed" } })],
+    [
+      "200+error 块",
+      () => jsonResponse({ error: { message: "generation failed" } }),
+    ],
     ["5xx", () => jsonResponse({}, 500)],
     ["fetch reject", () => Promise.reject(new Error("network down"))],
   ])("%s 归一 AI_UNAVAILABLE,不抛裸异常", async (_name, responder) => {
@@ -108,7 +115,11 @@ describe("runWebSearchCompletion 来源聚合", () => {
         jsonResponse(
           searchResponse(
             [
-              { url: "https://nextjs.org/docs", title: "Next.js Docs", snippet: "官方文档" },
+              {
+                url: "https://nextjs.org/docs",
+                title: "Next.js Docs",
+                snippet: "官方文档",
+              },
               { url: "https://example.com/a", title: null, snippet: "示例" },
             ],
             [
@@ -135,9 +146,11 @@ describe("runWebSearchCompletion 来源聚合", () => {
 
 describe("stub 门控(Review Focus 5)", () => {
   it("DEEPSEEK_STUB_FIXTURE 未设时不走 stub(真实 fetch 被调用)", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse(searchResponse([{ url: "https://real.com", title: "R" }])),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(searchResponse([{ url: "https://real.com", title: "R" }])),
+      );
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("DEEPSEEK_API_KEY", "sk-test");
     // 注意:不设 DEEPSEEK_STUB_FIXTURE

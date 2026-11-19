@@ -52,9 +52,11 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-function renderAuthScreen(props: {
-  initialView?: "login" | "register";
-} = {}): ReturnType<typeof render> {
+function renderAuthScreen(
+  props: {
+    initialView?: "login" | "register";
+  } = {},
+): ReturnType<typeof render> {
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={{ auth: authMessages }}>
       <AuthScreen initialView={props.initialView ?? "login"} />
@@ -198,9 +200,9 @@ describe("R7 客户端统一文案（登录失败内联呈现，AXY-8 UI 优化�
     submitActiveForm(container);
 
     expect(await screen.findByText("用户名或密码不匹配")).toBeDefined();
-    expect(
-      screen.getByLabelText("密码").getAttribute("aria-invalid"),
-    ).toBe("true");
+    expect(screen.getByLabelText("密码").getAttribute("aria-invalid")).toBe(
+      "true",
+    );
     // R7 纪律：不泄露探测面——账户框不因凭据失败报红
     expect(
       screen.getByLabelText("账户名").getAttribute("aria-invalid"),
@@ -219,9 +221,7 @@ describe("R7 客户端统一文案（登录失败内联呈现，AXY-8 UI 优化�
     fillLogin("zhang_san", "study2026");
     submitActiveForm(container);
 
-    expect(
-      await screen.findByText("操作过于频繁，请稍后再试"),
-    ).toBeDefined();
+    expect(await screen.findByText("操作过于频繁，请稍后再试")).toBeDefined();
     expect(
       screen.getByLabelText("密码").getAttribute("aria-invalid"),
     ).toBeNull();
@@ -237,9 +237,9 @@ describe("B2 邮箱形态走字段错误（新语义）", () => {
     fillLogin("name@mail.com", "study2026");
     submitActiveForm(container);
 
-    expect(
-      screen.getByLabelText("账户名").getAttribute("aria-invalid"),
-    ).toBe("true");
+    expect(screen.getByLabelText("账户名").getAttribute("aria-invalid")).toBe(
+      "true",
+    );
     expect(
       screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
     ).toBeNull();
@@ -262,9 +262,9 @@ describe("INVALID_INPUT fieldErrors 归位（E-02）", () => {
     submitActiveForm(container);
 
     await waitFor(() => {
-      expect(
-        screen.getByLabelText("账户名").getAttribute("aria-invalid"),
-      ).toBe("true");
+      expect(screen.getByLabelText("账户名").getAttribute("aria-invalid")).toBe(
+        "true",
+      );
     });
     expect(
       screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),

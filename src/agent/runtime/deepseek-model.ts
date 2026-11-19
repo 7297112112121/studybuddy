@@ -26,8 +26,7 @@ export function chatModel(): LanguageModel {
 }
 
 export type StructuredResult<S extends z.ZodType> =
-  | { ok: true; object: z.infer<S> }
-  | { ok: false; error: "AI_UNAVAILABLE" };
+  { ok: true; object: z.infer<S> } | { ok: false; error: "AI_UNAVAILABLE" };
 
 /** 提取 system 消息文本(v7 破坏性变更:system 禁入 messages,须走 instructions)。 */
 function extractInstructions(messages: ModelMessage[]): string | undefined {

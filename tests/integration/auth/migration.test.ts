@@ -40,9 +40,7 @@ describe("username 迁移落库（tests/integration/auth/migration）", () => {
     }>(
       sql`SELECT column_name, is_nullable FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'user'`,
     );
-    const byName = Object.fromEntries(
-      rows.map((r) => [r.column_name, r]),
-    );
+    const byName = Object.fromEntries(rows.map((r) => [r.column_name, r]));
 
     expect(byName["username"]?.is_nullable).toBe("NO");
     expect(byName["phone_number"]).toBeUndefined();
@@ -79,10 +77,7 @@ describe("username 迁移落库（tests/integration/auth/migration）", () => {
           .from(user)
           .where(inArray(user.username, ["Alice", "alice"]));
         expect(rows).toHaveLength(2);
-        expect(rows.map((r) => r.username).sort()).toEqual([
-          "Alice",
-          "alice",
-        ]);
+        expect(rows.map((r) => r.username).sort()).toEqual(["Alice", "alice"]);
 
         // 断言完成后抛信号回滚整个事务，两行不落库
         throw new RollbackSignal("断言完成，回滚");

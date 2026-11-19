@@ -150,7 +150,10 @@
       color-mix(in oklab, oklch(1 0 0) 8%, transparent) 1px,
       transparent 1px
     );
-  background-size: 64px 64px, 64px 64px, 3px 3px;
+  background-size:
+    64px 64px,
+    64px 64px,
+    3px 3px;
   -webkit-mask-image: radial-gradient(
     ellipse 70% 60% at 50% 45%,
     black,

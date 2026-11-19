@@ -153,6 +153,11 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      # P0 门禁:Prettier 全仓格式检查(.prettierignore 排除 docs/website 等文档目录)。
+      # 零外部服务依赖,置于 lint 之前快速失败。
+      - name: Format check
+        run: npm run format:check
+
       - name: Lint
         run: npm run lint
 

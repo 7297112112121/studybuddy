@@ -54,7 +54,12 @@ function day(date: string, urls: string[]) {
 describe("filterPlanDays(纯函数五规则)", () => {
   it("日期越界剔除", () => {
     const days = filterPlanDays(
-      { days: [day("2026-11-20", [SOURCES[0].url]), day("2026-12-01", [SOURCES[0].url])] },
+      {
+        days: [
+          day("2026-11-20", [SOURCES[0].url]),
+          day("2026-12-01", [SOURCES[0].url]),
+        ],
+      },
       "2026-11-20",
       "2026-11-30",
       SOURCES,
@@ -64,7 +69,12 @@ describe("filterPlanDays(纯函数五规则)", () => {
 
   it("同日去重保留首条", () => {
     const days = filterPlanDays(
-      { days: [day("2026-11-20", [SOURCES[0].url]), day("2026-11-20", [SOURCES[1].url])] },
+      {
+        days: [
+          day("2026-11-20", [SOURCES[0].url]),
+          day("2026-11-20", [SOURCES[1].url]),
+        ],
+      },
       "2026-11-20",
       "2026-11-30",
       SOURCES,
@@ -118,7 +128,12 @@ describe("filterPlanDays(纯函数五规则)", () => {
 describe("requestEntryProposal 编排", () => {
   function stubEntryFound(): void {
     limitMock.mockResolvedValue([
-      { id: "entry-1", userId: "u1", entryDate: "2026-11-20", title: "学习next框架" },
+      {
+        id: "entry-1",
+        userId: "u1",
+        entryDate: "2026-11-20",
+        title: "学习next框架",
+      },
     ]);
   }
 
@@ -216,7 +231,11 @@ describe("requestEntryProposal 编排", () => {
       })
       .mockResolvedValueOnce(intentApplicable)
       .mockResolvedValueOnce(planOk);
-    runWebSearchMock.mockResolvedValueOnce({ ok: true, text: "ok", sources: SOURCES });
+    runWebSearchMock.mockResolvedValueOnce({
+      ok: true,
+      text: "ok",
+      sources: SOURCES,
+    });
 
     const proposal = await requestEntryProposal("u1", "entry-1", "到月底");
 
@@ -260,7 +279,10 @@ describe("requestEntryProposal 编排", () => {
 
     const proposal = await requestEntryProposal("u1", "entry-1", null);
 
-    expect(proposal).toEqual({ kind: "NOT_APPLICABLE", reason: "日常购物事项" });
+    expect(proposal).toEqual({
+      kind: "NOT_APPLICABLE",
+      reason: "日常购物事项",
+    });
   });
 
   it("意图判定 AI_UNAVAILABLE → throw AiUnavailableError", async () => {
@@ -269,15 +291,15 @@ describe("requestEntryProposal 编排", () => {
       error: "AI_UNAVAILABLE",
     });
 
-    await expect(requestEntryProposal("u1", "entry-1", null)).rejects.toBeInstanceOf(
-      AiUnavailableError,
-    );
+    await expect(
+      requestEntryProposal("u1", "entry-1", null),
+    ).rejects.toBeInstanceOf(AiUnavailableError);
   });
 
   it("条目不存在或不属该用户 → throw EntryNotFoundError", async () => {
     limitMock.mockResolvedValue([]);
-    await expect(requestEntryProposal("u1", "entry-x", null)).rejects.toBeInstanceOf(
-      EntryNotFoundError,
-    );
+    await expect(
+      requestEntryProposal("u1", "entry-x", null),
+    ).rejects.toBeInstanceOf(EntryNotFoundError);
   });
 });

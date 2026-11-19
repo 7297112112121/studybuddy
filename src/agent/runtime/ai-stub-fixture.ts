@@ -37,8 +37,7 @@ export function stubSearchSources(): WebSearchSource[] {
 }
 
 export type StubStructured =
-  | { unavailable: true }
-  | { unavailable: false; object: unknown };
+  { unavailable: true } | { unavailable: false; object: unknown };
 
 /** 以服务端「今天」为锚的偏移日期(E2E 断言不随真实日历漂移)。 */
 function offsetDate(offsetDays: number): string {

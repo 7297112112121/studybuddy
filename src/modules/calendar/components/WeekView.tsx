@@ -17,15 +17,9 @@ import { useTranslations } from "next-intl";
 import { cn } from "cn";
 
 import type { CalendarEntryView } from "../queries";
-import {
-  layoutDayBlocks,
-  slotPrefillStart,
-  type WeekDay,
-} from "../week";
+import { layoutDayBlocks, slotPrefillStart, type WeekDay } from "../week";
 import dynamic from "next/dynamic";
-import WeekEntryDialog, {
-  type WeekEntryDialogState,
-} from "./WeekEntryDialog";
+import WeekEntryDialog, { type WeekEntryDialogState } from "./WeekEntryDialog";
 
 // 提案浮层按需加载(模块作用域,避免每次渲染重建 dynamic 组件)
 const ProposalDialog = dynamic(() => import("./ProposalDialog"));
@@ -69,9 +63,9 @@ export default function WeekView({ days, entries }: WeekViewProps) {
   const [dialogState, setDialogState] = useState<WeekEntryDialogState | null>(
     null,
   );
-  const [proposalEntry, setProposalEntry] = useState<
-    CalendarEntryView | null
-  >(null);
+  const [proposalEntry, setProposalEntry] = useState<CalendarEntryView | null>(
+    null,
+  );
 
   const [nowMinutes, setNowMinutes] = useState<number>(clientNowMinutes);
   const hasToday = days.some((d) => d.isToday);
@@ -85,7 +79,8 @@ export default function WeekView({ days, entries }: WeekViewProps) {
   // D-10:打开即锚定当前时段(免切换可见实时线);非今天所在周锚 08:00。
   const anchorRef = useRef<number | null>(null);
   if (anchorRef.current === null) {
-    anchorRef.current = (hasToday ? clientNowMinutes() : NON_TODAY_ANCHOR_MINUTES) - 120;
+    anchorRef.current =
+      (hasToday ? clientNowMinutes() : NON_TODAY_ANCHOR_MINUTES) - 120;
   }
   useEffect(() => {
     const el = scrollRef.current;
@@ -143,10 +138,7 @@ export default function WeekView({ days, entries }: WeekViewProps) {
               {t("week.allDay")}
             </div>
             {days.map((d) => (
-              <div
-                key={d.date}
-                className="flex flex-col gap-1 px-0.5 py-1"
-              >
+              <div key={d.date} className="flex flex-col gap-1 px-0.5 py-1">
                 {(byDate.get(d.date) ?? [])
                   .filter((e) => e.startTime === null)
                   .map((e) => (
@@ -165,7 +157,10 @@ export default function WeekView({ days, entries }: WeekViewProps) {
           </div>
           {/* 空态(E-04):整周无条目 */}
           {entries.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground" role="status">
+            <p
+              className="py-8 text-center text-sm text-muted-foreground"
+              role="status"
+            >
               {t("week.emptyWeek")}
             </p>
           )}

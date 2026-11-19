@@ -88,7 +88,11 @@ export default function RegisterForm(props: RegisterFormProps) {
         </SubmitButton>
       </div>
 
-      <ViewSwitchLink target="login" prefix="已经有账号了？" onSwitch={props.onSwitchView}>
+      <ViewSwitchLink
+        target="login"
+        prefix="已经有账号了？"
+        onSwitch={props.onSwitchView}
+      >
         去登录
       </ViewSwitchLink>
     </form>

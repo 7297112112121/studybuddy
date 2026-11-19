@@ -4,10 +4,10 @@ on:
   push:
     branches: [master]
     paths:
-      - 'docs/**'
-      - 'website/**'
-      - 'package.json'
-      - 'package-lock.json'
+      - "docs/**"
+      - "website/**"
+      - "package.json"
+      - "package-lock.json"
   # 工作流自身变更（如 action 钉版升级）不改变站点产物，不再自动触发部署；
   # 需要时可手动触发
   workflow_dispatch:

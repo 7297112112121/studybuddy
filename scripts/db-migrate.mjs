@@ -20,7 +20,9 @@ if (!url) {
 
 const client = postgres(url, { max: 1 });
 try {
-  await migrate(drizzle({ client }), { migrationsFolder: "./src/db/migrations" });
+  await migrate(drizzle({ client }), {
+    migrationsFolder: "./src/db/migrations",
+  });
   console.log("数据库迁移完成");
 } finally {
   await client.end();

@@ -24,9 +24,7 @@ function hasIssue(
   field: string,
   message: string,
 ): boolean {
-  return issues.some(
-    (i) => i.path.includes(field) && i.message === message,
-  );
+  return issues.some((i) => i.path.includes(field) && i.message === message);
 }
 
 /** 合法基线入参（不带时间形态）。 */
@@ -56,9 +54,7 @@ describe("calendarEntry 表定义", () => {
   });
 
   it("可空性：userId/entryDate/title/createdAt/updatedAt notNull，startTime/endTime 可空", () => {
-    const byName = Object.fromEntries(
-      config.columns.map((c) => [c.name, c]),
-    );
+    const byName = Object.fromEntries(config.columns.map((c) => [c.name, c]));
     for (const col of ["id", "user_id", "entry_date", "title"]) {
       expect(byName[col]?.notNull, col).toBe(true);
     }
@@ -96,16 +92,14 @@ describe("TIME_HHMM_RE：HH:MM 分钟粒度", () => {
 describe("calendarEntryInputSchema：title 规则（E-01/F-01）", () => {
   it("title 留空 → calendar.error.titleRequired", () => {
     const issues = issuesOf({ ...validBase, title: "" });
-    expect(
-      hasIssue(issues, "title", "calendar.error.titleRequired"),
-    ).toBe(true);
+    expect(hasIssue(issues, "title", "calendar.error.titleRequired")).toBe(
+      true,
+    );
   });
 
   it("title 51 字 → calendar.error.titleTooLong；50 字通过", () => {
     const issues = issuesOf({ ...validBase, title: "x".repeat(51) });
-    expect(
-      hasIssue(issues, "title", "calendar.error.titleTooLong"),
-    ).toBe(true);
+    expect(hasIssue(issues, "title", "calendar.error.titleTooLong")).toBe(true);
     expect(() =>
       calendarEntryInputSchema.parse({ ...validBase, title: "x".repeat(50) }),
     ).not.toThrow();
@@ -117,9 +111,9 @@ describe("calendarEntryInputSchema：时间规则（F-02/F-03/E-03）", () => {
     "非法时间 %s → calendar.error.invalidTime",
     (t) => {
       const issues = issuesOf({ ...validBase, startTime: t });
-      expect(
-        hasIssue(issues, "startTime", "calendar.error.invalidTime"),
-      ).toBe(true);
+      expect(hasIssue(issues, "startTime", "calendar.error.invalidTime")).toBe(
+        true,
+      );
     },
   );
 
@@ -131,19 +125,25 @@ describe("calendarEntryInputSchema：时间规则（F-02/F-03/E-03）", () => {
     [null, null],
   ])("合法组合 startTime=%s, endTime=%s 通过", (s, e) => {
     expect(() =>
-      calendarEntryInputSchema.parse({ ...validBase, startTime: s, endTime: e }),
+      calendarEntryInputSchema.parse({
+        ...validBase,
+        startTime: s,
+        endTime: e,
+      }),
     ).not.toThrow();
   });
 
   it("date '2026-02-30'（不存在日历日）→ calendar.error.invalidDate", () => {
     const issues = issuesOf({ ...validBase, date: "2026-02-30" });
-    expect(hasIssue(issues, "date", "calendar.error.invalidDate")).toBe(
-      true,
-    );
+    expect(hasIssue(issues, "date", "calendar.error.invalidDate")).toBe(true);
   });
 
   it("refine#1：开始留空而结束有值 → endTime 报 calendar.error.endTimeAfterStart", () => {
-    const issues = issuesOf({ ...validBase, startTime: null, endTime: "14:00" });
+    const issues = issuesOf({
+      ...validBase,
+      startTime: null,
+      endTime: "14:00",
+    });
     expect(
       hasIssue(issues, "endTime", "calendar.error.endTimeAfterStart"),
     ).toBe(true);
@@ -152,10 +152,13 @@ describe("calendarEntryInputSchema：时间规则（F-02/F-03/E-03）", () => {
   it.each([
     ["14:00", "14:00"],
     ["14:00", "13:59"],
-  ])("refine#2：结束 %s 不晚于开始 %s → calendar.error.endTimeAfterStart", (s, e) => {
-    const issues = issuesOf({ ...validBase, startTime: s, endTime: e });
-    expect(
-      hasIssue(issues, "endTime", "calendar.error.endTimeAfterStart"),
-    ).toBe(true);
-  });
+  ])(
+    "refine#2：结束 %s 不晚于开始 %s → calendar.error.endTimeAfterStart",
+    (s, e) => {
+      const issues = issuesOf({ ...validBase, startTime: s, endTime: e });
+      expect(
+        hasIssue(issues, "endTime", "calendar.error.endTimeAfterStart"),
+      ).toBe(true);
+    },
+  );
 });

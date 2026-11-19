@@ -39,11 +39,21 @@ export default function FieldRulesPopover(props: FieldRulesPopoverProps) {
             className="flex items-center gap-2 text-xs"
           >
             {rule.passed ? (
-              <CheckIcon aria-hidden="true" className="size-3.5 shrink-0 text-aurora-aqua" />
+              <CheckIcon
+                aria-hidden="true"
+                className="size-3.5 shrink-0 text-aurora-aqua"
+              />
             ) : (
-              <XIcon aria-hidden="true" className="size-3.5 shrink-0 text-destructive" />
+              <XIcon
+                aria-hidden="true"
+                className="size-3.5 shrink-0 text-destructive"
+              />
             )}
-            <span className={rule.passed ? "text-muted-foreground" : "text-foreground"}>
+            <span
+              className={
+                rule.passed ? "text-muted-foreground" : "text-foreground"
+              }
+            >
               {rule.label}
             </span>
           </li>

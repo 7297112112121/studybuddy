@@ -6,7 +6,13 @@
  * 确认分支调 deleteEntryAction。文案以真实 calendar.json 渲染。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import DayPanel from "@/modules/calendar/components/DayPanel";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
@@ -34,7 +40,10 @@ function renderPanel(
   props: Partial<React.ComponentProps<typeof DayPanel>> = {},
 ) {
   return render(
-    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+    <NextIntlClientProvider
+      locale="zh-CN"
+      messages={{ calendar: calendarMessages }}
+    >
       <DayPanel
         date={props.date ?? "2026-11-17"}
         entries={props.entries ?? []}
@@ -64,8 +73,20 @@ describe("DayPanel（tests/calendar/components/DayPanel）", () => {
   it("③ 行文案：带时间条目渲染「14:00–15:30」+「高数复习」，无时间仅 title", () => {
     renderPanel({
       entries: [
-        { id: "e1", date: "2026-11-17", title: "高数复习", startTime: "14:00", endTime: "15:30" },
-        { id: "e2", date: "2026-11-17", title: "交英语作业", startTime: null, endTime: null },
+        {
+          id: "e1",
+          date: "2026-11-17",
+          title: "高数复习",
+          startTime: "14:00",
+          endTime: "15:30",
+        },
+        {
+          id: "e2",
+          date: "2026-11-17",
+          title: "交英语作业",
+          startTime: null,
+          endTime: null,
+        },
       ],
     });
     expect(screen.getByText("14:00–15:30")).toBeTruthy();
@@ -77,7 +98,13 @@ describe("DayPanel（tests/calendar/components/DayPanel）", () => {
   it("④ 删除确认层：层内无输入控件；「取消」后条目仍在且 deleteEntryAction 未被调", async () => {
     renderPanel({
       entries: [
-        { id: "e1", date: "2026-11-17", title: "高数复习", startTime: "14:00", endTime: "15:30" },
+        {
+          id: "e1",
+          date: "2026-11-17",
+          title: "高数复习",
+          startTime: "14:00",
+          endTime: "15:30",
+        },
       ],
     });
 
@@ -95,7 +122,13 @@ describe("DayPanel（tests/calendar/components/DayPanel）", () => {
     deleteEntryActionMock.mockResolvedValue({ ok: true });
     renderPanel({
       entries: [
-        { id: "e1", date: "2026-11-17", title: "高数复习", startTime: "14:00", endTime: "15:30" },
+        {
+          id: "e1",
+          date: "2026-11-17",
+          title: "高数复习",
+          startTime: "14:00",
+          endTime: "15:30",
+        },
       ],
     });
 
@@ -103,7 +136,9 @@ describe("DayPanel（tests/calendar/components/DayPanel）", () => {
     const dialog = await screen.findByRole("alertdialog");
     // 确认按钮与行内「删除」触发器同名，取 dialog 内的
     fireEvent.click(
-      [...dialog.querySelectorAll("button")].find((b) => b.textContent === "删除")!,
+      [...dialog.querySelectorAll("button")].find(
+        (b) => b.textContent === "删除",
+      )!,
     );
     await waitFor(() =>
       expect(deleteEntryActionMock).toHaveBeenCalledWith("e1"),
@@ -113,7 +148,13 @@ describe("DayPanel（tests/calendar/components/DayPanel）", () => {
   it("⑥ 编辑切换：新建模式先挂载后点「编辑」→ 表单预填被编辑条目（useState 初始化器须重跑）", async () => {
     renderPanel({
       entries: [
-        { id: "e1", date: "2026-11-16", title: "旧标题", startTime: "10:00", endTime: "11:00" },
+        {
+          id: "e1",
+          date: "2026-11-16",
+          title: "旧标题",
+          startTime: "10:00",
+          endTime: "11:00",
+        },
       ],
     });
     // 新建模式先在场（空表单）
@@ -123,14 +164,24 @@ describe("DayPanel（tests/calendar/components/DayPanel）", () => {
 
     const title = screen.getByLabelText("事项") as HTMLInputElement;
     await waitFor(() => expect(title.value).toBe("旧标题"));
-    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe("10:00");
-    expect((screen.getByLabelText("所属日期") as HTMLInputElement).value).toBe("2026-11-16");
+    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe(
+      "10:00",
+    );
+    expect((screen.getByLabelText("所属日期") as HTMLInputElement).value).toBe(
+      "2026-11-16",
+    );
   });
 });
 
 describe("DayPanel 资料展示与发起入口(AXY-24 T7)", () => {
   const baseEntries = [
-    { id: "e9", date: "2026-11-17", title: "学习next框架", startTime: null, endTime: null },
+    {
+      id: "e9",
+      date: "2026-11-17",
+      title: "学习next框架",
+      startTime: null,
+      endTime: null,
+    },
   ];
 
   it("资源经 props 合并渲染资料链接(target=_blank)", () => {

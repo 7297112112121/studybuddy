@@ -66,9 +66,7 @@ async function createEntry(page: Page, title: string): Promise<void> {
 }
 
 async function openProposal(page: Page): Promise<void> {
-  await dayPanel(page)
-    .getByRole("button", { name: "帮我找资料" })
-    .click();
+  await dayPanel(page).getByRole("button", { name: "帮我找资料" }).click();
   await expect(page.getByText("AI 资料提案")).toBeVisible();
   await expect(page.getByText("正在生成提案…")).toHaveCount(0);
 }
@@ -86,9 +84,7 @@ test.describe("AXY-24 条目 AI 资料提案", () => {
     const dialog = page.getByRole("dialog");
     const texts = await dialog.getByLabel("安排").all();
     expect(texts).toHaveLength(3);
-    await expect(dialog.getByLabel("安排").first()).toHaveValue(
-      /Next\.js/,
-    );
+    await expect(dialog.getByLabel("安排").first()).toHaveValue(/Next\.js/);
     await expect(dialog.getByRole("link").first()).toBeVisible();
 
     // 未确认前日程零新增:d(1) 的月格不含提案安排文字
@@ -126,9 +122,7 @@ test.describe("AXY-24 条目 AI 资料提案", () => {
 
     // 仅确认条目写入 d(1);原条目仍在今天
     const d1 = offsetDate(1);
-    await page.goto(
-      `/calendar?view=month&month=${d1.slice(0, 7)}`,
-    );
+    await page.goto(`/calendar?view=month&month=${d1.slice(0, 7)}`);
     await expect(
       page.locator(`[data-date="${d1}"]`).getByText("改后的安排"),
     ).toBeVisible();
@@ -136,7 +130,9 @@ test.describe("AXY-24 条目 AI 资料提案", () => {
     // 原条目保持不变(今天的月格与详情都有原文)
     await page.goto("/calendar?view=month");
     await page.locator(`[data-date="${fmt(new Date())}"]`).click();
-    await expect(dayPanel(page).getByText("学习next框架 11.20–11.30")).toBeVisible();
+    await expect(
+      dayPanel(page).getByText("学习next框架 11.20–11.30"),
+    ).toBeVisible();
 
     // AC-3 资料留存:点开写入日,详情行可见资料链接
     await page.goto(`/calendar?view=month&month=${d1.slice(0, 7)}`);
@@ -154,7 +150,10 @@ test.describe("AXY-24 条目 AI 资料提案", () => {
     await createEntry(page, "学习next框架 11.20–11.30");
 
     await openProposal(page);
-    await page.getByRole("dialog").getByRole("button", { name: "关闭" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "关闭" })
+      .click();
 
     await openProposal(page);
     const dialog = page.getByRole("dialog");
@@ -203,11 +202,15 @@ test.describe("AXY-24 提案:周视图入口与边界态", () => {
     await registerAndOpenMonth(page);
     const today = fmt(new Date());
     await page.locator(`[data-date="${today}"]`).click();
-    await page.locator("#calendar-entry-title").fill("学习next框架 11.20–11.30");
+    await page
+      .locator("#calendar-entry-title")
+      .fill("学习next框架 11.20–11.30");
     await page.locator("#calendar-entry-start").fill("14:00");
     await page.locator("#calendar-entry-end").fill("15:30");
     await page.getByRole("button", { name: "添加" }).click();
-    await expect(dayPanel(page).getByText("学习next框架 11.20–11.30")).toBeVisible();
+    await expect(
+      dayPanel(page).getByText("学习next框架 11.20–11.30"),
+    ).toBeVisible();
 
     await page.goto("/calendar");
     await page
@@ -257,7 +260,9 @@ test.describe("AXY-24 提案:周视图入口与边界态", () => {
     await expect(page.getByText("请输入你打算的时间,或取消")).toBeVisible();
   });
 
-  test("AC-4 演示态 4:非学习类条目明确告知不适用,日程不变", async ({ page }) => {
+  test("AC-4 演示态 4:非学习类条目明确告知不适用,日程不变", async ({
+    page,
+  }) => {
     await registerAndOpenMonth(page);
     await createEntry(page, "买牛奶");
 
@@ -265,12 +270,17 @@ test.describe("AXY-24 提案:周视图入口与边界态", () => {
     await expect(page.getByText("这条日程不需要找资料")).toBeVisible();
     await expect(page.getByRole("dialog").getByLabel("安排")).toHaveCount(0);
 
-    await page.getByRole("dialog").getByRole("button", { name: "关闭" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "关闭" })
+      .click();
     await expect(page.getByText("AI 资料提案")).toHaveCount(0);
     await expect(dayPanel(page).getByText("买牛奶")).toBeVisible();
   });
 
-  test("AC-5 演示态 4:没找到连同理由一起告知,不出凑数清单", async ({ page }) => {
+  test("AC-5 演示态 4:没找到连同理由一起告知,不出凑数清单", async ({
+    page,
+  }) => {
     await registerAndOpenMonth(page);
     await createEntry(page, "冷门主题调研 11.20-11.30");
 
@@ -281,7 +291,9 @@ test.describe("AXY-24 提案:周视图入口与边界态", () => {
     await expect(page.getByRole("dialog").getByLabel("安排")).toHaveCount(0);
   });
 
-  test("AC-6 演示态 5:服务不可用明确提示可重试;重试重新发起", async ({ page }) => {
+  test("AC-6 演示态 5:服务不可用明确提示可重试;重试重新发起", async ({
+    page,
+  }) => {
     await registerAndOpenMonth(page);
     await createEntry(page, "触发AI故障 11.20-11.30");
 
@@ -329,7 +341,9 @@ test.describe("AXY-24 提案:周视图入口与边界态", () => {
     await expect(page.getByText("AI 资料提案")).toHaveCount(0);
     await page.goto(`/calendar?view=month&month=${d1.slice(0, 7)}`);
     await expect(
-      page.locator(`[data-date="${d1}"]`).getByText("阅读 Next.js 官方文档基础篇"),
+      page
+        .locator(`[data-date="${d1}"]`)
+        .getByText("阅读 Next.js 官方文档基础篇"),
     ).toBeVisible();
   });
 });

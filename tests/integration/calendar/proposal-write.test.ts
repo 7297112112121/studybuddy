@@ -113,7 +113,12 @@ describe("confirmProposalAction 写入事务", () => {
     const entries = await db
       .select()
       .from(calendarEntry)
-      .where(and(eq(calendarEntry.userId, u1), eq(calendarEntry.entryDate, "2026-11-21")));
+      .where(
+        and(
+          eq(calendarEntry.userId, u1),
+          eq(calendarEntry.entryDate, "2026-11-21"),
+        ),
+      );
     expect(entries).toHaveLength(1);
     expect(entries[0].title).toBe("阅读官方文档");
     expect(entries[0].startTime).toBeNull();
@@ -132,7 +137,10 @@ describe("confirmProposalAction 写入事务", () => {
     const u1 = await makeUser("w-rollback");
     signIn(u1);
     const entryId = await makeEntry(u1, "学习next框架");
-    const before = await db.select().from(calendarEntry).where(eq(calendarEntry.userId, u1));
+    const before = await db
+      .select()
+      .from(calendarEntry)
+      .where(eq(calendarEntry.userId, u1));
 
     const result = await confirmProposalAction({
       entryId,
@@ -151,7 +159,10 @@ describe("confirmProposalAction 写入事务", () => {
     });
 
     expect(result).toEqual({ ok: false, error: "WRITE_FAILED" });
-    const after = await db.select().from(calendarEntry).where(eq(calendarEntry.userId, u1));
+    const after = await db
+      .select()
+      .from(calendarEntry)
+      .where(eq(calendarEntry.userId, u1));
     expect(after.length).toBe(before.length);
     const resources = await db.select().from(entryResource);
     expect(resources.filter((r) => r.title === "合法的一天")).toHaveLength(0);
@@ -199,7 +210,9 @@ describe("requestProposalAction", () => {
     const result = await requestProposalAction(entryId, "字".repeat(201));
     expect(result.ok).toBe(false);
     if (!result.ok && result.error === "INVALID_INPUT") {
-      expect(result.fieldErrors.answer).toBe("calendar.proposal.answerRequired");
+      expect(result.fieldErrors.answer).toBe(
+        "calendar.proposal.answerRequired",
+      );
     }
   });
 
@@ -236,7 +249,11 @@ describe("requestProposalAction", () => {
           ],
         },
       });
-    runWebSearchMock.mockResolvedValueOnce({ ok: true, text: "ok", sources: SOURCES });
+    runWebSearchMock.mockResolvedValueOnce({
+      ok: true,
+      text: "ok",
+      sources: SOURCES,
+    });
 
     const result = await requestProposalAction(entryId, null);
 
