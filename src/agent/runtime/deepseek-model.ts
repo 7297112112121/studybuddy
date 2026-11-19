@@ -13,7 +13,7 @@ import type { z } from "zod";
 import { aiStubEnabled, stubStructured } from "./ai-stub-fixture";
 
 /** DeepSeek 主力模型标识(ADR-0028,联网工具指定型号)。 */
-export const DEEPSEEK_MODEL_ID = "deepseek-flash";
+const DEEPSEEK_MODEL_ID = "deepseek-flash";
 
 /** 取结构化调用模型;密钥缺失即抛(服务端配置错误,fail fast)。 */
 export function chatModel(): LanguageModel {

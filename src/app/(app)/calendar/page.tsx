@@ -99,20 +99,26 @@ export default async function CalendarPage({
   const shown = parseViewParams(params, today);
   const currentWeekStart = weekStartFor(today);
 
-  const [entries, t] = await Promise.all([
+  // AXY-24 T7:条目附属资料(仅月视图当日详情展示),账号隔离由查询传导;
+  // 日期域直接取整月,与 entries 并行取,不拖迟页面载荷
+  const monthDates: string[] = [];
+  if (shown.view === "month") {
+    const dayCount = new Date(shown.year, shown.month, 0).getDate();
+    for (let d = 1; d <= dayCount; d++) {
+      monthDates.push(
+        `${shown.year}-${String(shown.month).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
+      );
+    }
+  }
+  const [entries, resources, t] = await Promise.all([
     shown.view === "week"
       ? listWeekEntries(session.user.id, shown.weekStart)
       : listMonthEntries(session.user.id, shown.year, shown.month),
+    shown.view === "month"
+      ? listEntryResources(session.user.id, monthDates)
+      : Promise.resolve(undefined),
     getTranslations("calendar"),
   ]);
-  // AXY-24 T7:条目附属资料(仅月视图当日详情展示),账号隔离由查询传导
-  const resources =
-    shown.view === "month"
-      ? await listEntryResources(
-          session.user.id,
-          [...new Set(entries.map((e) => e.date))],
-        )
-      : undefined;
 
   // 周/月切换(路由行为 #3):月默认当前月并携带周锚点;周回到锚点所在周。
   const carriedWeek =

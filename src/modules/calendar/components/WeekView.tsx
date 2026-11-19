@@ -22,10 +22,13 @@ import {
   slotPrefillStart,
   type WeekDay,
 } from "../week";
-import ProposalDialog from "./ProposalDialog";
+import dynamic from "next/dynamic";
 import WeekEntryDialog, {
   type WeekEntryDialogState,
 } from "./WeekEntryDialog";
+
+// 提案浮层按需加载(模块作用域,避免每次渲染重建 dynamic 组件)
+const ProposalDialog = dynamic(() => import("./ProposalDialog"));
 
 const PX_PER_MINUTE = 2;
 const SLOT_MINUTES = 30;
@@ -69,6 +72,7 @@ export default function WeekView({ days, entries }: WeekViewProps) {
   const [proposalEntry, setProposalEntry] = useState<
     CalendarEntryView | null
   >(null);
+
   const [nowMinutes, setNowMinutes] = useState<number>(clientNowMinutes);
   const hasToday = days.some((d) => d.isToday);
 

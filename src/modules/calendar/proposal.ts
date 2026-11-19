@@ -34,7 +34,7 @@ import {
 } from "@/agent/runtime/deepseek-web-search";
 import { calendarEntry, calendarEntryInputSchema, entryResource } from "./schema";
 
-export type ProposalResource = { title: string; url: string };
+type ProposalResource = { title: string; url: string };
 
 export type ProposalDay = {
   date: string; // "YYYY-MM-DD",∈ [rangeStart, rangeEnd]

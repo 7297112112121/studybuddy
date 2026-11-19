@@ -12,9 +12,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import type { CalendarEntryView, EntryResourceView } from "../queries";
+import dynamic from "next/dynamic";
 import EntryForm from "./EntryForm";
 import EntryRow from "./EntryRow";
-import ProposalDialog from "./ProposalDialog";
+
+// 提案浮层按需加载:主路由 chunk 不含浮层实现(Q4 首屏不劣化),
+// 首次发起时才拉取
+const ProposalDialog = dynamic(() => import("./ProposalDialog"));
 
 type DayPanelProps = {
   date: string;

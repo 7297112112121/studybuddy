@@ -22,7 +22,7 @@ export function aiStubEnabled(): boolean {
   return process.env.DEEPSEEK_STUB_FIXTURE === "1";
 }
 
-export const STUB_SOURCE_URLS = [
+const STUB_SOURCE_URLS = [
   "https://nextjs.org/docs",
   "https://nextjs.org/learn",
   "https://example.com/next-basics",

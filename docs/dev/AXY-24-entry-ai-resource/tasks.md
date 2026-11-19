@@ -239,3 +239,7 @@
 裁决: T1∥(T2→T3)两并行链改内联串行执行 — 同工作区双代理并发跑 `npm install` 与 git commit 存在 index.lock / node_modules 竞争,隔离收益(墙钟)小于事故风险 — 代价:执行墙钟变求和。
 裁决: 新增第三 chain `resource-search`(T4 范围内)— design 只定义了两 chain,检索调用的 messages 构造无承载,prompts 三件套按「每任务一文件」补齐 — 代价:多一份提示词文件与 2 个测试用例。
 裁决: T3 `generateObject` 泛型入参实测改为类型面验证(ai@7.0.177 + @ai-sdk/deepseek@3.0.88 安装成功、generateObject 契约编译通过) — 无 DEEPSEEK_API_KEY 无法真实出网实测,真实调用面留给测试提质阶段 — 代价:provider 运行时兼容性延后确认。
+裁决: T8「stub 泄漏面」E2E 独立用例取消,由 T3 单测(env 未设 stub 不可达)+ webServer env 注入承载 — 双环境双构建跑两套 E2E 成本过高 — 代价:泄漏面由单测与配置注释守护,E2E 不重复覆盖。
+裁决: T8 stub 语料由固定日期改为服务端「今天」偏移动态生成,E2E 断言用同款 offset — 固定日期的断言随真实日历漂移(跨月即红) — 代价:stub 与 E2E 各自实现 offset 计算需保持同构。
+裁决: T9 stub 意图路由收紧——日期样 token 只认点号形态、答复「随便」判 NEEDS_RANGE — 横杠今日行被误命中致全部条目判 APPLICABLE;「随便」需表达不可理解分支 — 代价:stub 路由依赖测试条目关键词约定(已写进 fixture 头注)。
+裁决: T10 收口期发现 AXY-22 calendar.spec R3 在本分支确定性级别波动(~1/3→处理后 ~1/6),master 基线 3/3 全绿 — 签名为 Radix 确认层自发性 onOpenChange(false) + action 按钮 detach 翻转;已做两项缓解:ProposalDialog 改 next/dynamic 按需加载(主路由 chunk 恢复基线体量,兼兑现 Q4)、R3 第二次开层补 toBeVisible 等待 — 代价:未定位到根因(排除 SSR 水合竞态/连续重渲染源/串行查询拖迟),残余波动由 CI retries=2 兜底;建议 spec-review 后单独立测试稳定性任务跟进。
