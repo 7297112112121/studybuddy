@@ -1,8 +1,16 @@
 /**
- * calendar 读路径（AXY-22 design「契约」节）：RSC page 直接调用。
+ * 文件作用:日历读路径的数据库查询,RSC 页面直接调用。
  *
- * 仅本人——R6/R7 的数据半边：查询恒带 userId 条件，不收客户端未过滤集。
- * DB 异常向上抛（页面渲染失败由 Next 错误边界兜底），本层不做归一。
+ * 成员:
+ * 1. 月度条目查询(listMonthEntries):按账号读一个月的条目视图;
+ * 2. 周度条目查询(listWeekEntries):按账号读一周的条目视图;
+ * 3. 条目资料查询(listEntryResources):按日期读条目附属资料并按条目分组;
+ * 4. 条目视图(CalendarEntryView):条目列表单行结构;
+ * 5. 资料视图(EntryResourceView):附属资料的标题与网址结构。
+ *
+ * 其他:
+ * 1. 仅本人可见:查询恒带 userId 条件,不收客户端未过滤集合;
+ * 2. 数据库异常向上抛,页面渲染失败由 Next 错误边界兜底,本层不做归一。
  */
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 
@@ -12,59 +20,7 @@ import { formatHhmm, monthRange } from "./month";
 import { calendarEntry, entryResource } from "./schema";
 import { weekRange } from "./week";
 
-export type CalendarEntryView = {
-  id: string;
-  date: string; // entryDate，"YYYY-MM-DD"
-  title: string;
-  startTime: string | null; // "HH:MM" 或 null
-  endTime: string | null; // "HH:MM" 或 null
-};
-
-/** 同日排序：不带时间在前、带时间按 startTime 升序（演示态 4「按开始时间先后并列」）。 */
-function compareEntries(a: CalendarEntryView, b: CalendarEntryView): number {
-  if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-  if (a.startTime === null && b.startTime === null) return 0;
-  if (a.startTime === null) return -1;
-  if (b.startTime === null) return 1;
-  return a.startTime < b.startTime ? -1 : a.startTime > b.startTime ? 1 : 0;
-}
-
-/**
- * 闭区间读条目主体（月/周共用）：恒带 userId 条件（R7 数据半边）、
- * formatHhmm 归一时间列、compareEntries 排序。月/周入口只负责区间推导。
- */
-async function listEntriesInRange(
-  userId: string,
-  start: string,
-  end: string,
-): Promise<CalendarEntryView[]> {
-  const rows = await db
-    .select({
-      id: calendarEntry.id,
-      date: calendarEntry.entryDate,
-      title: calendarEntry.title,
-      startTime: calendarEntry.startTime,
-      endTime: calendarEntry.endTime,
-    })
-    .from(calendarEntry)
-    .where(
-      and(
-        eq(calendarEntry.userId, userId),
-        gte(calendarEntry.entryDate, start),
-        lte(calendarEntry.entryDate, end),
-      ),
-    );
-
-  return rows
-    .map((r) => ({
-      ...r,
-      startTime: r.startTime === null ? null : formatHhmm(r.startTime),
-      endTime: r.endTime === null ? null : formatHhmm(r.endTime),
-    }))
-    .sort(compareEntries);
-}
-
-/** 按账号 + 月区间读条目；排序 entryDate 升序、同日按 compareEntries。 */
+/** 作用:按账号与月份区间读条目,排序为日期升序、同日按开始时间先后。 */
 export async function listMonthEntries(
   userId: string,
   year: number,
@@ -74,7 +30,7 @@ export async function listMonthEntries(
   return listEntriesInRange(userId, start, end);
 }
 
-/** 按账号 + 周区间读条目(AXY-23);排序与 listMonthEntries 一致;恒带 userId 条件。 */
+/** 作用:按账号与周区间读条目,排序与月度条目查询一致。 */
 export async function listWeekEntries(
   userId: string,
   weekStart: string,
@@ -83,12 +39,12 @@ export async function listWeekEntries(
   return listEntriesInRange(userId, start, end);
 }
 
-/** 条目附属资料视图(AXY-24):仅标题与 URL。 */
-export type EntryResourceView = { title: string; url: string };
-
 /**
- * 按条目 id 分组读本人条目资料(AXY-24 T7):经条目 join 传导账号隔离
- * (资料表无 user_id,归属由条目 user_id 决定,R11);dates 为空直接短路。
+ * 作用:按条目 id 分组读本人条目的附属资料。
+ * 流程:
+ * 1. 日期列表为空时直接返回空映射;
+ * 2. 资料表经条目表连接传导账号隔离(资料表无 userId,归属由条目决定);
+ * 3. 结果按条目 id 分组返回。
  */
 export async function listEntryResources(
   userId: string,
@@ -122,4 +78,58 @@ export async function listEntryResources(
     }
   }
   return grouped;
+}
+
+export type CalendarEntryView = {
+  id: string;
+  date: string; // 即数据库列 entryDate,"YYYY-MM-DD"
+  title: string;
+  startTime: string | null; // "HH:MM" 或 null
+  endTime: string | null; // "HH:MM" 或 null
+};
+
+export type EntryResourceView = { title: string; url: string };
+
+/**
+ * 作用:按账号读闭区间内的条目主体,供月度与周度查询共用;
+ * 查询恒带 userId 条件,时间列归一为 "HH:MM" 并按同日规则排序。
+ */
+async function listEntriesInRange(
+  userId: string,
+  start: string,
+  end: string,
+): Promise<CalendarEntryView[]> {
+  const rows = await db
+    .select({
+      id: calendarEntry.id,
+      date: calendarEntry.entryDate,
+      title: calendarEntry.title,
+      startTime: calendarEntry.startTime,
+      endTime: calendarEntry.endTime,
+    })
+    .from(calendarEntry)
+    .where(
+      and(
+        eq(calendarEntry.userId, userId),
+        gte(calendarEntry.entryDate, start),
+        lte(calendarEntry.entryDate, end),
+      ),
+    );
+
+  return rows
+    .map((row) => ({
+      ...row,
+      startTime: row.startTime === null ? null : formatHhmm(row.startTime),
+      endTime: row.endTime === null ? null : formatHhmm(row.endTime),
+    }))
+    .sort(compareEntries);
+}
+
+/** 作用:同日排序比较——不带时间的条目在前,带时间按开始时间升序。 */
+function compareEntries(a: CalendarEntryView, b: CalendarEntryView): number {
+  if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+  if (a.startTime === null && b.startTime === null) return 0;
+  if (a.startTime === null) return -1;
+  if (b.startTime === null) return 1;
+  return a.startTime < b.startTime ? -1 : a.startTime > b.startTime ? 1 : 0;
 }

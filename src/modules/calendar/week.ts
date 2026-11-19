@@ -1,9 +1,22 @@
 /**
- * calendar/week.ts——周视图数学纯函数(AXY-23 design「契约」节)。
+ * 文件作用:日历周视图的日期与布局纯函数。
  *
- * 与 month.ts 同源约定:零 IO、零日期库,日期运算全部基于 UTC 毫秒,
- * 避免本地时区(DST)扰动;日期语义是字面日期 "YYYY-MM-DD"
- * (单时区假设,AXY-22 design 开放问题 #2 沿承)。
+ * 成员:
+ * 1. 周一锚点(weekStartFor):给出日期所在周的周一;
+ * 2. 周内单日列表构建(buildWeekDays):给出周内 7 天列表;
+ * 3. 周区间(weekRange):给出该周的日期闭区间;
+ * 4. 周加减(addWeeks):周一锚点整周进退;
+ * 5. 周一校验(isValidWeekStart):校验入参确为周一;
+ * 6. 分钟换算(timeToMinutes):re-export,实现收拢在 @/lib/date;
+ * 7. 槽起点换算(slotPrefillStart):点击位置换算为 30 分钟槽起点;
+ * 8. 日块布局(layoutDayBlocks):单日条目布局为周网格块;
+ * 9. 星期键(WeekdayKey):星期标识联合类型;
+ * 10. 周内单日(WeekDay):周视图单日结构;
+ * 11. 周块(WeekBlock):周网格布局块结构。
+ *
+ * 其他:
+ * 1. 零 IO、零日期库,日期运算全部基于 UTC 毫秒,避免本地时区(夏令时)扰动;
+ * 2. 日期语义是字面日期 "YYYY-MM-DD"(单时区假设)。
  */
 import {
   formatUtcDate,
@@ -14,37 +27,19 @@ import {
 
 import type { CalendarEntryView } from "./queries";
 
-export type WeekdayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-
-export type WeekDay = {
-  date: string;
-  weekdayKey: WeekdayKey;
-  isToday: boolean;
-};
-
-const WEEKDAY_KEYS: WeekdayKey[] = [
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-  "sun",
-];
-
-/** date("YYYY-MM-DD") → 该日所在周的周一("YYYY-MM-DD",周一恒等)。 */
+/** 作用:给出日期所在周的周一;date 不是合法 "YYYY-MM-DD" 时,抛 RangeError。 */
 export function weekStartFor(date: string): string {
   if (!isValidDateString(date)) {
     throw new RangeError(`invalid date: ${date}`);
   }
-  const [y, m, d] = date.split("-").map(Number);
-  // getUTCDay:周日=0;换算为周一首日的偏移天数(周一=0 .. 周日=6)。
-  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-  const offset = (dow + 6) % 7;
-  return formatUtcDate(Date.UTC(y, m - 1, d) - offset * MS_PER_DAY);
+  const [year, month, day] = date.split("-").map(Number);
+  // 该日星期(周日为 0),换算为周一首日的偏移天数(周一为 0)
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  const offset = (weekday + 6) % 7;
+  return formatUtcDate(Date.UTC(year, month - 1, day) - offset * MS_PER_DAY);
 }
 
-/** 周一锚点 → 周内 7 天(列序周一首,weekdayKey 依列序;isToday 对照 today)。 */
+/** 作用:由周一锚点给出周内 7 天,列序周一首,并逐日标记是否今天。 */
 export function buildWeekDays(weekStart: string, today: string): WeekDay[] {
   const startMs = Date.parse(`${weekStart}T00:00:00Z`);
   return WEEKDAY_KEYS.map((weekdayKey, i) => {
@@ -53,7 +48,7 @@ export function buildWeekDays(weekStart: string, today: string): WeekDay[] {
   });
 }
 
-/** 周一锚点 → 该周闭区间(周一..周日,"YYYY-MM-DD"),listWeekEntries 入参来源。 */
+/** 作用:由周一锚点给出该周闭区间(周一至周日),作为周度条目查询的入参来源。 */
 export function weekRange(weekStart: string): { start: string; end: string } {
   const startMs = Date.parse(`${weekStart}T00:00:00Z`);
   return {
@@ -62,61 +57,46 @@ export function weekRange(weekStart: string): { start: string; end: string } {
   };
 }
 
-/** 周一锚点 ± delta 周(跨月/跨年由 UTC 毫秒运算兜住)。 */
+/** 作用:周一锚点加减 delta 周,跨月跨年由 UTC 毫秒运算兜住。 */
 export function addWeeks(weekStart: string, delta: number): string {
   const startMs = Date.parse(`${weekStart}T00:00:00Z`);
   return formatUtcDate(startMs + delta * 7 * MS_PER_DAY);
 }
 
-/** 严格校验:合法 "YYYY-MM-DD" 且确为周一(?week= wire 格式约束)。 */
+/** 作用:严格校验入参为合法 "YYYY-MM-DD" 且确为周一(地址栏 week 参数的格式约束)。 */
 export function isValidWeekStart(value: string): value is string {
   if (!isValidDateString(value)) return false;
   return weekStartFor(value) === value;
 }
 
-/** "HH:MM" → 当日分钟数 0–1439：实现收拢在 @/lib/date，re-export 保住既有导出面。 */
+/** "HH:MM" 换算为当日分钟数;实现收拢在 @/lib/date,re-export 保住既有导出面。 */
 export { timeToMinutes };
 
-/** 分钟数 → "HH:MM"(零填充)。 */
-function minutesToHhmm(minutes: number): string {
-  const h = String(Math.floor(minutes / 60)).padStart(2, "0");
-  const m = String(minutes % 60).padStart(2, "0");
-  return `${h}:${m}`;
-}
-
-/** 点击位置分钟数 → 所在 30 分钟槽起点 "HH:00"/"HH:30"(向下取整,F-05)。 */
+/** 作用:点击位置分钟数换算为所在 30 分钟槽的起点("HH:00" 或 "HH:30",向下取整)。 */
 export function slotPrefillStart(minutes: number): string {
   return minutesToHhmm(Math.floor(minutes / 30) * 30);
 }
 
-export type WeekBlock = {
-  entryId: string;
-  /** 列内横向偏移与宽度(百分比;同一重叠簇内并列均分,proposal 边界 #2)。 */
-  leftPercent: number;
-  widthPercent: number;
-  /** 距 00:00 分钟偏移与时长(时间点条目 durationMinutes 固定 30,D-12)。 */
-  startMinutes: number;
-  durationMinutes: number;
-};
-
 /**
- * 单日带时间条目 → 网格布局块。
- * 重叠簇 = 区间图连通分量(扫描线:按开始时间排序,开始 ≥ 当前簇最大结束
- * 即开新簇);簇内按贪心车道(前块结束 ≤ 本块开始即复用车道)并列,
- * 宽度 = 100 / 簇大小,leftPercent = 车道序 × 宽度。入参顺序无关:
- * 先按 (startMinutes, entryId) 确定性排序再计算。
+ * 作用:把单日带时间条目布局成周网格块,重叠条目在列内并列均分。
+ * 流程:
+ * 1. 过滤出带开始时间的条目,换算为分钟区间(无结束时间按 30 分钟计);
+ * 2. 按(开始分钟,条目 id)确定性排序,使结果与入参顺序无关;
+ * 3. 扫描线切出重叠簇:条目开始时间不早于当前簇最大结束时间即开新簇;
+ * 4. 簇内按贪心车道并列:前一块结束不晚于本块开始即复用车道;
+ * 5. 块宽度为 100 除以簇大小,横向偏移为车道序乘以宽度。
  */
 export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
   type Item = { id: string; start: number; end: number };
   const items: Item[] = dayEntries
-    .filter((e) => e.startTime !== null)
-    .map((e) => ({
-      id: e.id,
-      start: timeToMinutes(e.startTime as string),
+    .filter((entry) => entry.startTime !== null)
+    .map((entry) => ({
+      id: entry.id,
+      start: timeToMinutes(entry.startTime as string),
       end:
-        e.endTime === null
-          ? timeToMinutes(e.startTime as string) + 30 // D-12:时间点条目 30 分钟
-          : timeToMinutes(e.endTime),
+        entry.endTime === null
+          ? timeToMinutes(entry.startTime as string) + 30 // 无结束时间按 30 分钟计
+          : timeToMinutes(entry.endTime),
     }))
     .sort((a, b) => a.start - b.start || a.id.localeCompare(b.id));
 
@@ -155,4 +135,39 @@ export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
   flush();
 
   return blocks;
+}
+
+export type WeekdayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+export type WeekDay = {
+  date: string;
+  weekdayKey: WeekdayKey;
+  isToday: boolean;
+};
+
+export type WeekBlock = {
+  entryId: string;
+  /** 距列左缘的横向偏移与宽度(百分比,同一重叠簇内并列均分)。 */
+  leftPercent: number;
+  widthPercent: number;
+  /** 距 00:00 的分钟偏移与时长(无结束时间的条目按 30 分钟计)。 */
+  startMinutes: number;
+  durationMinutes: number;
+};
+
+const WEEKDAY_KEYS: WeekdayKey[] = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun",
+];
+
+/** 作用:分钟数换算为 "HH:MM"(零填充)。 */
+function minutesToHhmm(minutes: number): string {
+  const hour = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const minute = String(minutes % 60).padStart(2, "0");
+  return `${hour}:${minute}`;
 }
