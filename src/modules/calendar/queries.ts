@@ -32,13 +32,15 @@ function compareEntries(
   return a.startTime < b.startTime ? -1 : a.startTime > b.startTime ? 1 : 0;
 }
 
-/** 按账号 + 月区间读条目；排序 entryDate 升序、同日按 compareEntries。 */
-export async function listMonthEntries(
+/**
+ * 闭区间读条目主体（月/周共用）：恒带 userId 条件（R7 数据半边）、
+ * formatHhmm 归一时间列、compareEntries 排序。月/周入口只负责区间推导。
+ */
+async function listEntriesInRange(
   userId: string,
-  year: number,
-  month: number,
+  start: string,
+  end: string,
 ): Promise<CalendarEntryView[]> {
-  const { start, end } = monthRange(year, month);
   const rows = await db
     .select({
       id: calendarEntry.id,
@@ -65,36 +67,23 @@ export async function listMonthEntries(
     .sort(compareEntries);
 }
 
+/** 按账号 + 月区间读条目；排序 entryDate 升序、同日按 compareEntries。 */
+export async function listMonthEntries(
+  userId: string,
+  year: number,
+  month: number,
+): Promise<CalendarEntryView[]> {
+  const { start, end } = monthRange(year, month);
+  return listEntriesInRange(userId, start, end);
+}
+
 /** 按账号 + 周区间读条目(AXY-23);排序与 listMonthEntries 一致;恒带 userId 条件。 */
 export async function listWeekEntries(
   userId: string,
   weekStart: string,
 ): Promise<CalendarEntryView[]> {
   const { start, end } = weekRange(weekStart);
-  const rows = await db
-    .select({
-      id: calendarEntry.id,
-      date: calendarEntry.entryDate,
-      title: calendarEntry.title,
-      startTime: calendarEntry.startTime,
-      endTime: calendarEntry.endTime,
-    })
-    .from(calendarEntry)
-    .where(
-      and(
-        eq(calendarEntry.userId, userId),
-        gte(calendarEntry.entryDate, start),
-        lte(calendarEntry.entryDate, end),
-      ),
-    );
-
-  return rows
-    .map((r) => ({
-      ...r,
-      startTime: r.startTime === null ? null : formatHhmm(r.startTime),
-      endTime: r.endTime === null ? null : formatHhmm(r.endTime),
-    }))
-    .sort(compareEntries);
+  return listEntriesInRange(userId, start, end);
 }
 
 /** 条目附属资料视图(AXY-24):仅标题与 URL。 */
