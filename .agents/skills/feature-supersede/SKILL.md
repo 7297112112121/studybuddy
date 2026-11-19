@@ -7,9 +7,9 @@ description: 当一个已走完完整开发流程并合并主分支的特性需�
 
 ## 概述与定位
 
-**横切技能**：不在 product-design → proposal-writing → architecture-design → plan-writing → spec-review 的单向流内，任意阶段可触发。触发条件：**特性已走完完整开发流程并合并主分支**，而其用户故事需要推翻重写、被新特性取代、或整个废弃。未合并的特性不适用——直接修订工件并重走批准门即可，不需要本技能。
+**横切技能**：不在 product_design → product_proposal_writing → dev_architecture_design → dev_plan_writing → dev_implementation → dev_spec_review（可选终审）的单向流内，任意阶段可触发。触发条件：**特性已走完完整开发流程并合并主分支**，而其用户故事需要推翻重写、被新特性取代、或整个废弃。未合并的特性不适用——直接修订工件并重走批准门即可，不需要本技能。
 
-本技能只定义「变更管理」这一层：定级、冻结、重新批准、代码处置、墓碑留痕、变更记录。四技能的既有门禁一律**引用而非复述**：故事与 proposal 的批准门见 product-design / proposal-writing，契约纪律见 architecture-design，TDD 门禁见 plan-writing，证据门禁见 spec-review——需要时指向对应技能，不复制其规则细节。
+本技能只定义「变更管理」这一层：定级、冻结、重新批准、代码处置、墓碑留痕、变更记录。各技能的既有门禁一律**引用而非复述**：故事与 proposal 的批准门见 product_design / product_proposal_writing，契约纪律见 dev_architecture_design，TDD 门禁见 dev_plan_writing，执行纪律见 implementation，证据门禁见 dev_spec_review——需要时指向对应技能，不复制其规则细节。
 
 **开始时声明**：「我正在使用 feature-supersede 技能处理 <特性名> 的推翻/取代/废弃。」
 
@@ -24,9 +24,9 @@ description: 当一个已走完完整开发流程并合并主分支的特性需�
 
 - **引用不复述**：批准门、契约纪律、TDD 门禁、证据门禁只引用（见概述）；本技能的产出（新 story、新或修订 proposal、重走的 design / tasks / review）仍走各自所属技能与门禁。
 - **A 级轻量路径**：A 级表述变化只做阶段 1、3、6 的轻量版（更新 story + proposal Changelog + 变更记录），不强制重走 design / plan / review；**但仍须重新批准**——批准覆盖文档当前内容的纪律不因轻量而豁免。
-- **与 spec-review 的关系**：被推翻 / 废弃特性的旧 review 加墓碑后**不参与**新实现的终审判定，新 review 只审新实现；变更记录（`change-record.md`）是 spec-review 判断「哪些代码是活的」的依据。
+- **与 dev_spec_review 的关系**：被推翻 / 废弃特性的旧 review 加墓碑后**不参与**新实现的终审判定，新 review 只审新实现；变更记录（`change-record.md`）是 dev_spec_review 判断「哪些代码是活的」的依据。
 - **下游特性**：本技能只负责评估与通知下游，不替下游做变更；下游各自走本技能或自己的修订流程。
-- **分支衔接**：横切两侧分支——阶段 1–4（定级、冻结、story / proposal 重写与重新批准）与 `change-record.md` 落盘、product 侧墓碑走 `docs/<slug>` 分支并 PR；阶段 5 代码处置与阶段 6 重走下游客、dev 侧（design / tasks / review）墓碑走 `feat/AXY-<N>-<slug>` 分支并 PR。细则见 [docs/研发流程.md](../../docs/研发流程.md)「分支生命周期」。
+- **分支衔接**：横切两侧分支——阶段 1–4（定级、冻结、story / proposal 重写与重新批准）与 `change-record.md` 落盘、product 侧墓碑走 `docs/<slug>` 分支并 PR；阶段 5 代码处置与阶段 6 重走下游客、dev 侧（design / tasks / review）墓碑走 `feat/AXY-<N>-<slug>` 分支并 PR。细则见 [README](../README.md)「总流程与分支生命周期」。
 
 ## 流程（六阶段）
 
@@ -47,14 +47,14 @@ description: 当一个已走完完整开发流程并合并主分支的特性需�
 ### 3. story 重写并重新批准
 
 - **输入**：旧 story + 定级结论。
-- **动作**：C / D 级——旧 story 加墓碑全文保留，新版本按 product-design 流程重新澄清落盘（C 级另起新编号，编号不复用），重走 DOR 与批准门；A / B 级——story 按新语义更新并在状态行注记修订依据，重新批准。
+- **动作**：C / D 级——旧 story 加墓碑全文保留，新版本按 product_design 流程重新澄清落盘（C 级另起新编号，编号不复用），重走 DOR 与批准门；A / B 级——story 按新语义更新并在状态行注记修订依据，重新批准。
 - **产出**：新 story + 批准记录。
 - **判据**：新版批准日期晚于本变更记录；C / D 级旧版正文未改写（墓碑只动头部状态区）。
 
 ### 4. proposal 处置（三选一，必须显式）
 
 - **输入**：已批准的新 story + 旧 proposal。
-- **动作**：**修订**（B 级：升版本，废止条目保留编号进 Changelog，如实写明「语义已变」或「语义未变」）/ **新建**（C 级：旧 proposal 标「已被 AXY-<M> 取代」，新编号不复用）/ **废弃**（D 级：标「已废弃」并解除下游），按 proposal-writing 流程重走批准门。
+- **动作**：**修订**（B 级：升版本，废止条目保留编号进 Changelog，如实写明「语义已变」或「语义未变」）/ **新建**（C 级：旧 proposal 标「已被 AXY-<M> 取代」，新编号不复用）/ **废弃**（D 级：标「已废弃」并解除下游），按 product_proposal_writing 流程重走批准门。
 - **产出**：proposal 处置决策 + 变更后 proposal。
 - **判据**：处置与定级一致；推翻 / 取代场景语义默认「已变」，写「未变」须附逐条 R 核对依据。
 
@@ -112,7 +112,7 @@ description: 当一个已走完完整开发流程并合并主分支的特性需�
 
 ## 变更记录字段
 
-变更记录（`change-record.md`）是四技能之外的**第五份工件**，落 `docs/product/AXY-<N>-<slug>/`，是未来 spec-review 判断「哪些代码是活的」的依据。必填字段：变更编号（CR-<YYYYMMDD>-<N>）与日期、定级与判据、下游影响、story 变更、proposal 处置（三选一 + 编号策略 + 语义是否变化 + 废止条目编号清单）、代码处置（四选一 + Git 引用 + 旧测试处理 + 迁移处理）、墓碑清单、重走下游客、证据。结构与各节内联合格判据的单源在 [templates/change-record.md](templates/change-record.md)，此处不重复。
+变更记录（`change-record.md`）是四技能之外的**第五份工件**，落 `docs/product/AXY-<N>-<slug>/`，是未来 dev_spec_review 判断「哪些代码是活的」的依据。必填字段：变更编号（CR-<YYYYMMDD>-<N>）与日期、定级与判据、下游影响、story 变更、proposal 处置（三选一 + 编号策略 + 语义是否变化 + 废止条目编号清单）、代码处置（四选一 + Git 引用 + 旧测试处理 + 迁移处理）、墓碑清单、重走下游客、证据。结构与各节内联合格判据的单源在 [templates/change-record.md](templates/change-record.md)，此处不重复。
 
 ## 合理化对照表
 
