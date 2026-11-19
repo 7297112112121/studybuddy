@@ -105,13 +105,14 @@ describe("WeekView(AXY-23 Task 8)", () => {
 
   it("实时线分段:今天列段亮红加粗,其余列段淡红暗淡", () => {
     renderView([], days); // today 2026-11-18 → 第 3 列(index 2)
+    // 底衬线由容器自身承担:h-px 保证实际包围盒非零(E2E toBeVisible 依赖)
+    const line = screen.getByTestId("now-line");
+    expect(line.classList.contains("h-px")).toBe(true);
+    expect(line.classList.contains("bg-destructive/40")).toBe(true);
     const bright = screen.getByTestId("now-line-today");
     expect(bright.classList.contains("bg-destructive")).toBe(true);
     expect(Number.parseFloat(bright.style.left)).toBeCloseTo((2 * 100) / 7, 2);
     expect(Number.parseFloat(bright.style.width)).toBeCloseTo(100 / 7, 2);
-    expect(
-      screen.getByTestId("now-line-base").classList.contains("bg-destructive/40"),
-    ).toBe(true);
     // 高亮段左端实心圆点锚点(如图样式)
     const dot = screen.getByTestId("now-line-dot");
     expect(dot.classList.contains("bg-destructive")).toBe(true);

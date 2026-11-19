@@ -261,18 +261,15 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                 );
               })}
               {/* 实时线(D-05/F-06):仅今天所在周渲染。分段样式:
-                  今天列段粗·亮红,其余列段淡红暗淡(1px 底衬) */}
+                  容器自身即 1px 淡红底衬(h-px 保证非零包围盒,toBeVisible 依赖),
+                  今天列段粗·亮红叠于其上 */}
               {hasToday && (
                 <div
                   data-testid="now-line"
                   aria-label={t("week.nowLine", { time: hhmm(nowMinutes) })}
-                  className="pointer-events-none absolute right-0 z-20"
+                  className="pointer-events-none absolute right-0 z-20 h-px bg-destructive/40"
                   style={{ left: "3rem", top: nowMinutes * PX_PER_MINUTE }}
                 >
-                  <div
-                    data-testid="now-line-base"
-                    className="absolute inset-x-0 top-0 h-px -translate-y-1/2 bg-destructive/40"
-                  />
                   {/* 左端时间轴内的当前实时时间;整点时由高亮刻度承担,不重复显示 */}
                   {nowMinutes % 60 !== 0 && (
                     <span
