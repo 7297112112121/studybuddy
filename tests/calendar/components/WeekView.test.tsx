@@ -87,6 +87,17 @@ describe("WeekView(AXY-23 Task 8)", () => {
     expect(screen.queryByTestId("now-line")).toBeNull();
   });
 
+  it("实时线分段:今天列段亮红加粗,其余列段淡红暗淡", () => {
+    renderView([], days); // today 2026-11-18 → 第 3 列(index 2)
+    const bright = screen.getByTestId("now-line-today");
+    expect(bright.classList.contains("bg-destructive")).toBe(true);
+    expect(Number.parseFloat(bright.style.left)).toBeCloseTo((2 * 100) / 7, 2);
+    expect(Number.parseFloat(bright.style.width)).toBeCloseTo(100 / 7, 2);
+    expect(
+      screen.getByTestId("now-line-base").classList.contains("bg-destructive/40"),
+    ).toBe(true);
+  });
+
   it("实时线到达整点 → 时间轴该小时标签高亮(destructive);非整点不高亮", () => {
     vi.useFakeTimers();
     try {
