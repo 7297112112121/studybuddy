@@ -24,6 +24,7 @@
 | 开发落地 | `plan-writing/` | 架构设计 → 实现计划 | 已批准 design → tasks（微任务 + TDD） |
 | 开发落地 | `spec-review/` | 实现完成后的规范终审 | proposal + 实现产物 → review 报告 |
 | 横切 / 变更管理 | `feature-supersede/` | 已合并主分支特性的推翻 / 取代 / 废弃 | 旧全部工件 + 现有代码 → 定级 + 重新批准 + 代码处置（revert / tag）+ 墓碑 + 变更记录（第五份工件） |
+| 横切 / 工程操作（轻量） | `branch-wrapup/` | 工作分支合并收尾 | 已完工工作分支 → PR（含提交错误处置）→ squash merge → 清理本地/远程分支 → 切回 master 拉新 |
 | 测试提质 | （暂缺） | 测试提质阶段的质量加固 | 暂不编写 |
 
 ### 外部技能（skills-lock.json 管理）
