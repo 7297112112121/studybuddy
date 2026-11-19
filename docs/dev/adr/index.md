@@ -73,6 +73,7 @@ YYYY-MM-DD
 | [0023](error-reporting-glitchtip) | 2026-11-12 | 错误上报：GlitchTip（Sentry SDK 兼容自托管） | 已接受 |
 | [0024](telemetry-opentelemetry) | 2026-11-12 | 采集层：OpenTelemetry 标准（Next.js instrumentation + AI SDK 遥测） | 已接受 |
 | [0025](client-data-layer) | 2026-11-13 | 客户端数据层：TanStack Query + Server Actions（取代 ADR-0008 的 tRPC） | 已接受 |
+| [0026](ci-path-filtering) | 2026-11-19 | CI 按变更路径裁剪：dorny/paths-filter（PR 层 + push master 层 job 级裁剪，兜底式全跑；修订 0022 白名单条款） | 已接受 |
 
 ## 现行技术栈速查
 
@@ -100,11 +101,12 @@ YYYY-MM-DD
 | [0019](observability-grafana-stack) | Grafana 栈 | 观测栈独立部署勿与生产同机；日志 7 天 / 指标 30 天 | 调资源限额或告警规则时 |
 | [0020](tencent-tcr-registry) | 腾讯云 TCR | 镜像 tag = 短 SHA，发版附加 semver | 配额受限或需内网拉取时 |
 | [0021](trivy-dependabot) | Trivy + Dependabot | 推送前 Trivy 阻断 HIGH/CRITICAL，豁免须注明原因 | 需豁免漏洞或改扫描面时 |
-| [0022](ci-secrets) | CI 机密管理 | 应用运行时机密零过 CI 只存服务器；action 钉完整 SHA | 新增 CI 机密或引第三方 action 时 |
+| [0022](ci-secrets) | CI 机密管理 | 应用运行时机密零过 CI 只存服务器；action 钉完整 SHA；个人组织 action 例外须显式 ADR 评审 | 新增 CI 机密或引第三方 action 时 |
+| [0026](ci-path-filtering) | dorny/paths-filter | PR 层与 push master 层裁剪；未命中显式跳过清单一律全跑（deploy 层跳过仅限镜像产物无差异清单），filter 与 .github/** 变更强制全跑 | 改 CI 触发面、新增顶层目录或升级该 action 时 |
 | [0023](error-reporting-glitchtip) | GlitchTip | SDK = @sentry/nextjs，DSN 指自托管 | 升级 SDK 或遇协议缝隙时 |
 | [0024](telemetry-opentelemetry) | OpenTelemetry | OTel 唯一埋点；涉敏链路关 recordInputs/Outputs | 新增采集点或涉敏链路决策时 |
 | [0025](client-data-layer) | TanStack Query + Server Actions | 错误经判别联合返回不抛裸异常；首屏数据走 RSC 直读 | 并行分发、乐观更新或 GET 缓存语义时 |
 
 ## 待决策清单
 
-本轮选型清单（0001–0024）已全部完成；0020–0022 由 ADR-0018 拆分而来，0023–0024 由 ADR-0019 拆分而来（2026-11-13）。0025 是首次选型复盘的产物：以 TanStack Query + Server Actions 取代 ADR-0008 的 tRPC（2026-11-13）。后续出现新决策时按同一模板新增 ADR 并登记于决策日志。
+本轮选型清单（0001–0024）已全部完成；0020–0022 由 ADR-0018 拆分而来，0023–0024 由 ADR-0019 拆分而来（2026-11-13）。0025 是首次选型复盘的产物：以 TanStack Query + Server Actions 取代 ADR-0008 的 tRPC（2026-11-13）。0026 是 CI 流程裁剪决策：dorny/paths-filter 引入 PR 校验与 push master 部署两条流水线，并修订 ADR-0022 的 action 白名单条款（2026-11-19，已接受；实施另行开工）。后续出现新决策时按同一模板新增 ADR 并登记于决策日志。

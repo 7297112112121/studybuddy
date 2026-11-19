@@ -69,7 +69,7 @@ CI/CD 流水线采用 **GitHub Actions**（仓库原生，公共仓库免费）�
 
 ### 负面
 - 两环境共驻 2核4G：开发/测试互抢 CPU 与内存（以容器内存限额压制）；50G 磁盘放两套 PG / SeaweedFS 数据与镜像缓存，余量需要盯。
-- E2E + 多阶段镜像构建在公共 runner 上排队时间不可控；PR 全跑 E2E 会拖慢反馈（后续可按目录变化裁剪 E2E 触发面）。
+- E2E + 多阶段镜像构建在公共 runner 上排队时间不可控；PR 全跑 E2E 会拖慢反馈（后续可按目录变化裁剪 E2E 触发面——该挂账已由 [ADR-0026](./ci-path-filtering) 承接）。
 - 流水线 YAML 本身成为新的维护面（workflow 拆分、缓存治理）。
 
 ### 风险
@@ -85,3 +85,4 @@ CI/CD 流水线采用 **GitHub Actions**（仓库原生，公共仓库免费）�
 - [ADR-0020：镜像仓库采用腾讯云 TCR 个人版](./tencent-tcr-registry)
 - [ADR-0021：安全扫描采用 Trivy + Dependabot](./trivy-dependabot)
 - [ADR-0022：CI 机密管理分环境隔离与三层分界](./ci-secrets)
+- [ADR-0026：CI 按变更路径裁剪 dorny/paths-filter](./ci-path-filtering)
