@@ -7,27 +7,11 @@
  *
  * 约定：month 入参 1–12（产品口径），非 JS Date 的 0–11。
  */
+import { daysInMonth, formatUtcDate } from "@/lib/date";
 
 export type MonthCell = { date: string; inMonth: boolean; isToday: boolean };
 
 const MS_PER_DAY = 86_400_000;
-
-/** 平闰年该月天数（m 为 1–12）。 */
-function daysInMonth(year: number, month: number): number {
-  const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-  return [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][
-    month - 1
-  ];
-}
-
-/** UTC 时间戳 → "YYYY-MM-DD"（零填充）。 */
-function formatDate(ms: number): string {
-  const d = new Date(ms);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 /** 6 行 × 7 列月网格，周一为每周首日；含邻月补位格（inMonth=false）。 */
 export function buildMonthGrid(
@@ -45,9 +29,9 @@ export function buildMonthGrid(
     const ms = firstCellMs + i * MS_PER_DAY;
     const d = new Date(ms);
     cells.push({
-      date: formatDate(ms),
+      date: formatUtcDate(ms),
       inMonth: d.getUTCMonth() + 1 === month,
-      isToday: formatDate(ms) === today,
+      isToday: formatUtcDate(ms) === today,
     });
   }
   return cells;
@@ -74,13 +58,8 @@ export function addMonths(
   return { year: Math.floor(total / 12), month: (total % 12) + 1 };
 }
 
-/** 严格校验 "YYYY-MM-DD"：格式合法且为真实存在的日历日（拒收 2026-02-30）。 */
-export function isValidDateString(value: string): value is string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [y, m, d] = value.split("-").map(Number);
-  if (m < 1 || m > 12 || d < 1) return false;
-  return d <= daysInMonth(y, m);
-}
+/** 严格校验 "YYYY-MM-DD"：实现收拢在 @/lib/date，re-export 保住模块内既有导出面。 */
+export { isValidDateString } from "@/lib/date";
 
 /** "HH:MM:SS" → "HH:MM"（time 列查询结果归一）。 */
 export function formatHhmm(time: string): string {
