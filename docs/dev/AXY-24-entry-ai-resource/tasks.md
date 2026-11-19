@@ -237,3 +237,5 @@
 ## 裁决记录
 
 裁决: T1∥(T2→T3)两并行链改内联串行执行 — 同工作区双代理并发跑 `npm install` 与 git commit 存在 index.lock / node_modules 竞争,隔离收益(墙钟)小于事故风险 — 代价:执行墙钟变求和。
+裁决: 新增第三 chain `resource-search`(T4 范围内)— design 只定义了两 chain,检索调用的 messages 构造无承载,prompts 三件套按「每任务一文件」补齐 — 代价:多一份提示词文件与 2 个测试用例。
+裁决: T3 `generateObject` 泛型入参实测改为类型面验证(ai@7.0.177 + @ai-sdk/deepseek@3.0.88 安装成功、generateObject 契约编译通过) — 无 DEEPSEEK_API_KEY 无法真实出网实测,真实调用面留给测试提质阶段 — 代价:provider 运行时兼容性延后确认。
