@@ -41,23 +41,20 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## 研发流程与 AI 技能
 
-特性研发遵循 [docs/研发流程.md](docs/研发流程.md) 的三阶段流程(产品设计 → 开发落地 → 测试提质),由 `.agents/skills/` 下的技能承载(`.claude/skills` 等工具目录是指向它的 symlink)。本节仅保留两道批准门与 TDD 铁律的门禁提醒(每次会话必载,作为第一触点),其余规则一律见各技能 SKILL.md,不在此重复:
-
-- 接到新功能需求时,先读 `product_design` 技能——未经批准的用户故事不得进入开发落地。
-- 产品设计按用户故事 → proposal 接力(product_design、product_proposal_writing,proposal 属产品侧文档);开发落地按 design → plan → dev_implementation(TDD 实现)接力,dev_spec_review 为可选终审、是否执行由用户显式决定;两道批准门(proposal、design)未过,不得拆任务或写任何产品代码,对应技能:product_proposal_writing、dev_architecture_design、dev_plan_writing、implementation、dev_spec_review。
-- 一切产品代码遵循 TDD 铁律:无先失败的测试,即无产品代码。
-- 一切 UI/前端代码遵循 `.agents/skills/shared/前端设计规范.md`——组件从 `src/components/ui/`(shadcn,ADR-0004)选型,颜色/圆角/阴影一律语义 token,禁裸色值与手写平行组件;项目主题请参看 `src/app/globals.css`(组件选型基础见 ADR-0004/0003);视觉实现手法(美学方向、排版)参考外部技能 `frontend-design`(skills-lock.json 管理),与规范冲突时以规范为准。
-- 技术选型与既有 ADR(docs/dev/adr/)冲突或无 ADR 覆盖时,先走 ADR 流程再继续设计。
+- 产品技能使用顺序:product_design(用户故事)→ product_proposal_writing(proposal)。
+- 开发技能使用顺序:dev_architecture_design(design)→ dev_plan_writing(实现计划)→ dev_implementation(TDD 实现)→ dev_spec_review(可选终审)。
 
 ## 文档地图
 
-每类文档的完整全景(阶段 · 产物 · 路径模式 · 产出技能 · 真源说明)见 [docs/文档地图.md](docs/文档地图.md),本节只保留快速坐标。
+每类文档的完整全景见 [docs/文档地图.md](docs/文档地图.md),本节只保留快速坐标。
 
-- 全部文档在 `docs/`(文档站 `website/` 的源目录)。格式约定:给 AI 的指令与规范一律 `.md`,面向人类的富媒体页(交互原型)一律 `.mdx`;线上每页均有纯文本 `.md` 端点,全站索引见 `https://7297112112121.github.io/studybuddy/llms.txt`。
-- `docs/intro.md` — 产品简介;`docs/研发流程.md` — 三阶段流程总览(门禁见上节,不重复)。
-- `docs/dev/` — 技术规范:代码目录约定(`代码目录.md`)、ADR 流程与决策日志(`docs/dev/adr/index.md`)、特性开发工件(`docs/dev/AXY-<N>-<slug>/`:design/tasks/review;proposal 在 docs/product/)。
-- `docs/product/` — 产品侧文档:用户故事 `AXY-<N>-<slug>/story.md`(编号即路径,index.md 仅总览仪表盘,勿按文件名盲搜;五大组成部分)与需求规范(`AXY-<N>-<slug>/proposal.md`,含原型契约);通用 DoD 基线在 `.agents/skills/product_design/references/dod.md`。交互原型一律不入库,proposal 的「原型契约」节是原型唯一资产与 AI 唯一接口(演示态清单唯一源),需要演示时按契约现场生成一次性 HTML 看完即弃。AXY 编号由项目管理平台生成,禁止自行分配。
-- `docs/other/` — 调研存档:格式调研(`md-vs-mdx-research.mdx`)、技能管理标杆、特性开发流程调研;`docs/test/` — 测试文档索引。
+- 全部文档在 `docs/`(文档站 `website/` 源目录;给 AI 的规范一律 `.md`,人类富媒体页一律 `.mdx`;每页 URL 加 `.md` 即纯文本端点,全站索引见 llms.txt)。
+- 产品简介在 `docs/intro.md`;研发流程总览在 `docs/研发流程.md`。
+- 代码目录文件在 `docs/dev/代码目录.md`;技术选型文件目录在 `docs/dev/adr`。
+- 用户故事与需求规范在 `docs/product/AXY-<N>-<slug>/`(story.md + proposal.md;编号即路径,AXY 编号由项目管理平台生成,禁止自行分配);特性开发工件(design/tasks/review)在 `docs/dev/AXY-<N>-<slug>/`。
+- 通用 DoD 基线在 `.agents/skills/product_design/references/dod.md`;交互原型不入库,按 proposal 的原型契约现场生成一次性 HTML,看完即弃。
+- 调研存档在 `docs/other/`;测试文档在 `docs/test/`。
+- 项目主题色在 `src/app/globals.css`。
 
 ## Git 与版本约定
 
@@ -66,15 +63,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **版本管理**:语义化版本(SemVer),当前版本 `0.1.0`(见 `package.json`)。
 - **输出语言**:面向用户的回复与提交说明使用中文。
 
-## 已启用的mcp服务
-本项目已启用 codegraph MCP，存在 .codegraph 索引。
-规则：
-1. 查询符号、调用方、被调用方、修改影响范围，优先使用 codegraph 工具（codegraph_callers / codegraph_callees / codegraph_impact）
-2. rg / read 仅用于模糊文本查找、读取codegraph返回之外的补充文件
-3. 不要重复read codegraph已经返回源码片段的文件
+## MCP 工具使用规则
 
-本项目已启用 shadcn MCP（`.mcp.json`，无密钥、团队通用）。
-用途：写 UI 前查询组件 registry（可用组件、源码、demo），避免凭记忆写组件 API；配合 `.agents/skills/shared/前端设计规范.md` 使用。
+- 当需要查询符号、调用方、被调用方或修改影响范围时,使用 codegraph 工具(codegraph_callers / codegraph_callees / codegraph_impact)。
+- 当仅做模糊文本查找或读取 codegraph 返回之外的补充文件时,使用 rg / read 工具。
+- 当 codegraph 已返回某文件的源码片段时,不再使用 read 工具重复读取。
+- 当写 UI 需要查询组件 registry(可用组件、源码、demo)时,使用 shadcn 工具,避免凭记忆写组件 API;并配合 `.agents/skills/shared/前端设计规范.md` 使用。
 
 
 <!-- BEGIN:nextjs-agent-feedback -->
