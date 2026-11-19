@@ -1,15 +1,15 @@
 ---
-name: architecture-design
+name: dev_architecture_design
 description: 当 proposal 已获人工批准,需要产出架构设计(design)时使用。输入为状态为"已批准"的 proposal;proposal 未获批准时不得触发,也不得开始写任何产品代码。
 ---
 
-# 架构设计（architecture-design）
+# 架构设计（dev_architecture_design）
 
 ## 概述
 
-开发技能组第二步：把已批准的需求规范（proposal）转化为**架构设计（design）**——数据模型、契约、UI 结构、组件划分。design 是实现计划（plan-writing）的直接输入。
+开发技能组第二步：把已批准的需求规范（proposal）转化为**架构设计（design）**——数据模型、契约、UI 结构、组件划分。design 是实现计划（dev_plan_writing）的直接输入。
 
-**开始时声明**：「我正在使用 architecture-design 技能为 <特性名> 做架构设计。」
+**开始时声明**：「我正在使用 dev_architecture_design 技能为 <特性名> 做架构设计。」
 
 ## 硬门禁（HARD-GATE）
 
@@ -17,7 +17,9 @@ description: 当 proposal 已获人工批准,需要产出架构设计(design)时
 
 ## 分支衔接
 
-本技能是 feat 分支的开启点：开工前确认 proposal 已随 docs 分支合并进 master（未合并时先走 branch-wrapup 收尾 docs 分支），再从最新 `master` 新建 `feat/AXY-<N>-<slug>`。design 四件套落盘与批准、后续实现与终审全部在该分支上进行。完整生命周期见 [docs/研发流程.md](../../docs/研发流程.md)「分支生命周期」。
+**流程前后继**：上游——product_proposal_writing（已批准 proposal 已合并进 `master`）；下游——dev_plan_writing（承接已批准 design）。
+
+本技能是 feat 分支的开启点：开工前确认 proposal 已随 docs 分支合并进 master（未合并时先走 branch-wrapup 收尾 docs 分支），再从最新 `master` 新建 `feat/AXY-<N>-<slug>`。design 四件套落盘与批准、后续实现与终审全部在该分支上进行。生命周期真源见 [README](../README.md)「总流程与分支生命周期」。
 
 ## 流程
 

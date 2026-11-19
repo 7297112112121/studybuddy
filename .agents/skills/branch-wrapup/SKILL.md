@@ -1,13 +1,13 @@
 ---
 name: branch-wrapup
-description: 当一条工作分支(docs 产品侧 / feat 开发侧 / 修复分支)的阶段性工作已完成、需要合并回 master 时使用(轻量工程操作技能,不在研发流程单向流内)。输入为当前工作分支;覆盖动作:推送并提交 PR、处理 PR 提交错误、squash merge、清理本地/远程分支、切回 master 拉新。分支尚有未完工的流程动作(如 proposal / design 未批准、spec-review 未通过)时不应触发本技能。
+description: 当一条工作分支(docs 产品侧 / feat 开发侧 / 修复分支)的阶段性工作已完成、需要合并回 master 时使用(轻量工程操作技能,不在研发流程单向流内)。输入为当前工作分支;覆盖动作:推送并提交 PR、处理 PR 提交错误、squash merge、清理本地/远程分支、切回 master 拉新。分支尚有未完工的流程动作(如 proposal / design 未批准、dev_spec_review 被触发且未通过)时不应触发本技能。
 ---
 
 # 轻量分支收尾(branch-wrapup)
 
 ## 定位
 
-**轻量工程操作技能**:横切于 product-design → … → spec-review 流程之外,任意阶段可触发。只负责「工作分支 → 已合并 → 干净 master」这一段机械操作。两种收束时机都归它:产品侧(proposal 批准后收 docs 分支)与开发侧(spec-review 通过后收 feat 分支)——触发时机由流程技能在各自分支衔接节点指认,本技能只认「分支内容已完工」这一前提。质量门禁(TDD 铁律、批准门、spec-review、CI 绿灯)不归本技能,引用不复述。分支生命周期全图见 [docs/研发流程.md](../../docs/研发流程.md)「分支生命周期」。
+**轻量工程操作技能**:横切于 product_design → … → dev_implementation 流程之外,任意阶段可触发。只负责「工作分支 → 已合并 → 干净 master」这一段机械操作。两种收束时机都归它:产品侧(proposal 批准后收 docs 分支)与开发侧(实现完工后收 feat 分支——dev_spec_review 通过,或用户显式决定不审查)——触发时机由流程技能在各自分支衔接节点指认,本技能只认「分支内容已完工」这一前提。质量门禁(TDD 铁律、批准门、CI 绿灯;dev_spec_review 被触发时还包括其判定)不归本技能,引用不复述。分支生命周期真源见 [README](../README.md)「总流程与分支生命周期」。
 
 **开始时声明**:「我正在使用 branch-wrapup 技能收尾分支 `<branch-name>`。」
 

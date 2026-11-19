@@ -1,17 +1,17 @@
 ---
-name: proposal-writing
+name: product_proposal_writing
 description: 当已批准的用户故事需要转化为需求规范(proposal)时使用。输入为 docs/product/AXY-<N>-<slug>/story.md 状态为"已批准"的用户故事;故事未获批准、或 AXY 目录不存在(编号未下发,故事未就绪)时不得触发。
 ---
 
-# 需求规范编写（proposal-writing）
+# 需求规范编写（product_proposal_writing）
 
 ## 概述
 
-产品技能组的第二技能，负责「产品设计」部分的后半步：把已批准的用户故事转写为一份**需求规范（proposal）**——回答做什么、不做什么、做到什么程度、边界在哪，并承载**原型契约**（原型的唯一入库资产与 AI 唯一接口）。用户故事只装五大组成部分，其余规范内容全部由 proposal 承接。后续的架构设计（architecture-design）与实现计划（plan-writing）都以 proposal 为准绳；终审（spec-review）逐条核对的对象也是它。
+产品技能组的第二技能，负责「产品设计」部分的后半步：把已批准的用户故事转写为一份**需求规范（proposal）**——回答做什么、不做什么、做到什么程度、边界在哪，并承载**原型契约**（原型的唯一入库资产与 AI 唯一接口）。用户故事只装五大组成部分，其余规范内容全部由 proposal 承接。后续的架构设计（dev_architecture_design）与实现计划（dev_plan_writing）都以 proposal 为准绳；终审（dev_spec_review）逐条核对的对象也是它。
 
 **迭代粒度：一份 proposal 对应一个特性。** 多个特性混入一份 proposal 会让规范变成大杂烩，禁止。
 
-**开始时声明**：「我正在使用 proposal-writing 技能为 <特性名> 编写需求规范。」
+**开始时声明**：「我正在使用 product_proposal_writing 技能为 <特性名> 编写需求规范。」
 
 ## 硬门禁（HARD-GATE）
 
@@ -21,7 +21,7 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 
 ### 0. 定位输入（按编号查索引）
 
-编号即路径：故事文档位于 `docs/product/AXY-<N>-<slug>/story.md`（目录已由 product-design 在编号回填时创建），可对照 `docs/product/index.md` 总览核对状态。**目录不存在 = 编号未下发 = 故事未就绪**，视为故事不存在，不得触发本技能，也不得盲猜搜索文件。状态非「已批准」时同样不得触发。
+编号即路径：故事文档位于 `docs/product/AXY-<N>-<slug>/story.md`（目录已由 product_design 在编号回填时创建），可对照 `docs/product/index.md` 总览核对状态。**目录不存在 = 编号未下发 = 故事未就绪**，视为故事不存在，不得触发本技能，也不得盲猜搜索文件。状态非「已批准」时同样不得触发。
 
 ### 1. 读取用户故事（含引用物）
 
@@ -37,7 +37,7 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 
 ### 3. 转写为需求规范
 
-按 [templates/proposal.md](templates/proposal.md) 写入 `docs/product/AXY-<N>-<slug>/proposal.md`——目录已由 product-design 在编号回填时创建（不存在即第 0 步的前置信号，不得自行建目录），本文件是该特性需求规范的唯一落点；开发落地工件（design / tasks / review）落在 `docs/dev/AXY-<N>-<slug>/`。核心动作：
+按 [templates/proposal.md](templates/proposal.md) 写入 `docs/product/AXY-<N>-<slug>/proposal.md`——目录已由 product_design 在编号回填时创建（不存在即第 0 步的前置信号，不得自行建目录），本文件是该特性需求规范的唯一落点；开发落地工件（design / tasks / review）落在 `docs/dev/AXY-<N>-<slug>/`。核心动作：
 
 - **决策集中**：澄清对话与批准过程中的每项裁定（提出者 / PO / AI）登记进「关键决策记录」（D-01、D-02…），正文只引用决策 ID，不夹带长括号说明；已批准决策不得被后续转写静默推翻；
 - **做什么**：把每条 AC 转化为编号的需求条目（R1、R2…，增强表含优先级 / 类型 / 需求 / 来源 / 验收断言 / 测试层 / 演示态 / 状态），表述可测试——终审时每条须有对应实现与测试证据；
@@ -45,7 +45,7 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 - **领域模型独立成节**：第 2 步四问的产出物（概念与状态 / 状态义务 / 领域事件 / 负空间）与界面字段 ↔ 模型属性核对表在 proposal「领域模型」节成表呈现，不塞进「依赖与影响」单元格；正文引用实体与状态时与该节口径一致；
 - **验收矩阵**：AC ↔ R 双向覆盖核对；DOD / DOR / WF 等无 AC 来源的条目单列，不得漏登；
 - **不做什么**：显式写出非目标（含第 2 步确认的项）；
-- **性能与质量要求**：逐条列出可度量的指标与度量方式，验收归属标注「后置，非本期验收」；本节条目（Q）由测试提质阶段验收，spec-review 终审不核对；
+- **性能与质量要求**：逐条列出可度量的指标与度量方式，验收归属标注「后置，非本期验收」；本节条目（Q）由测试提质阶段验收，dev_spec_review 终审不核对；
 - **边界与约束**：输入的合法范围、异常情形、与既有特性的交互（规则细节引用 F 编号，不重复正则）；
 - **开放问题**：逐项写明是否阻塞与阻塞条件；
 - **待确认 / 冲突清单**：转写中发现的冲突与不一致登记为 C-xx 并给出建议处理方式，不得静默改写；
@@ -75,11 +75,13 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 - [ ] 冲突与不确定项已进入「待确认 / 冲突清单」，未静默改写
 - [ ] 修订进 Changelog，正文只保留当前有效状态
 
-自查通过后提请人工批准。批准前状态为「草案」，批准后改为「已批准」并附批准日期。**批准通过即产品侧完工：触发 branch-wrapup 技能，把 docs 分支 PR 合并回 master**——开发侧（architecture-design）在 proposal 进入 master 后才开工。
+自查通过后提请人工批准。批准前状态为「草案」，批准后改为「已批准」并附批准日期。**批准通过即产品侧完工：触发 branch-wrapup 技能，把 docs 分支 PR 合并回 master**——开发侧（dev_architecture_design）在 proposal 进入 master 后才开工。
 
 ## 分支衔接
 
-proposal 在 product-design 开出的 `docs/<slug>` 分支上编写与修订，不另开分支。完整生命周期见 [docs/研发流程.md](../../docs/研发流程.md)「分支生命周期」。
+**流程前后继**：上游——product_design（已批准用户故事）；下游——dev_architecture_design（proposal 经 branch-wrapup 合并进 `master` 后承接）。
+
+proposal 在 product_design 开出的 `docs/<slug>` 分支上编写与修订，不另开分支。生命周期真源见 [README](../README.md)「总流程与分支生命周期」。
 
 ## 合理化对照表
 

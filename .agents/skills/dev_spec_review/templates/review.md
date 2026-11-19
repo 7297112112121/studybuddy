@@ -58,7 +58,7 @@ sidebar_position: 4
 
 ## 裁决记录落实核对
 
-<合格判据:tasks 裁决记录每条一行;落实位置给文件:行号;「design 指针」列按 architecture-design 裁决回写纪律核对 design 侧是否留了一行指针——无指针不阻塞通过,记 Minor。>
+<合格判据:tasks 裁决记录每条一行;落实位置给文件:行号;「design 指针」列按 dev_architecture_design 裁决回写纪律核对 design 侧是否留了一行指针——无指针不阻塞通过,记 Minor。>
 
 | 裁决 | 落实位置 | 是否按裁决实现 | design 指针 |
 | ---- | ---- | ---- | ---- |

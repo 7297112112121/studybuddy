@@ -10,7 +10,7 @@ sidebar_position: 5
 | ---- | ---- | ---- | ---- |
 | 关联特性 | AXY-<N> | 批准人 | <填写> |
 
-> 本记录由 feature-supersede 技能产出，是 story / proposal / design / tasks / review 之外的**第五份工件**：未来 spec-review 判断「哪些代码是活的」以本记录为准。各节合格判据内联于节首，本模板是判据单源。
+> 本记录由 feature-supersede 技能产出，是 story / proposal / design / tasks / review 之外的**第五份工件**：未来 dev_spec_review 判断「哪些代码是活的」以本记录为准。各节合格判据内联于节首，本模板是判据单源。
 
 ## 1. 定级与判据
 
