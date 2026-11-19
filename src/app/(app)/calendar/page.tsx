@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/routes";
 import { getCurrentSession } from "@/modules/auth";
 import CalendarScreen from "@/modules/calendar/components/CalendarScreen";
-import StarsBackground from "@/modules/calendar/components/StarsBackground";
 import WeekView from "@/modules/calendar/components/WeekView";
 import { addMonths } from "@/modules/calendar/month";
 import { listMonthEntries, listWeekEntries } from "@/modules/calendar/queries";
@@ -112,9 +111,7 @@ export default async function CalendarPage({
   const monthHref = `/calendar?view=month&month=${monthParam(now.getFullYear(), now.getMonth() + 1)}&week=${carriedWeek}`;
 
   return (
-    <main className="calendar-theme relative isolate mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 text-foreground md:p-6">
-      {/* 深空星点背景(fixed -z-10 装饰层,aria-hidden,不拦截指针) */}
-      <StarsBackground />
+    <main className="relative isolate mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 text-foreground md:p-6">
       <h1 className="text-2xl font-bold text-foreground">{t("page.title")}</h1>
       <nav className="flex flex-wrap items-center gap-1">
         {/* 周/月切换:分段控件,服务端 Link(路由行为 #3) */}

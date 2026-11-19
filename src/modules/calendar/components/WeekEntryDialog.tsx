@@ -70,7 +70,7 @@ export default function WeekEntryDialog({
   return (
     <>
       <Dialog open onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="calendar-theme sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
             {editing ? t("week.dialogEdit") : t("week.dialogCreate")}

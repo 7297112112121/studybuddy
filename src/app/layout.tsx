@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+
+import StarsBackground from "@/components/StarsBackground";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,6 +33,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* 全站深空星点背景(fixed -z-10 装饰层,aria-hidden,不拦截指针;
+            ADR-0027:背景随深空主题全站挂载,含 auth) */}
+        <StarsBackground />
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>

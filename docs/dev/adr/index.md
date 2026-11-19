@@ -74,6 +74,7 @@ YYYY-MM-DD
 | [0024](telemetry-opentelemetry) | 2026-11-12 | 采集层：OpenTelemetry 标准（Next.js instrumentation + AI SDK 遥测） | 已接受 |
 | [0025](client-data-layer) | 2026-11-13 | 客户端数据层：TanStack Query + Server Actions（取代 ADR-0008 的 tRPC） | 已接受 |
 | [0026](ci-path-filtering) | 2026-11-19 | CI 按变更路径裁剪：dorny/paths-filter（PR 层 + push master 层 job 级裁剪，兜底式全跑；修订 0022 白名单条款） | 已接受 |
+| [0027](global-deep-space-theme) | 2026-11-19 | 全局主题：calendar 深空主题转正（固定暗色 + 星点背景全站挂载） | 已接受 |
 
 ## 现行技术栈速查
 
@@ -106,6 +107,7 @@ YYYY-MM-DD
 | [0023](error-reporting-glitchtip) | GlitchTip | SDK = @sentry/nextjs，DSN 指自托管 | 升级 SDK 或遇协议缝隙时 |
 | [0024](telemetry-opentelemetry) | OpenTelemetry | OTel 唯一埋点；涉敏链路关 recordInputs/Outputs | 新增采集点或涉敏链路决策时 |
 | [0025](client-data-layer) | TanStack Query + Server Actions | 错误经判别联合返回不抛裸异常；首屏数据走 RSC 直读 | 并行分发、乐观更新或 GET 缓存语义时 |
+| [0027](global-deep-space-theme) | 全局深空主题（固定暗色） | 全站只有暗色主题：语义 token 暗色校准、禁直书浅色假设色值；星点背景经根布局 StarsBackground 挂载，页面不自带背景层 | 需要亮色模式、手动切换或页面级主题覆盖时 |
 
 ## 待决策清单
 

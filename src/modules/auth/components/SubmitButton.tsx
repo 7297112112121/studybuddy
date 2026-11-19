@@ -1,8 +1,8 @@
 /**
  * 提交按钮（R5）。受 submitting 驱动禁用与文案键切换。
  * 视觉：shadcn Button（default variant）+ aurora 渐变面（aqua→aqua-bright→
- * magenta,规格 100deg/38% via）；文字色取 .aurora-theme 作用域内的
- * --primary-foreground（墨色，亮渐变面上对比达标），主 CTA 的签名观感。
+ * magenta,规格 100deg/38% via）；文字色取全局 --primary-foreground
+ * （墨色，亮渐变面上对比达标），主 CTA 的签名观感。
  */
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";

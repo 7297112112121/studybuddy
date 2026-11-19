@@ -228,7 +228,7 @@ export default function AuthScreen(props: AuthScreenProps) {
   const agreementInvalid = errors.agreement !== undefined;
 
   return (
-    <main className="aurora-theme relative isolate min-h-dvh overflow-hidden bg-background text-foreground">
+    <main className="relative isolate min-h-dvh overflow-hidden bg-background text-foreground">
       {/* aurora 背景层（aria-hidden，-z-10）：墨底上散布柔光斑 → aurora 纱幕
           （网格 + 颗粒）→ 双重压暗（中央保持可读、边缘沉入墨底）。
           整页一张背景，卡片与宣传列同景，不再有分区边界。 */}
