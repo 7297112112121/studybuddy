@@ -8,11 +8,21 @@
 #          新路径入清单须经核实,红线:.trivyignore(镜像门禁输入)、scripts/(服务器执行)、
 #          Dockerfile、compose*、package*.json、next.config.ts 一律不得入清单。
 #   code = catch-all 排他式兜底:'**' 命中一切,再逐条取反 docs 清单。
-#          新增顶层目录、.github/**(含本文件自身)、任何未入清单的路径都天然命中 code → 全跑。
+#          新增顶层目录、任何未入清单的路径(含 .github/** 下新增文件)都天然命中 code → 全跑。
 #
 # 跳过判定必须取合取 docs == true && code == false,禁止只看 docs == true:
 # dorny 对「不匹配任何过滤器的文件」输出 false,若只定义 docs 过滤器,
 # 触碰 docs + 未入清单新路径的变更会被误判为 docs-only 而跳过(部署层即真实漂移)。
+#
+# .github/** 的拆分依据(2026-11-19 清单扩充,依据 ADR-0026「新路径入清单须经核实」):
+# .dockerignore 明确排除 .github——任何 .github 文件都不进镜像构建上下文,零镜像影响;
+# 但两条路径必须保持触发部署:
+#   .github/workflows/deploy.yml——部署流水线本体,变更后触发的部署即对其端到端实弹
+#     验证(ADR-0026 决策 3 明文「deploy.yml 自身一律全量晋升」);
+#   .github/paths-filter.yml——裁剪判定的规则源,ADR-0026 决策 2「规则集自身变更一律全跑」。
+# 豁免的 CI 配置文件:ci.yml(校验在 runner 上跑,与部署零耦合,破坏由下一次 PR 发现)、
+# docs.yml(自带 paths 过滤的独立发布链路)、security-scan.yml(scheduled 周扫)、
+# dependabot.yml。未来 .github 下新增文件默认触发部署,核实不进运行时后再入清单。
 docs:
   - 'docs/**'
   - 'website/**'
@@ -24,6 +34,10 @@ docs:
   - '.githooks/**'
   - '.mcp.json'
   - 'skills-lock.json'
+  - '.github/workflows/ci.yml'
+  - '.github/workflows/docs.yml'
+  - '.github/workflows/security-scan.yml'
+  - '.github/dependabot.yml'
 code:
   - '**'
   - '!docs/**'
@@ -36,3 +50,7 @@ code:
   - '!.githooks/**'
   - '!.mcp.json'
   - '!skills-lock.json'
+  - '!.github/workflows/ci.yml'
+  - '!.github/workflows/docs.yml'
+  - '!.github/workflows/security-scan.yml'
+  - '!.github/dependabot.yml'
