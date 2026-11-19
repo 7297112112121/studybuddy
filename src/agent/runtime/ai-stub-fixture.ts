@@ -40,6 +40,16 @@ export type StubStructured =
   | { unavailable: true }
   | { unavailable: false; object: unknown };
 
+/** 以服务端「今天」为锚的偏移日期(E2E 断言不随真实日历漂移)。 */
+function offsetDate(offsetDays: number): string {
+  const now = new Date();
+  now.setDate(now.getDate() + offsetDays);
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 const intentNotApplicable = {
   verdict: "NOT_APPLICABLE",
   notApplicableReason: "这是日常购物事项,不需要学习资料",
@@ -59,8 +69,8 @@ const intentNeedsRange = {
 const intentApplicable = {
   verdict: "APPLICABLE",
   notApplicableReason: null,
-  rangeStart: "2026-11-20",
-  rangeEnd: "2026-11-30",
+  rangeStart: offsetDate(0),
+  rangeEnd: offsetDate(10),
   searchQuery: "Next.js 官方教程 入门",
 };
 
@@ -75,17 +85,17 @@ const planOk = {
   notFoundReason: null,
   days: [
     {
-      date: "2026-11-20",
+      date: offsetDate(1),
       text: "阅读 Next.js 官方文档基础篇",
       resources: [{ title: "Next.js 官方文档", url: STUB_SOURCE_URLS[0] }],
     },
     {
-      date: "2026-11-21",
+      date: offsetDate(2),
       text: "跟学 Next.js Learn 课程",
       resources: [{ title: "Next.js Learn 课程", url: STUB_SOURCE_URLS[1] }],
     },
     {
-      date: "2026-11-22",
+      date: offsetDate(3),
       text: "完成基础练习并搭建示例项目",
       resources: [{ title: "Next.js 基础练习", url: STUB_SOURCE_URLS[2] }],
     },
