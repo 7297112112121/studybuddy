@@ -29,6 +29,15 @@ export type StructuredResult<S extends z.ZodType> =
   | { ok: true; object: z.infer<S> }
   | { ok: false; error: "AI_UNAVAILABLE" };
 
+/** 提取 system 消息文本(v7 破坏性变更:system 禁入 messages,须走 instructions)。 */
+function extractInstructions(messages: ModelMessage[]): string | undefined {
+  const parts = messages
+    .filter((m) => m.role === "system")
+    .map((m) => (typeof m.content === "string" ? m.content : ""))
+    .filter((s) => s.length > 0);
+  return parts.length > 0 ? parts.join("\n\n") : undefined;
+}
+
 /** 结构化调用(generateObject 包装);任何异常归一 AI_UNAVAILABLE。 */
 export async function generateStructured<S extends z.ZodType>(args: {
   schema: S;
@@ -42,10 +51,13 @@ export async function generateStructured<S extends z.ZodType>(args: {
     return { ok: true, object: stub.object as unknown as z.infer<S> };
   }
   try {
+    const instructions = extractInstructions(args.messages);
+    const rest = args.messages.filter((m) => m.role !== "system");
     const { object } = await generateObject({
       model: chatModel(),
       schema: args.schema,
-      messages: args.messages,
+      ...(instructions !== undefined ? { instructions } : {}),
+      messages: rest,
     });
     // ai 的 InferSchema<S> 与 zod 的 z.infer<S> 在未解析泛型下互不可赋,
     // 运行时恒同(schema 即传入对象),断言安全

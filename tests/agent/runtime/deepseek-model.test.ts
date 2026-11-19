@@ -64,4 +64,33 @@ describe("generateStructured", () => {
     });
     expect(result).toEqual({ ok: false, error: "AI_UNAVAILABLE" });
   });
+
+  it("AI SDK v7:system 消息拆出为 instructions,不进 messages", async () => {
+    vi.stubEnv("DEEPSEEK_API_KEY", "sk-test");
+    generateObjectMock.mockResolvedValueOnce({ object: { verdict: "NEEDS_RANGE" } });
+    const result = await generateStructured({
+      schema,
+      messages: [
+        { role: "system", content: "系统提示" },
+        { role: "user", content: "条目" },
+      ],
+    });
+    expect(result).toEqual({ ok: true, object: { verdict: "NEEDS_RANGE" } });
+    const call = generateObjectMock.mock.calls[0]?.[0] as Record<string, unknown>;
+    // v7 破坏性变更:messages 含 system 角色 → AI_InvalidPromptError,
+    // 系统提示必须走 instructions 选项
+    expect(call.instructions).toBe("系统提示");
+    expect(call.messages).toEqual([{ role: "user", content: "条目" }]);
+  });
+
+  it("无 system 消息时不传 instructions", async () => {
+    vi.stubEnv("DEEPSEEK_API_KEY", "sk-test");
+    generateObjectMock.mockResolvedValueOnce({ object: { verdict: "APPLICABLE" } });
+    await generateStructured({
+      schema,
+      messages: [{ role: "user", content: "x" }],
+    });
+    const call = generateObjectMock.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect("instructions" in call).toBe(false);
+  });
 });

@@ -17,7 +17,6 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
-import { isValidDateString } from "./month";
 import {
   chainEntryIntent,
   entryIntentOutputSchema,

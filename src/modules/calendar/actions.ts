@@ -22,7 +22,6 @@ import {
 } from "./schema";
 import { createEntry, deleteEntry, updateEntry } from "./service";
 import {
-  AiUnavailableError,
   EntryNotFoundError,
   confirmedProposalSchema,
   requestEntryProposal,
