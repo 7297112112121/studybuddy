@@ -97,8 +97,9 @@ export default function WeekView({ days, entries }: WeekViewProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* 单一横滚容器:表头/全天区/网格同步滚动,纵轴列 sticky 不错位(D-09) */}
+    <div className="flex flex-col gap-3 rounded-2xl border border-white/25 bg-aurora-ink/40 p-3 md:p-4">
+      {/* 外层卡面与月视图网格卡同款(CalendarScreen/DayPanel 统一形态);
+          单一横滚容器:表头/全天区/网格同步滚动,纵轴列 sticky 不错位(D-09) */}
       <div className="overflow-x-auto">
         <div className="min-w-[720px]">
           {/* 星期表头:星期名 + 日期数字两行堆叠;今天日期数字 primary 胶囊 */}
