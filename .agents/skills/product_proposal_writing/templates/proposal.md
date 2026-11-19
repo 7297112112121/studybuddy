@@ -145,7 +145,7 @@ normative_language: zh-CN
 
 ## 12. 性能与质量要求（Q 表）
 
-**本节条目后置，非本期验收**：由测试提质阶段验收，spec-review 终审不核对。指标必须可度量，后置 ≠ 不写。
+**本节条目后置，非本期验收**：由测试提质阶段验收，dev_spec_review 终审不核对。指标必须可度量，后置 ≠ 不写。
 
 | # | 指标 | 度量方式 | 验收归属 | 状态 |
 | - | ---- | ---- | ---- | ---- |
@@ -159,7 +159,7 @@ normative_language: zh-CN
 
 ## 14. 原型契约
 
-原型的唯一入库资产与 AI 唯一接口（规范见 `.agents/skills/proposal-writing/references/prototype-contract.md`）。交互原型不入库；需要看效果时按本契约现场生成一次性 HTML，看完即弃。交互逻辑一律回引 R / F / E 编号，不复述验收标准。
+原型的唯一入库资产与 AI 唯一接口（规范见 `.agents/skills/product_proposal_writing/references/prototype-contract.md`）。交互原型不入库；需要看效果时按本契约现场生成一次性 HTML，看完即弃。交互逻辑一律回引 R / F / E 编号，不复述验收标准。
 
 ### 14.1 演示态清单（≤ 5 个 AC 演示态）
 
