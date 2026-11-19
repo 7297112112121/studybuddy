@@ -9,6 +9,8 @@ description: CI 只持部署最小面——TCR 凭证 + 每台服务器 SSH key�
 
 已接受（Accepted）
 
+> 2026-11-19 修订：决策 3 的 action 白名单条款由 [ADR-0026](./ci-path-filtering) 放宽——默认仍收敛到官方组织，例外须经显式 ADR 评审方可引入个人组织 action（现有例外：dorny/paths-filter）。
+
 ## 日期
 
 2026-11-12
@@ -26,7 +28,7 @@ CI 机密管理采用**分环境隔离 + 三层分界**，核心原则是**应�
 
 1. **CI 只持部署最小面**：TCR 登录凭证（ADR-0020，固定密码模型）与每台服务器的 SSH key，**按 GitHub environment 分环境存放**（dev / test / prod 各自持有自己服务器的 key，secret 仅在绑定该环境的作业中可见），production 环境叠加 required reviewers 人工放行（支持禁止自批）；
 2. **应用运行时机密**（LLM API key、数据库密码）**只存服务器本地 `.env`**（ADR-0016 纪律延伸），流水线不复制、不渲染、不经过——CI 被攻破的爆炸半径 = TCR 推送凭证 + 部署 SSH key，两者皆可轮换；
-3. **`GITHUB_TOKEN` 最小权限**（`permissions` 只授所需）；第三方 action 一律**钉完整 commit SHA**（官方安全指南："Pin actions to a full-length commit SHA…mitigate the risk of a bad actor adding a backdoor"）；非组织级官方仓库的 action 不引入，action 白名单收敛到官方组织（docker / aquasecurity）——部署用原生 ssh（ADR-0018），不用第三方 SSH action。
+3. **`GITHUB_TOKEN` 最小权限**（`permissions` 只授所需）；第三方 action 一律**钉完整 commit SHA**（官方安全指南："Pin actions to a full-length commit SHA…mitigate the risk of a bad actor adding a backdoor"）；非组织级官方仓库的 action 默认不引入，action 白名单收敛到官方组织（docker / aquasecurity），**例外须经显式 ADR 评审**（ADR-0026 修订，现有例外：dorny/paths-filter）——部署用原生 ssh（ADR-0018），不用第三方 SSH action。
 
 ## 备选方案
 
@@ -62,5 +64,6 @@ CI 机密管理采用**分环境隔离 + 三层分界**，核心原则是**应�
 
 - [ADR-0016：部署编排 Docker Compose](./docker-compose)
 - [ADR-0018：CI/CD 流水线 GitHub Actions](./cicd-github-actions)
+- [ADR-0026：CI 按变更路径裁剪（修订本 ADR 白名单条款）](./ci-path-filtering)
 - [ADR-0020：镜像仓库采用腾讯云 TCR 个人版](./tencent-tcr-registry)
 - [ADR-0021：安全扫描采用 Trivy + Dependabot](./trivy-dependabot)
