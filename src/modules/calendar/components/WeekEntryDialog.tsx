@@ -74,48 +74,48 @@ export default function WeekEntryDialog({
     <>
       <Dialog open onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>
-            {editing ? t("week.dialogEdit") : t("week.dialogCreate")}
-          </DialogTitle>
-        </DialogHeader>
-        {editing ? (
-          <EntryForm
-            date={state.entry.date}
-            entry={state.entry}
-            showDateField={false}
-            onSaved={onClose}
-          />
-        ) : (
-          <EntryForm
-            date={state.date}
-            showDateField={false}
-            initialStartTime={state.prefillStart}
-            onSaved={onClose}
-          />
-        )}
-        {editing && (
-          <div className="flex justify-end gap-2">
-            {onAssist !== undefined && (
+          <DialogHeader>
+            <DialogTitle>
+              {editing ? t("week.dialogEdit") : t("week.dialogCreate")}
+            </DialogTitle>
+          </DialogHeader>
+          {editing ? (
+            <EntryForm
+              date={state.entry.date}
+              entry={state.entry}
+              showDateField={false}
+              onSaved={onClose}
+            />
+          ) : (
+            <EntryForm
+              date={state.date}
+              showDateField={false}
+              initialStartTime={state.prefillStart}
+              onSaved={onClose}
+            />
+          )}
+          {editing && (
+            <div className="flex justify-end gap-2">
+              {onAssist !== undefined && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onAssist(state.entry);
+                    onClose();
+                  }}
+                >
+                  {t("proposal.assistButton")}
+                </Button>
+              )}
               <Button
                 variant="ghost"
-                onClick={() => {
-                  onAssist(state.entry);
-                  onClose();
-                }}
+                className="text-destructive"
+                onClick={() => setConfirmOpen(true)}
               >
-                {t("proposal.assistButton")}
+                {t("entry.delete")}
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              className="text-destructive"
-              onClick={() => setConfirmOpen(true)}
-            >
-              {t("entry.delete")}
-            </Button>
-          </div>
-        )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>

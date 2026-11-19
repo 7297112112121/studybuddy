@@ -232,7 +232,10 @@ export default function AuthScreen(props: AuthScreenProps) {
       {/* aurora 背景层（aria-hidden，-z-10）：墨底上散布柔光斑 → aurora 纱幕
           （网格 + 颗粒）→ 双重压暗（中央保持可读、边缘沉入墨底）。
           整页一张背景，卡片与宣传列同景，不再有分区边界。 */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+      >
         <div className="absolute -top-40 -left-32 size-[28rem] rounded-full bg-aurora-aqua/30 blur-3xl" />
         <div className="absolute top-1/4 right-1/3 size-96 rounded-full bg-aurora-indigo/30 blur-3xl" />
         <div className="absolute -bottom-44 -right-24 size-[30rem] rounded-full bg-aurora-magenta/25 blur-3xl" />
@@ -307,7 +310,9 @@ export default function AuthScreen(props: AuthScreenProps) {
                     isInvalid("password") ||
                     topError === "auth.error.invalidCredentials"
                   }
-                  errorText={topError === null ? undefined : errorText(topError)}
+                  errorText={
+                    topError === null ? undefined : errorText(topError)
+                  }
                   submitting={submitting}
                   onSubmit={handleLoginSubmit}
                   onAccountChange={(value) => updateValue("account", value)}

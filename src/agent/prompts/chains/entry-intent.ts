@@ -26,9 +26,12 @@ export const entryIntentOutputSchema = z
     // 给检索调用的建议查询词
     searchQuery: z.string().min(1).max(100),
   })
-  .refine((v) => v.verdict !== "NOT_APPLICABLE" || v.notApplicableReason !== null, {
-    message: "notApplicableReason required when verdict is NOT_APPLICABLE",
-  });
+  .refine(
+    (v) => v.verdict !== "NOT_APPLICABLE" || v.notApplicableReason !== null,
+    {
+      message: "notApplicableReason required when verdict is NOT_APPLICABLE",
+    },
+  );
 
 export type EntryIntentInput = {
   /** 条目文字原文(AXY-22 F-01,≤50 字)。 */
@@ -52,10 +55,7 @@ export function chainEntryIntent(input: EntryIntentInput): {
     "以 today 为当日参照解析「下周」「月底」等相对表述。",
   ].join("\n");
 
-  const lines = [
-    `条目文字:${input.entryTitle}`,
-    `今日:${input.today}`,
-  ];
+  const lines = [`条目文字:${input.entryTitle}`, `今日:${input.today}`];
   if (input.userRangeHint !== null) {
     lines.push(`追问答复(用户对「打算学到哪天」的回答):${input.userRangeHint}`);
   }

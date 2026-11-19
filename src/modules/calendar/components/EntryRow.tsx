@@ -44,7 +44,12 @@ function timePrefix(entry: CalendarEntryView): string | null {
     : `${entry.startTime}–${entry.endTime}`;
 }
 
-export default function EntryRow({ entry, onEdit, onAssist, resources }: EntryRowProps) {
+export default function EntryRow({
+  entry,
+  onEdit,
+  onAssist,
+  resources,
+}: EntryRowProps) {
   const t = useTranslations("calendar");
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -85,28 +90,28 @@ export default function EntryRow({ entry, onEdit, onAssist, resources }: EntryRo
             <Button variant="ghost" size="sm" onClick={onEdit}>
               {t("entry.edit")}
             </Button>
-          <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={isDeleting}
-              onClick={() => setConfirmOpen(true)}
-            >
-              {t("entry.delete")}
-            </Button>
-            <AlertDialogContent>
-              <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
-              <AlertDialogDescription>{entry.title}</AlertDialogDescription>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setConfirmOpen(false)}>
-                  {t("entry.cancel")}
-                </AlertDialogCancel>
-                <AlertDialogAction onClick={handleConfirmDelete}>
-                  {t("entry.delete")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isDeleting}
+                onClick={() => setConfirmOpen(true)}
+              >
+                {t("entry.delete")}
+              </Button>
+              <AlertDialogContent>
+                <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
+                <AlertDialogDescription>{entry.title}</AlertDialogDescription>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setConfirmOpen(false)}>
+                    {t("entry.cancel")}
+                  </AlertDialogCancel>
+                  <AlertDialogAction onClick={handleConfirmDelete}>
+                    {t("entry.delete")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
         {resources !== undefined && resources.length > 0 && (

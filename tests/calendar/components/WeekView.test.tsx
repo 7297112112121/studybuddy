@@ -46,7 +46,10 @@ function renderView(
   weekDays = days,
 ): ReturnType<typeof render> {
   return render(
-    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+    <NextIntlClientProvider
+      locale="zh-CN"
+      messages={{ calendar: calendarMessages }}
+    >
       <WeekView days={weekDays} entries={entries} />
     </NextIntlClientProvider>,
   );
@@ -129,14 +132,18 @@ describe("WeekView(AXY-23 Task 8)", () => {
       vi.setSystemTime(new Date(2026, 10, 18, 11, 0, 0));
       renderView([], days);
       expect(
-        screen.getByTestId("week-hour-11").classList.contains("text-destructive"),
+        screen
+          .getByTestId("week-hour-11")
+          .classList.contains("text-destructive"),
       ).toBe(true);
       cleanup();
 
       vi.setSystemTime(new Date(2026, 10, 18, 11, 1, 0));
       renderView([], days);
       expect(
-        screen.getByTestId("week-hour-11").classList.contains("text-destructive"),
+        screen
+          .getByTestId("week-hour-11")
+          .classList.contains("text-destructive"),
       ).toBe(false);
     } finally {
       vi.useRealTimers();

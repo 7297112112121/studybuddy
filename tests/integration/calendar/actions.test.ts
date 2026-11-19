@@ -73,11 +73,15 @@ const input = (
 describe("calendar Server Actions（tests/integration/calendar/actions）", () => {
   it("① 无会话：三 action 各返回 UNAUTHORIZED", async () => {
     getCurrentSessionMock.mockResolvedValue(null);
-    expect(await createEntryAction(input("2026-11-17", "x", null, null))).toEqual({
+    expect(
+      await createEntryAction(input("2026-11-17", "x", null, null)),
+    ).toEqual({
       ok: false,
       error: "UNAUTHORIZED",
     });
-    expect(await updateEntryAction("e1", input("2026-11-17", "x", null, null))).toEqual({
+    expect(
+      await updateEntryAction("e1", input("2026-11-17", "x", null, null)),
+    ).toEqual({
       ok: false,
       error: "UNAUTHORIZED",
     });
@@ -91,7 +95,9 @@ describe("calendar Server Actions（tests/integration/calendar/actions）", () =
     const userId = await makeUser("invalid");
     signIn(userId);
 
-    expect(await createEntryAction(input("2026-11-17", "", null, null))).toEqual({
+    expect(
+      await createEntryAction(input("2026-11-17", "", null, null)),
+    ).toEqual({
       ok: false,
       error: "INVALID_INPUT",
       fieldErrors: { title: "calendar.error.titleRequired" },
@@ -116,7 +122,10 @@ describe("calendar Server Actions（tests/integration/calendar/actions）", () =
     signIn(userId);
 
     expect(
-      await updateEntryAction(crypto.randomUUID(), input("2026-11-17", "x", null, null)),
+      await updateEntryAction(
+        crypto.randomUUID(),
+        input("2026-11-17", "x", null, null),
+      ),
     ).toEqual({ ok: false, error: "NOT_FOUND" });
     expect(await deleteEntryAction(crypto.randomUUID())).toEqual({
       ok: false,
@@ -125,16 +134,25 @@ describe("calendar Server Actions（tests/integration/calendar/actions）", () =
   });
 
   it("④ 越权：乙会话调甲 entryId 的 update/delete → NOT_FOUND（service false 归一）", async () => {
-    const [userA, userB] = await Promise.all([makeUser("ow-a"), makeUser("ow-b")]);
+    const [userA, userB] = await Promise.all([
+      makeUser("ow-a"),
+      makeUser("ow-b"),
+    ]);
     signIn(userA);
     await createEntryAction(input("2026-11-17", "甲的条目", "14:00", "15:30"));
     const entryId = (await listMonthEntries(userA, 2026, 11))[0].id;
 
     signIn(userB);
     expect(
-      await updateEntryAction(entryId, input("2026-11-17", "乙的篡改", null, null)),
+      await updateEntryAction(
+        entryId,
+        input("2026-11-17", "乙的篡改", null, null),
+      ),
     ).toEqual({ ok: false, error: "NOT_FOUND" });
-    expect(await deleteEntryAction(entryId)).toEqual({ ok: false, error: "NOT_FOUND" });
+    expect(await deleteEntryAction(entryId)).toEqual({
+      ok: false,
+      error: "NOT_FOUND",
+    });
 
     signIn(userA);
     const rows = await listMonthEntries(userA, 2026, 11);
@@ -146,14 +164,22 @@ describe("calendar Server Actions（tests/integration/calendar/actions）", () =
     const userId = await makeUser("create");
     signIn(userId);
 
-    expect(await createEntryAction(input("2026-11-17", "高数复习", "14:00", "15:30"))).toEqual({
+    expect(
+      await createEntryAction(
+        input("2026-11-17", "高数复习", "14:00", "15:30"),
+      ),
+    ).toEqual({
       ok: true,
     });
     expect(revalidatePathMock).toHaveBeenCalledWith(ROUTES.calendar);
 
     const rows = await listMonthEntries(userId, 2026, 11);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ title: "高数复习", startTime: "14:00", endTime: "15:30" });
+    expect(rows[0]).toMatchObject({
+      title: "高数复习",
+      startTime: "14:00",
+      endTime: "15:30",
+    });
   });
 
   it("⑥ 合法更新/删除 → ok:true 且库行变更/消失", async () => {
@@ -163,7 +189,10 @@ describe("calendar Server Actions（tests/integration/calendar/actions）", () =
     const entryId = (await listMonthEntries(userId, 2026, 11))[0].id;
 
     expect(
-      await updateEntryAction(entryId, input("2026-11-17", "新标题", "09:00", "10:00")),
+      await updateEntryAction(
+        entryId,
+        input("2026-11-17", "新标题", "09:00", "10:00"),
+      ),
     ).toEqual({ ok: true });
     let rows = await listMonthEntries(userId, 2026, 11);
     expect(rows[0]).toMatchObject({ title: "新标题", startTime: "09:00" });

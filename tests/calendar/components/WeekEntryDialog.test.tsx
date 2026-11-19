@@ -6,7 +6,13 @@
  * deleteEntryAction / 取消不调)。action 经 vi.mock 桩接;文案用真实 calendar.json。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import WeekEntryDialog from "@/modules/calendar/components/WeekEntryDialog";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
@@ -40,7 +46,10 @@ const entry = {
 
 function renderDialog(props: Partial<WeekEntryDialogProps>) {
   return render(
-    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+    <NextIntlClientProvider
+      locale="zh-CN"
+      messages={{ calendar: calendarMessages }}
+    >
       <WeekEntryDialog
         state={
           props.state ?? {
@@ -60,17 +69,27 @@ describe("WeekEntryDialog(AXY-23 Task 7)", () => {
     renderDialog({});
 
     expect((screen.getByLabelText("事项") as HTMLInputElement).value).toBe("");
-    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe("14:30");
-    expect((screen.getByLabelText("结束时间") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe(
+      "14:30",
+    );
+    expect((screen.getByLabelText("结束时间") as HTMLInputElement).value).toBe(
+      "",
+    );
     expect(screen.queryByLabelText("所属日期")).toBeNull();
   });
 
   it("edit 模式:预填原值", () => {
     renderDialog({ state: { mode: "edit", entry } });
 
-    expect((screen.getByLabelText("事项") as HTMLInputElement).value).toBe("组会");
-    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe("14:30");
-    expect((screen.getByLabelText("结束时间") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("事项") as HTMLInputElement).value).toBe(
+      "组会",
+    );
+    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe(
+      "14:30",
+    );
+    expect((screen.getByLabelText("结束时间") as HTMLInputElement).value).toBe(
+      "",
+    );
   });
 
   it("create 保存成功 → createEntryAction 以锁定日期+预填开始时间被调,onClose 回调", async () => {
@@ -78,7 +97,9 @@ describe("WeekEntryDialog(AXY-23 Task 7)", () => {
     const onClose = vi.fn();
     renderDialog({ onClose });
 
-    fireEvent.change(screen.getByLabelText("事项"), { target: { value: "组会" } });
+    fireEvent.change(screen.getByLabelText("事项"), {
+      target: { value: "组会" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "添加" }));
 
     await waitFor(() => expect(createEntryActionMock).toHaveBeenCalledOnce());
@@ -110,7 +131,9 @@ describe("WeekEntryDialog(AXY-23 Task 7)", () => {
     const dialog = await screen.findByRole("alertdialog");
     fireEvent.click(screen.getByRole("button", { name: "删除" }));
 
-    await waitFor(() => expect(deleteEntryActionMock).toHaveBeenCalledWith("e1"));
+    await waitFor(() =>
+      expect(deleteEntryActionMock).toHaveBeenCalledWith("e1"),
+    );
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     void dialog;
   });

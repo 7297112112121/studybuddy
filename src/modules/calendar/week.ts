@@ -16,7 +16,11 @@ import type { CalendarEntryView } from "./queries";
 
 export type WeekdayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
-export type WeekDay = { date: string; weekdayKey: WeekdayKey; isToday: boolean };
+export type WeekDay = {
+  date: string;
+  weekdayKey: WeekdayKey;
+  isToday: boolean;
+};
 
 const WEEKDAY_KEYS: WeekdayKey[] = [
   "mon",
@@ -109,9 +113,10 @@ export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
     .map((e) => ({
       id: e.id,
       start: timeToMinutes(e.startTime as string),
-      end: e.endTime === null
-        ? timeToMinutes(e.startTime as string) + 30 // D-12:时间点条目 30 分钟
-        : timeToMinutes(e.endTime),
+      end:
+        e.endTime === null
+          ? timeToMinutes(e.startTime as string) + 30 // D-12:时间点条目 30 分钟
+          : timeToMinutes(e.endTime),
     }))
     .sort((a, b) => a.start - b.start || a.id.localeCompare(b.id));
 

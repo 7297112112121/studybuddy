@@ -3,18 +3,11 @@
   "version": "9",
   "dialect": "postgres",
   "id": "c7751843-2353-47d1-a067-17ee377dc4f6",
-  "prevIds": [
-    "a11377ef-e0e2-48a6-aecb-c961c50c1678"
-  ],
+  "prevIds": ["a11377ef-e0e2-48a6-aecb-c961c50c1678"],
   "footprints": [
     {
       "statementType": "drop_index",
-      "statementTarget": [
-        "index",
-        "public",
-        "user",
-        "user_phone_number"
-      ],
+      "statementTarget": ["index", "public", "user", "user_phone_number"],
       "writes": [
         "s|idx|public.user_phone_number",
         "n|idx|public.user_phone_number",
@@ -26,72 +19,41 @@
         "n|sch|public",
         "e|col|public.user.phone_number"
       ],
-      "sharedWrites": [
-        "e|uniqueness|public.user.phone_number"
-      ]
+      "sharedWrites": ["e|uniqueness|public.user.phone_number"]
     },
     {
       "statementType": "add_column",
-      "statementTarget": [
-        "column",
-        "public",
-        "user",
-        "username"
-      ],
+      "statementTarget": ["column", "public", "user", "username"],
       "writes": [
         "s|col|public.user.username",
         "n|col|public.user.username",
         "e|col|public.user.username"
       ],
-      "reads": [
-        "n|tbl|public.user",
-        "n|sch|public"
-      ]
+      "reads": ["n|tbl|public.user", "n|sch|public"]
     },
     {
       "statementType": "drop_column",
-      "statementTarget": [
-        "column",
-        "public",
-        "user",
-        "phone_number"
-      ],
+      "statementTarget": ["column", "public", "user", "phone_number"],
       "writes": [
         "s|col|public.user.phone_number",
         "n|col|public.user.phone_number",
         "e|col|public.user.phone_number"
       ],
-      "reads": [
-        "n|tbl|public.user",
-        "n|sch|public"
-      ]
+      "reads": ["n|tbl|public.user", "n|sch|public"]
     },
     {
       "statementType": "drop_column",
-      "statementTarget": [
-        "column",
-        "public",
-        "user",
-        "phone_number_verified"
-      ],
+      "statementTarget": ["column", "public", "user", "phone_number_verified"],
       "writes": [
         "s|col|public.user.phone_number_verified",
         "n|col|public.user.phone_number_verified",
         "e|col|public.user.phone_number_verified"
       ],
-      "reads": [
-        "n|tbl|public.user",
-        "n|sch|public"
-      ]
+      "reads": ["n|tbl|public.user", "n|sch|public"]
     },
     {
       "statementType": "create_index",
-      "statementTarget": [
-        "index",
-        "public",
-        "user",
-        "user_username"
-      ],
+      "statementTarget": ["index", "public", "user", "user_username"],
       "writes": [
         "s|idx|public.user_username",
         "n|idx|public.user_username",

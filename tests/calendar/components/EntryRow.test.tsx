@@ -28,12 +28,17 @@ const entry: CalendarEntryView = {
   endTime: null,
 };
 
-function renderRow(props: {
-  onAssist?: () => void;
-  resources?: { title: string; url: string }[];
-} = {}): void {
+function renderRow(
+  props: {
+    onAssist?: () => void;
+    resources?: { title: string; url: string }[];
+  } = {},
+): void {
   render(
-    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+    <NextIntlClientProvider
+      locale="zh-CN"
+      messages={{ calendar: calendarMessages }}
+    >
       <ul>
         <EntryRow
           entry={entry}
@@ -62,7 +67,9 @@ describe("EntryRow(AXY-24 T7)", () => {
 
   it("resources 渲染资料链接(target=_blank),无 resources 不渲染资料区", () => {
     renderRow({
-      resources: [{ title: "Next.js 官方文档", url: "https://nextjs.org/docs" }],
+      resources: [
+        { title: "Next.js 官方文档", url: "https://nextjs.org/docs" },
+      ],
     });
     const link = screen.getByRole("link", { name: "Next.js 官方文档" });
     expect(link.getAttribute("href")).toBe("https://nextjs.org/docs");

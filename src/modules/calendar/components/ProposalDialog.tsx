@@ -22,10 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/lib/routes";
-import {
-  confirmProposalAction,
-  requestProposalAction,
-} from "../actions";
+import { confirmProposalAction, requestProposalAction } from "../actions";
 import type { ProposalDay } from "../proposal";
 
 type ProposalDialogProps = {
@@ -182,14 +179,19 @@ export default function ProposalDialog({
         </p>
 
         {phase === "loading" && (
-          <p role="status" className="text-muted-foreground py-6 text-center text-sm">
+          <p
+            role="status"
+            className="text-muted-foreground py-6 text-center text-sm"
+          >
             {t("proposal.generating")}
           </p>
         )}
 
         {phase === "needRange" && (
           <div className="flex flex-col gap-2">
-            <Label htmlFor="proposal-answer">{t("proposal.followUpQuestion")}</Label>
+            <Label htmlFor="proposal-answer">
+              {t("proposal.followUpQuestion")}
+            </Label>
             <Input
               id="proposal-answer"
               value={answer}
@@ -208,14 +210,18 @@ export default function ProposalDialog({
               <Button variant="ghost" onClick={onClose}>
                 {t("proposal.closeButton")}
               </Button>
-              <Button onClick={submitAnswer}>{t("proposal.continueButton")}</Button>
+              <Button onClick={submitAnswer}>
+                {t("proposal.continueButton")}
+              </Button>
             </div>
           </div>
         )}
 
         {phase === "notApplicable" && (
           <div className="flex flex-col gap-3">
-            <p role="alert" className="text-sm">{t("proposal.notApplicable")}</p>
+            <p role="alert" className="text-sm">
+              {t("proposal.notApplicable")}
+            </p>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={onClose}>
                 {t("proposal.closeButton")}
@@ -245,7 +251,9 @@ export default function ProposalDialog({
 
         {phase === "unavailable" && (
           <div className="flex flex-col gap-3">
-            <p role="alert" className="text-sm">{t("proposal.unavailable")}</p>
+            <p role="alert" className="text-sm">
+              {t("proposal.unavailable")}
+            </p>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={onClose}>
                 {t("proposal.closeButton")}
@@ -273,7 +281,9 @@ export default function ProposalDialog({
                         aria-label={t("proposal.dayDateLabel")}
                         type="date"
                         value={day.date}
-                        onChange={(e) => updateDay(index, { date: e.target.value })}
+                        onChange={(e) =>
+                          updateDay(index, { date: e.target.value })
+                        }
                       />
                     </div>
                     <div className="flex flex-col gap-1">
@@ -285,13 +295,12 @@ export default function ProposalDialog({
                         aria-label={t("proposal.dayTextLabel")}
                         maxLength={50}
                         value={day.text}
-                        onChange={(e) => updateDay(index, { text: e.target.value })}
+                        onChange={(e) =>
+                          updateDay(index, { text: e.target.value })
+                        }
                       />
                     </div>
-                    <Button
-                      variant="ghost"
-                      onClick={() => removeDay(index)}
-                    >
+                    <Button variant="ghost" onClick={() => removeDay(index)}>
                       {t("entry.delete")}
                     </Button>
                   </div>
@@ -325,17 +334,10 @@ export default function ProposalDialog({
               <Button variant="ghost" onClick={onClose}>
                 {t("proposal.closeButton")}
               </Button>
-              <Button
-                variant="ghost"
-                onClick={regenerate}
-                disabled={writing}
-              >
+              <Button variant="ghost" onClick={regenerate} disabled={writing}>
                 {t("proposal.regenerateButton")}
               </Button>
-              <Button
-                onClick={() => void handleConfirm()}
-                disabled={writing}
-              >
+              <Button onClick={() => void handleConfirm()} disabled={writing}>
                 {t("proposal.confirmButton")}
               </Button>
             </div>

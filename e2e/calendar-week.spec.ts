@@ -82,10 +82,10 @@ test.describe("AXY-23 日程周视图", () => {
     await expect(weekBlock(page, "高数复习")).toBeVisible();
   });
 
-  test("R8:窄屏 375px 周视图横向滚动,全天区与表头可见", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({ viewport: { width: 375, height: 720 } });
+  test("R8:窄屏 375px 周视图横向滚动,全天区与表头可见", async ({ browser }) => {
+    const context = await browser.newContext({
+      viewport: { width: 375, height: 720 },
+    });
     const page = await context.newPage();
     await registerAndOpenWeek(page);
 
@@ -94,7 +94,9 @@ test.describe("AXY-23 日程周视图", () => {
       (el) => el.scrollWidth > el.clientWidth,
     );
     expect(scrollable).toBe(true);
-    await expect(page.locator('[data-testid^="week-col-"]').first()).toBeVisible();
+    await expect(
+      page.locator('[data-testid^="week-col-"]').first(),
+    ).toBeVisible();
     await expect(page.getByText("全天")).toBeVisible();
     await context.close();
   });
@@ -104,7 +106,10 @@ test.describe("AXY-23 日程周视图", () => {
   }) => {
     await registerAndOpenWeek(page);
 
-    await page.getByRole("button", { name: /14:30 新建条目/ }).first().click();
+    await page
+      .getByRole("button", { name: /14:30 新建条目/ })
+      .first()
+      .click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("新建条目")).toBeVisible();
@@ -134,7 +139,9 @@ test.describe("AXY-23 日程周视图", () => {
     await weekBlock(page, "高数复习").click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator("#calendar-entry-title")).toHaveValue("高数复习");
+    await expect(dialog.locator("#calendar-entry-title")).toHaveValue(
+      "高数复习",
+    );
     await expect(dialog.locator("#calendar-entry-start")).toHaveValue("14:00");
     await dialog.locator("#calendar-entry-title").fill("高数冲刺");
     await dialog.getByRole("button", { name: "保存" }).click();
@@ -144,7 +151,10 @@ test.describe("AXY-23 日程周视图", () => {
 
     // 删除:二次确认层,取消保留
     await weekBlock(page, "高数冲刺").click();
-    await page.getByRole("dialog").getByRole("button", { name: "删除" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "删除" })
+      .click();
     const confirm = page.getByRole("alertdialog");
     await expect(confirm).toBeVisible();
     await confirm.getByRole("button", { name: "取消" }).click();
@@ -157,7 +167,10 @@ test.describe("AXY-23 日程周视图", () => {
 
     // 确认删除 → 色块消失,空周文案出现(R6)
     await weekBlock(page, "高数冲刺").click();
-    await page.getByRole("dialog").getByRole("button", { name: "删除" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "删除" })
+      .click();
     await page
       .getByRole("alertdialog")
       .getByRole("button", { name: "删除" })
@@ -182,7 +195,9 @@ test.describe("AXY-23 日程周视图", () => {
     await allDay.click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator("#calendar-entry-title")).toHaveValue("交英语作业");
+    await expect(dialog.locator("#calendar-entry-title")).toHaveValue(
+      "交英语作业",
+    );
   });
 
   test("R6+R10 演示态 5:空周文案;周↔月切换数据一致、保持所在周、URL 恒 /calendar", async ({
@@ -206,7 +221,9 @@ test.describe("AXY-23 日程周视图", () => {
     await page.getByRole("link", { name: "周", exact: true }).click();
     await expect(page).toHaveURL(/\/calendar\?week=/);
     // 不带时间条目 → 全天区(R5 形态),非色块
-    await expect(page.getByRole("button", { name: "月视图建的条目" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "月视图建的条目" }),
+    ).toBeVisible();
     await expect(page).toHaveURL(/\/calendar/);
   });
 });

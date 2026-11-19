@@ -69,7 +69,11 @@ async function requireSession() {
 async function runAction(
   input: CalendarEntryInput,
   entryId: string | null,
-  write: (userId: string, input: CalendarEntryInput, entryId: string | null) => Promise<WriteResult>,
+  write: (
+    userId: string,
+    input: CalendarEntryInput,
+    entryId: string | null,
+  ) => Promise<WriteResult>,
 ): Promise<CalendarEntryActionResult> {
   const session = await requireSession();
   if (!session) {
@@ -78,7 +82,11 @@ async function runAction(
 
   const parsed = calendarEntryInputSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "INVALID_INPUT", fieldErrors: toFieldErrors(parsed.error) };
+    return {
+      ok: false,
+      error: "INVALID_INPUT",
+      fieldErrors: toFieldErrors(parsed.error),
+    };
   }
 
   let result: WriteResult;

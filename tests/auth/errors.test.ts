@@ -24,9 +24,7 @@ describe("mapSignInError", () => {
   });
 
   it("status 429 → auth.error.tooManyAttempts", () => {
-    expect(mapSignInError({ status: 429 })).toBe(
-      "auth.error.tooManyAttempts",
-    );
+    expect(mapSignInError({ status: 429 })).toBe("auth.error.tooManyAttempts");
   });
 
   it("null → auth.error.unknown", () => {

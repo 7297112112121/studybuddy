@@ -40,14 +40,14 @@ PR 标题沿用分支提交的 Conventional Commits 格式;正文最少写清改
 
 ### 3. 处理 PR 提交错误(对照表)
 
-| 症状 | 处置 |
-| --- | --- |
-| `no upstream branch` / 提示先推送 | 回到第 2 步先 `git push -u origin <branch>` |
-| `a pull request for branch X already exists` | 复用既有 PR:`gh pr view <branch> --web` 或带编号继续第 4 步,不新建 |
-| CI 未通过 | `gh pr checks` 看失败项,修复后 push(新提交自动进同一 PR),再等绿灯 |
-| 合并冲突 | `git fetch origin && git rebase origin/master`,解决后 `git push --force-with-lease` |
-| 网络 / SSH 失败 | 本环境可能需代理(如 `HTTPS_PROXY=http://127.0.0.1:7897`)后重试一次 |
-| 其余未知错误 | 原样呈报用户(硬门禁 5) |
+| 症状                                         | 处置                                                                                |
+| -------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `no upstream branch` / 提示先推送            | 回到第 2 步先 `git push -u origin <branch>`                                         |
+| `a pull request for branch X already exists` | 复用既有 PR:`gh pr view <branch> --web` 或带编号继续第 4 步,不新建                  |
+| CI 未通过                                    | `gh pr checks` 看失败项,修复后 push(新提交自动进同一 PR),再等绿灯                   |
+| 合并冲突                                     | `git fetch origin && git rebase origin/master`,解决后 `git push --force-with-lease` |
+| 网络 / SSH 失败                              | 本环境可能需代理(如 `HTTPS_PROXY=http://127.0.0.1:7897`)后重试一次                  |
+| 其余未知错误                                 | 原样呈报用户(硬门禁 5)                                                              |
 
 ### 4. Squash merge 与分支清理
 
@@ -72,10 +72,10 @@ git checkout master && git pull --ff-only
 
 ## 常见合理化对照表
 
-| 借口 | 裁决 |
-| --- | --- |
-| CI 还在跑,先把分支删了/切走了 | 不行——未确认 `MERGED` 不得删分支(硬门禁 3) |
+| 借口                                         | 裁决                                                   |
+| -------------------------------------------- | ------------------------------------------------------ |
+| CI 还在跑,先把分支删了/切走了                | 不行——未确认 `MERGED` 不得删分支(硬门禁 3)             |
 | `git branch -d` 被拒,以为没合并成功,想改历史 | squash 合并后 `-d` 必拒绝,这是预期;先查 PR 状态再 `-D` |
-| 改动很小,直接推 master 不开 PR | 除非用户明确要求,一律走 PR(仓库 GitHub Flow 惯例) |
-| PR 正文先空着,合并后补 | 最少写清改动范围与测试情况;正文是审阅与回溯的唯一入口 |
-| rebase 后被拒就用普通 force push | 只允许 `--force-with-lease`(硬门禁 4) |
+| 改动很小,直接推 master 不开 PR               | 除非用户明确要求,一律走 PR(仓库 GitHub Flow 惯例)      |
+| PR 正文先空着,合并后补                       | 最少写清改动范围与测试情况;正文是审阅与回溯的唯一入口  |
+| rebase 后被拒就用普通 force push             | 只允许 `--force-with-lease`(硬门禁 4)                  |

@@ -24,7 +24,8 @@ export type WebSearchCompletion =
   | { ok: true; text: string; sources: WebSearchSource[] }
   | { ok: false; error: "AI_UNAVAILABLE" };
 
-const DEEPSEEK_CHAT_COMPLETIONS_URL = "https://api.deepseek.com/chat/completions";
+const DEEPSEEK_CHAT_COMPLETIONS_URL =
+  "https://api.deepseek.com/chat/completions";
 
 /** server_tool_calls[].calls[].sources 条目(官方扩展字段)。 */
 type ServerToolSource = { url?: unknown; title?: unknown; snippet?: unknown };
@@ -51,7 +52,9 @@ type ChatCompletionResponse = {
 function toSources(list: ServerToolSource[] | undefined): WebSearchSource[] {
   if (!list) return [];
   return list
-    .filter((s): s is ServerToolSource & { url: string } => typeof s.url === "string")
+    .filter(
+      (s): s is ServerToolSource & { url: string } => typeof s.url === "string",
+    )
     .map((s) => ({
       url: s.url,
       title: typeof s.title === "string" ? s.title : null,
@@ -62,11 +65,14 @@ function toSources(list: ServerToolSource[] | undefined): WebSearchSource[] {
 function parseSources(response: ChatCompletionResponse): WebSearchSource[] {
   const message = response.choices?.[0]?.message;
   // server_tool_calls 是「步」数组,来源在每步 calls[].sources(官方结构)
-  const fromTools: WebSearchSource[] = (message?.server_tool_calls ?? []).flatMap(
-    (step) => (step.calls ?? []).flatMap((call) => toSources(call.sources)),
+  const fromTools: WebSearchSource[] = (
+    message?.server_tool_calls ?? []
+  ).flatMap((step) =>
+    (step.calls ?? []).flatMap((call) => toSources(call.sources)),
   );
   const fromCitations: WebSearchSource[] = (message?.annotations ?? []).flatMap(
-    (a) => toSources([{ url: a.url_citation?.url, title: a.url_citation?.title }]),
+    (a) =>
+      toSources([{ url: a.url_citation?.url, title: a.url_citation?.title }]),
   );
   // 按 URL 去重(sources 与 citations 常重叠),保序取首见
   const byUrl = new Map<string, WebSearchSource>();
@@ -83,7 +89,11 @@ export async function runWebSearchCompletion(
   messages: ModelMessage[],
 ): Promise<WebSearchCompletion> {
   if (aiStubEnabled()) {
-    return { ok: true, text: "(stub) 已检索到固定来源", sources: stubSearchSources() };
+    return {
+      ok: true,
+      text: "(stub) 已检索到固定来源",
+      sources: stubSearchSources(),
+    };
   }
 
   const apiKey = process.env.DEEPSEEK_API_KEY;

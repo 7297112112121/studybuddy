@@ -21,7 +21,11 @@ describe("chainResourcePlan", () => {
       rangeEnd: "2026-11-30",
       today: "2026-11-19",
       sources: [
-        { url: "https://nextjs.org/docs", title: "Next.js Docs", snippet: null },
+        {
+          url: "https://nextjs.org/docs",
+          title: "Next.js Docs",
+          snippet: null,
+        },
         { url: "https://example.com/a", title: null, snippet: "示例" },
       ],
     });

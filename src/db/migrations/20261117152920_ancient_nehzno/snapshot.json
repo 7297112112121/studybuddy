@@ -3,17 +3,11 @@
   "version": "9",
   "dialect": "postgres",
   "id": "3ca7c1f6-a7ac-40a7-abc0-77efab986187",
-  "prevIds": [
-    "c7751843-2353-47d1-a067-17ee377dc4f6"
-  ],
+  "prevIds": ["c7751843-2353-47d1-a067-17ee377dc4f6"],
   "footprints": [
     {
       "statementType": "create_table",
-      "statementTarget": [
-        "table",
-        "public",
-        "calendar_entry"
-      ],
+      "statementTarget": ["table", "public", "calendar_entry"],
       "writes": [
         "s|tbl|public.calendar_entry",
         "n|tbl|public.calendar_entry",
@@ -22,9 +16,7 @@
         "n|type|public.calendar_entry",
         "n|rel|public.calendar_entry_pkey"
       ],
-      "reads": [
-        "n|sch|public"
-      ]
+      "reads": ["n|sch|public"]
     },
     {
       "statementType": "create_index",
@@ -223,9 +215,7 @@
         "schema": "public",
         "table": "calendar_entry",
         "name": "calendar_entry_pkey",
-        "columns": [
-          "id"
-        ],
+        "columns": ["id"],
         "nameExplicit": false,
         "entityType": "pks"
       }

@@ -49,7 +49,9 @@ function monthParam(year: number, month: number): string {
 }
 
 /** ?month= 解析:合法 "YYYY-MM"(真实月)才采纳,否则 null 回退当前月。 */
-function parseMonthParam(raw: string | undefined): { year: number; month: number } | null {
+function parseMonthParam(
+  raw: string | undefined,
+): { year: number; month: number } | null {
   if (raw === undefined || !/^\d{4}-\d{2}$/.test(raw)) return null;
   const [year, month] = raw.split("-").map(Number);
   if (month < 1 || month > 12 || year < 1 || year > 9999) return null;
@@ -138,7 +140,10 @@ export default async function CalendarPage({
           size="sm"
           asChild
         >
-          <Link href={weekHref} aria-current={shown.view === "week" ? "true" : undefined}>
+          <Link
+            href={weekHref}
+            aria-current={shown.view === "week" ? "true" : undefined}
+          >
             {t("week.viewWeek")}
           </Link>
         </Button>
@@ -147,7 +152,10 @@ export default async function CalendarPage({
           size="sm"
           asChild
         >
-          <Link href={monthHref} aria-current={shown.view === "month" ? "true" : undefined}>
+          <Link
+            href={monthHref}
+            aria-current={shown.view === "month" ? "true" : undefined}
+          >
             {t("week.viewMonth")}
           </Link>
         </Button>

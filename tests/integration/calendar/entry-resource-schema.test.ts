@@ -47,9 +47,7 @@ describe("entry_resource schema(T1)", () => {
       url: "https://example.com/next-tutorial",
     });
 
-    await db
-      .delete(calendarEntry)
-      .where(eq(calendarEntry.id, entry.id));
+    await db.delete(calendarEntry).where(eq(calendarEntry.id, entry.id));
 
     const left = await db
       .select()

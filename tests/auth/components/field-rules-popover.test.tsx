@@ -31,9 +31,7 @@ function renderAuthScreen(initialView: "login" | "register" = "login") {
 
 /** 浮层内第 label 条规则的通过态标记。 */
 function rulePassed(label: string): string | null {
-  const item = screen
-    .getByText(label)
-    .closest("li[data-passed]");
+  const item = screen.getByText(label).closest("li[data-passed]");
   return item?.getAttribute("data-passed") ?? null;
 }
 

@@ -35,7 +35,10 @@ function renderGrid(
 ) {
   const onSelect = overrides.onSelect ?? vi.fn();
   render(
-    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+    <NextIntlClientProvider
+      locale="zh-CN"
+      messages={{ calendar: calendarMessages }}
+    >
       <MonthGrid
         year={2026}
         month={11}
@@ -81,7 +84,13 @@ describe("MonthGrid（tests/calendar/components/MonthGrid）", () => {
     renderGrid({
       entries: [
         ...entries,
-        { id: "e3", date: "2026-11-17", title: "第三条", startTime: "20:00", endTime: null },
+        {
+          id: "e3",
+          date: "2026-11-17",
+          title: "第三条",
+          startTime: "20:00",
+          endTime: null,
+        },
       ],
     });
     const cell = document.querySelector(
@@ -103,9 +112,9 @@ describe("MonthGrid（tests/calendar/components/MonthGrid）", () => {
 
   it("⑥ 星期表头：周一至周日（一…日）按序渲染在月格之前", () => {
     renderGrid();
-    const labels = [
-      ...document.querySelectorAll("[data-weekday]"),
-    ].map((el) => el.textContent);
+    const labels = [...document.querySelectorAll("[data-weekday]")].map(
+      (el) => el.textContent,
+    );
     expect(labels).toEqual(["一", "二", "三", "四", "五", "六", "日"]);
   });
 });

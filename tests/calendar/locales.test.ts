@@ -9,7 +9,10 @@ import { describe, expect, it } from "vitest";
  */
 function readCalendarJson(): Record<string, Record<string, string>> {
   return JSON.parse(
-    readFileSync(resolve(__dirname, "../../src/locales/zh-CN/calendar.json"), "utf8"),
+    readFileSync(
+      resolve(__dirname, "../../src/locales/zh-CN/calendar.json"),
+      "utf8",
+    ),
   ) as Record<string, Record<string, string>>;
 }
 

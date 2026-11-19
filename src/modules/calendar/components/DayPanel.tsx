@@ -42,14 +42,13 @@ export default function DayPanel({
 }: DayPanelProps) {
   const t = useTranslations("calendar");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [assistEntry, setAssistEntry] = useState<CalendarEntryView | null>(null);
+  const [assistEntry, setAssistEntry] = useState<CalendarEntryView | null>(
+    null,
+  );
   const editingEntry =
-    editingId === null
-      ? undefined
-      : entries.find((e) => e.id === editingId);
+    editingId === null ? undefined : entries.find((e) => e.id === editingId);
 
-  const title =
-    formatMonthDay(date) + (date === today ? " · 今天" : "");
+  const title = formatMonthDay(date) + (date === today ? " · 今天" : "");
 
   return (
     <section

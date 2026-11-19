@@ -41,12 +41,7 @@ export async function updateEntry(
       endTime: input.endTime,
       updatedAt: new Date(),
     })
-    .where(
-      and(
-        eq(calendarEntry.id, entryId),
-        eq(calendarEntry.userId, userId),
-      ),
-    )
+    .where(and(eq(calendarEntry.id, entryId), eq(calendarEntry.userId, userId)))
     .returning({ id: calendarEntry.id });
   return rows.length > 0;
 }
@@ -58,12 +53,7 @@ export async function deleteEntry(
 ): Promise<boolean> {
   const rows = await db
     .delete(calendarEntry)
-    .where(
-      and(
-        eq(calendarEntry.id, entryId),
-        eq(calendarEntry.userId, userId),
-      ),
-    )
+    .where(and(eq(calendarEntry.id, entryId), eq(calendarEntry.userId, userId)))
     .returning({ id: calendarEntry.id });
   return rows.length > 0;
 }

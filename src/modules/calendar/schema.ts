@@ -95,10 +95,14 @@ export const calendarEntryInputSchema = z
     message: "calendar.error.endTimeAfterStart",
   })
   // F-03/E-03：结束须晚于开始；零填充 HH:MM 字符串比较即时间比较
-  .refine((v) => v.startTime === null || v.endTime === null || v.endTime > v.startTime, {
-    path: ["endTime"],
-    message: "calendar.error.endTimeAfterStart",
-  });
+  .refine(
+    (v) =>
+      v.startTime === null || v.endTime === null || v.endTime > v.startTime,
+    {
+      path: ["endTime"],
+      message: "calendar.error.endTimeAfterStart",
+    },
+  );
 
 export type CalendarEntryInput = z.infer<typeof calendarEntryInputSchema>;
 

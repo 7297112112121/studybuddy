@@ -31,7 +31,11 @@ import {
   runWebSearchCompletion,
   type WebSearchSource,
 } from "@/agent/runtime/deepseek-web-search";
-import { calendarEntry, calendarEntryInputSchema, entryResource } from "./schema";
+import {
+  calendarEntry,
+  calendarEntryInputSchema,
+  entryResource,
+} from "./schema";
 import { rangeDayCount, todayString } from "@/lib/date";
 
 type ProposalResource = { title: string; url: string };

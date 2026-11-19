@@ -56,7 +56,10 @@ function issueToFieldErrors(
   }
 }
 
-function toFieldErrors(input: RegisterInput, error: ZodError): RegisterFormErrors {
+function toFieldErrors(
+  input: RegisterInput,
+  error: ZodError,
+): RegisterFormErrors {
   const rawPassword = (input as { password?: unknown }).password;
   const fieldErrors: RegisterFormErrors = {};
   for (const issue of error.issues) {

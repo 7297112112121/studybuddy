@@ -21,10 +21,7 @@ export type CalendarEntryView = {
 };
 
 /** 同日排序：不带时间在前、带时间按 startTime 升序（演示态 4「按开始时间先后并列」）。 */
-function compareEntries(
-  a: CalendarEntryView,
-  b: CalendarEntryView,
-): number {
+function compareEntries(a: CalendarEntryView, b: CalendarEntryView): number {
   if (a.date !== b.date) return a.date < b.date ? -1 : 1;
   if (a.startTime === null && b.startTime === null) return 0;
   if (a.startTime === null) return -1;

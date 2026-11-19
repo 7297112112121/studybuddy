@@ -27,7 +27,11 @@ export default function SignOutButton() {
   }
 
   return (
-    <Button type="button" variant="outline" onClick={() => void handleSignOut()}>
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => void handleSignOut()}
+    >
       退出登录
     </Button>
   );

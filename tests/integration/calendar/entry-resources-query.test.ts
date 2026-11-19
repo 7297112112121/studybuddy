@@ -37,7 +37,11 @@ async function makeEntry(
   return row.id;
 }
 
-async function makeResource(entryId: string, title: string, url: string): Promise<void> {
+async function makeResource(
+  entryId: string,
+  title: string,
+  url: string,
+): Promise<void> {
   await db.insert(entryResource).values({ entryId, title, url });
 }
 

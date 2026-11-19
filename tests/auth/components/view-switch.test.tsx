@@ -52,12 +52,12 @@ describe("R16 视图切换", () => {
     });
     fireEvent.click(screen.getByRole("tab", { name: "注册" }));
 
-    expect(
-      (screen.getByLabelText("账户名") as HTMLInputElement).value,
-    ).toBe("13800138000");
-    expect(
-      (screen.getByLabelText("设置密码") as HTMLInputElement).value,
-    ).toBe("study2026");
+    expect((screen.getByLabelText("账户名") as HTMLInputElement).value).toBe(
+      "13800138000",
+    );
+    expect((screen.getByLabelText("设置密码") as HTMLInputElement).value).toBe(
+      "study2026",
+    );
     expect(replaceState).toHaveBeenCalledWith(null, "", "/register");
   });
 
@@ -70,9 +70,9 @@ describe("R16 视图切换", () => {
     }
 
     fireEvent.submit(form);
-    expect(
-      screen.getByLabelText("账户名").getAttribute("aria-invalid"),
-    ).toBe("true");
+    expect(screen.getByLabelText("账户名").getAttribute("aria-invalid")).toBe(
+      "true",
+    );
     expect(screen.queryByText(/项需要修改/)).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "注册一个" }));

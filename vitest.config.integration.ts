@@ -27,7 +27,8 @@ export default defineConfig({
       // （create-context.mjs：默认 secret 仅 dev 放行、缺失必抛），
       // Task 6 端点测试直调 auth.handler 前需在此注入测试值。
       BETTER_AUTH_SECRET:
-        process.env.BETTER_AUTH_SECRET ?? "integration-test-secret-0123456789abcdef",
+        process.env.BETTER_AUTH_SECRET ??
+        "integration-test-secret-0123456789abcdef",
       BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
     },
   },

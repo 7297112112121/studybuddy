@@ -15,7 +15,10 @@ afterEach(cleanup);
 
 function renderBoundary(error: Error, reset: () => void): void {
   render(
-    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+    <NextIntlClientProvider
+      locale="zh-CN"
+      messages={{ calendar: calendarMessages }}
+    >
       <CalendarError error={error} reset={reset} />
     </NextIntlClientProvider>,
   );

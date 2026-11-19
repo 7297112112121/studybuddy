@@ -16,15 +16,21 @@
  * reject——children 元素从未被产出，受保护内容不可能进入响应/文档。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
 import type { AuthSession } from "@/modules/auth";
 import AuthLayout from "@/app/(auth)/layout";
 import AppLayout from "@/app/(app)/layout";
 import SignOutButton from "@/modules/auth/components/SignOutButton";
 
-const getCurrentSession = vi.hoisted(
-  () => vi.fn<() => Promise<AuthSession | null>>(),
+const getCurrentSession = vi.hoisted(() =>
+  vi.fn<() => Promise<AuthSession | null>>(),
 );
 const redirectMock = vi.hoisted(() =>
   vi.fn<(path: string, type?: string) => never>((path) => {
@@ -37,9 +43,8 @@ const routerReplace = vi.hoisted(() => vi.fn<(path: string) => void>());
 const signOut = vi.hoisted(() => vi.fn());
 
 vi.mock("@/modules/auth", async () => {
-  const { default: RealAuthRedirect } = await import(
-    "@/modules/auth/components/AuthRedirect"
-  );
+  const { default: RealAuthRedirect } =
+    await import("@/modules/auth/components/AuthRedirect");
   return {
     getCurrentSession,
     AuthRedirect: RealAuthRedirect,
@@ -55,7 +60,11 @@ vi.mock("@/lib/auth-client", () => ({
 
 const session: AuthSession = {
   user: { id: "user-1", name: "studybuddy_u1", username: "studybuddy_u1" },
-  session: { id: "session-1", userId: "user-1", expiresAt: new Date("2026-12-31T00:00:00Z") },
+  session: {
+    id: "session-1",
+    userId: "user-1",
+    expiresAt: new Date("2026-12-31T00:00:00Z"),
+  },
 };
 
 function Children(): ReactElement {
@@ -107,7 +116,9 @@ describe("B6：(app) 布局守卫（服务端未登录拦截）", () => {
   it("未登录 → redirect 以 '/login' 抛出，children 不被产出（受保护内容不进文档）", async () => {
     getCurrentSession.mockResolvedValue(null);
 
-    await expect(AppLayout(layoutProps)).rejects.toThrow("NEXT_REDIRECT:/login");
+    await expect(AppLayout(layoutProps)).rejects.toThrow(
+      "NEXT_REDIRECT:/login",
+    );
     expect(redirectMock).toHaveBeenCalledTimes(1);
     expect(redirectMock).toHaveBeenCalledWith("/login");
   });

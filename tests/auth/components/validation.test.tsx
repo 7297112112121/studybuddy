@@ -48,9 +48,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-function renderAuthScreen(
-  props: { initialView?: "login" | "register" } = {},
-) {
+function renderAuthScreen(props: { initialView?: "login" | "register" } = {}) {
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={{ auth: authMessages }}>
       <AuthScreen initialView={props.initialView ?? "login"} />
@@ -145,9 +143,7 @@ describe("登录校验链（R1/R2/R3）", () => {
     submitActiveForm(container);
 
     expectInvalid("密码");
-    expect(
-      screen.queryByText("密码为 8—20 位，需含字母与数字"),
-    ).toBeNull();
+    expect(screen.queryByText("密码为 8—20 位，需含字母与数字")).toBeNull();
     expect(signInMock).not.toHaveBeenCalled();
   });
 

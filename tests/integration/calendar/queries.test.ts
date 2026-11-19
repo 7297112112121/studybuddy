@@ -68,7 +68,10 @@ describe("listWeekEntries(AXY-23 Task 4)", () => {
   });
 
   it("R7 隔离:账号乙的周查询不含账号甲条目;空周返回空数组", async () => {
-    const [userA, userB] = await Promise.all([makeUser("wk-a"), makeUser("wk-b")]);
+    const [userA, userB] = await Promise.all([
+      makeUser("wk-a"),
+      makeUser("wk-b"),
+    ]);
     await createEntry(userA, input("2026-11-18", "甲的条目", "09:00", "10:00"));
 
     const rowsB = await listWeekEntries(userB, "2026-11-16");
@@ -81,9 +84,15 @@ describe("listWeekEntries(AXY-23 Task 4)", () => {
 
   it("排序口径与 listMonthEntries 一致:同日不带时间在前、带时间按开始时间升序", async () => {
     const userId = await makeUser("order");
-    await createEntry(userId, input("2026-11-18", "下午条目", "14:00", "15:00"));
+    await createEntry(
+      userId,
+      input("2026-11-18", "下午条目", "14:00", "15:00"),
+    );
     await createEntry(userId, input("2026-11-18", "全天条目", null, null));
-    await createEntry(userId, input("2026-11-18", "上午条目", "09:00", "10:00"));
+    await createEntry(
+      userId,
+      input("2026-11-18", "上午条目", "09:00", "10:00"),
+    );
     await createEntry(userId, input("2026-11-17", "前一天条目", null, null));
 
     const rows = await listWeekEntries(userId, "2026-11-16");

@@ -55,12 +55,19 @@ export default function LoginForm(props: LoginFormProps) {
           </p>
         )}
 
-        <SubmitButton submitting={props.submitting} pendingKey="submit.loggingIn">
+        <SubmitButton
+          submitting={props.submitting}
+          pendingKey="submit.loggingIn"
+        >
           登录
         </SubmitButton>
       </div>
 
-      <ViewSwitchLink target="register" prefix="还没有账号？" onSwitch={props.onSwitchView}>
+      <ViewSwitchLink
+        target="register"
+        prefix="还没有账号？"
+        onSwitch={props.onSwitchView}
+      >
         注册一个
       </ViewSwitchLink>
     </form>

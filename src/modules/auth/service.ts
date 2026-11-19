@@ -38,11 +38,14 @@ export type RegisterOutcome =
  * 裁决经实测证伪（同名再注册实测抛 user_email_key），故仍须双约束映射。
  */
 function isUsernameUniqueViolation(err: unknown): boolean {
-  let e = err as {
-    code?: string;
-    constraint_name?: string;
-    cause?: unknown;
-  } | null | undefined;
+  let e = err as
+    | {
+        code?: string;
+        constraint_name?: string;
+        cause?: unknown;
+      }
+    | null
+    | undefined;
   while (e) {
     if (
       e.code === "23505" &&

@@ -45,7 +45,10 @@ describe("getCurrentSession（tests/integration/auth/queries）", () => {
 
   it("登录后携该 cookie → AuthSession 形状（user.name=账户名，expiresAt 为 Date）", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({ username, password: PASSWORD });
+    const registered = await registerWithUsername({
+      username,
+      password: PASSWORD,
+    });
     if (!registered.ok) {
       throw new Error("unreachable: 注册应成功");
     }

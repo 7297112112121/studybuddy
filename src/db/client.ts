@@ -10,10 +10,7 @@
  * 传入。表清单从公共契约 barrel 取（仅挑表实体，zod 契约不进 client）。
  */
 import { defineRelations } from "drizzle-orm";
-import {
-  drizzle,
-  type PostgresJsDatabase,
-} from "drizzle-orm/postgres-js";
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import * as schema from "./schema";

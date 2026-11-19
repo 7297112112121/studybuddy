@@ -8,7 +8,13 @@
  * 经 NextIntlClientProvider 渲染。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import EntryForm from "@/modules/calendar/components/EntryForm";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
@@ -41,7 +47,10 @@ function renderForm(
   props: Partial<React.ComponentProps<typeof EntryForm>> = {},
 ) {
   return render(
-    <NextIntlClientProvider locale="zh-CN" messages={{ calendar: calendarMessages }}>
+    <NextIntlClientProvider
+      locale="zh-CN"
+      messages={{ calendar: calendarMessages }}
+    >
       <EntryForm date={props.date ?? "2026-11-17"} {...props} />
     </NextIntlClientProvider>,
   );
@@ -136,7 +145,9 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     const dateInput = screen.getByLabelText("所属日期") as HTMLInputElement;
     expect(title.value).toBe("旧标题");
     expect(dateInput.value).toBe("2026-11-16");
-    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe("10:00");
+    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe(
+      "10:00",
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "保存" }));
     await waitFor(() => expect(updateEntryActionMock).toHaveBeenCalledOnce());
@@ -153,7 +164,9 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     renderForm();
     fillTitle("高数复习");
     submit();
-    const button = screen.getByRole("button", { name: "添加" }) as HTMLButtonElement;
+    const button = screen.getByRole("button", {
+      name: "添加",
+    }) as HTMLButtonElement;
     expect(button.disabled).toBe(true);
 
     submit(); // 提交中重复点击
@@ -161,7 +174,10 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
   });
 
   it("⑦ SAVE_FAILED → 表单提示区「保存失败,请重试」且不抛", async () => {
-    createEntryActionMock.mockResolvedValue({ ok: false, error: "SAVE_FAILED" });
+    createEntryActionMock.mockResolvedValue({
+      ok: false,
+      error: "SAVE_FAILED",
+    });
     renderForm();
     fillTitle("高数复习");
     submit();
@@ -179,12 +195,17 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
   });
 
   it("⑧ UNAUTHORIZED → router.replace('/login')", async () => {
-    createEntryActionMock.mockResolvedValue({ ok: false, error: "UNAUTHORIZED" });
+    createEntryActionMock.mockResolvedValue({
+      ok: false,
+      error: "UNAUTHORIZED",
+    });
     renderForm();
     fillTitle("高数复习");
     submit();
 
-    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith("/login"));
+    await waitFor(() =>
+      expect(routerMock.replace).toHaveBeenCalledWith("/login"),
+    );
   });
 
   it("⑨ NOT_FOUND → router.refresh() 静默刷新", async () => {
