@@ -185,6 +185,7 @@ test.describe("AXY-22 日程日历", () => {
 
     // 删除：确认后条目消失，回到空态
     await page.getByRole("button", { name: "删除" }).click();
+    await expect(dialog).toBeVisible();
     await dialog.getByRole("button", { name: "删除" }).click();
     await expect(dayPanel(page).getByText("这天还没有安排")).toBeVisible();
     await expect(dayPanel(page).getByText("英语听力")).toHaveCount(0);

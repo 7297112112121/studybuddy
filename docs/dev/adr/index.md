@@ -75,6 +75,7 @@ YYYY-MM-DD
 | [0025](client-data-layer) | 2026-11-13 | 客户端数据层：TanStack Query + Server Actions（取代 ADR-0008 的 tRPC） | 已接受 |
 | [0026](ci-path-filtering) | 2026-11-19 | CI 按变更路径裁剪：dorny/paths-filter（PR 层 + push master 层 job 级裁剪，兜底式全跑；修订 0022 白名单条款） | 已接受 |
 | [0027](global-deep-space-theme) | 2026-11-19 | 全局主题：calendar 深空主题转正（固定暗色 + 星点背景全站挂载） | 已接受 |
+| [0028](0028-deepseek-provider-web-search) | 2026-11-19 | LLM 提供方：DeepSeek（deepseek-flash）+ 声明式服务端联网工具，结构化与检索两段式调用（AXY-24 首个 AI 特性） | 已接受 |
 
 ## 现行技术栈速查
 

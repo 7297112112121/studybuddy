@@ -49,6 +49,26 @@ export const calendarEntry = pgTable(
 
 export const TIME_HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+/**
+ * entry_resource 单表(AXY-24:条目附属资料,唯一状态「已留存」——
+ * 随确认写入落库、随条目删除而消失)。entryId 为同模块引用,建 DB 级
+ * FK + ON DELETE CASCADE(AXY-22 不建 FK 的裁决仅针对跨模块 auth 引用);
+ * 账号隔离由条目 user_id 归属传导,读取路径一律经条目归属过滤(R11)。
+ */
+export const entryResource = pgTable(
+  "entry_resource",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    entryId: uuid()
+      .notNull()
+      .references(() => calendarEntry.id, { onDelete: "cascade" }),
+    title: text().notNull(),
+    url: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("entry_resource_entry_id").on(t.entryId)],
+);
+
 export const calendarEntryInputSchema = z
   .object({
     date: z

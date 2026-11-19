@@ -12,6 +12,10 @@ import { defineConfig, devices } from "@playwright/test";
  * - `instant()` helper（@next/playwright）不在 config 层挂载，待有真实
  *   cacheComponents 导航用例时在 spec 中按官方 instant-navigation 指南使用。
  */
+// E2E 端口可经 E2E_PORT 覆盖(默认 3000):本机已有服务占用 3000 时,
+// E2E_PORT=3100 npm run test:e2e 起独立实例,不干扰既有服务
+const e2ePort = process.env.E2E_PORT ?? "3000";
+
 export default defineConfig({
   testDir: "e2e",
   // E2E 与单测互不越界：vitest 的 include 已锁定 tests/**，此处 testDir 锁定 e2e/。
@@ -25,7 +29,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${e2ePort}`,
     trace: "on-first-retry",
   },
   projects: [
@@ -36,7 +40,16 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run build && npm run start",
-    url: "http://localhost:3000",
+    url: `http://localhost:${e2ePort}`,
     reuseExistingServer: !process.env.CI,
+    // AXY-24:E2E 全程走 AI stub(design 边界 #6,ADR-0017 LLM 一律 mock),
+    // stub 语料与门控见 src/agent/runtime/ai-stub-fixture.ts
+    env: {
+      ...process.env,
+      DEEPSEEK_STUB_FIXTURE: "1",
+      PORT: e2ePort,
+      // Better Auth trustedOrigins 随端口对齐(auth.ts 读 BETTER_AUTH_URL)
+      BETTER_AUTH_URL: `http://localhost:${e2ePort}`,
+    },
   },
 });

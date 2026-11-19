@@ -54,5 +54,27 @@
     "createAt": "周{weekday} {time} 新建条目",
     "dialogCreate": "新建条目",
     "dialogEdit": "编辑条目"
+  },
+  "proposal": {
+    "assistButton": "帮我找资料",
+    "title": "AI 资料提案",
+    "sourceEntry": "来源条目",
+    "generating": "正在生成提案…",
+    "followUpQuestion": "打算学到哪天?",
+    "answerPlaceholder": "例如:到 11 月底",
+    "continueButton": "继续",
+    "regenerateButton": "重新生成",
+    "confirmButton": "确认写入",
+    "closeButton": "关闭",
+    "retryButton": "重试",
+    "notApplicable": "这条日程不需要找资料",
+    "notFound": "没找到合适的资料:{reason}",
+    "unavailable": "AI 服务暂时不可用,请稍后重试",
+    "writeFailed": "写入日程失败,你的日程未改动,请重试",
+    "answerUnclear": "没看懂这个时间,把它写成起止日期(如 11.20–11.30)再试试",
+    "answerRequired": "请输入你打算的时间,或取消",
+    "dayDateLabel": "日期",
+    "dayTextLabel": "安排",
+    "resourcesLabel": "资料"
   }
 }
