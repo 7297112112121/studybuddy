@@ -197,3 +197,139 @@ test.describe("AXY-24 条目 AI 资料提案", () => {
     await expect(page.getByText("正在生成提案…")).toHaveCount(0);
   });
 });
+
+test.describe("AXY-24 提案:周视图入口与边界态", () => {
+  test("AC-1 周视图入口:色块编辑卡发起 → 同一提案浮层", async ({ page }) => {
+    await registerAndOpenMonth(page);
+    const today = fmt(new Date());
+    await page.locator(`[data-date="${today}"]`).click();
+    await page.locator("#calendar-entry-title").fill("学习next框架 11.20–11.30");
+    await page.locator("#calendar-entry-start").fill("14:00");
+    await page.locator("#calendar-entry-end").fill("15:30");
+    await page.getByRole("button", { name: "添加" }).click();
+    await expect(dayPanel(page).getByText("学习next框架 11.20–11.30")).toBeVisible();
+
+    await page.goto("/calendar");
+    await page
+      .locator('[data-testid^="week-block-"]')
+      .filter({ hasText: "学习next框架" })
+      .click();
+    await expect(page.getByText("编辑条目")).toBeVisible();
+    await page.getByRole("button", { name: "帮我找资料" }).click();
+
+    await expect(page.getByText("AI 资料提案")).toBeVisible();
+    await expect(page.getByText("正在生成提案…")).toHaveCount(0);
+    await expect(page.getByRole("dialog").getByLabel("安排")).toHaveCount(3);
+    // 编辑卡已关闭(发起后浮出提案层,不叠卡)
+    await expect(page.getByText("编辑条目")).toHaveCount(0);
+  });
+
+  test("R3 演示态 2:无范围条目先追问;无效答复 E-06 再答;有效答复出清单", async ({
+    page,
+  }) => {
+    await registerAndOpenMonth(page);
+    await createEntry(page, "学习next框架");
+
+    await openProposal(page);
+    await expect(page.getByText("打算学到哪天?")).toBeVisible();
+    const answer = page.getByLabel("打算学到哪天?");
+    await expect(answer).toHaveAttribute("maxLength", "200");
+
+    // 无效答复 → E-06 于输入框下方,可再答
+    await answer.fill("随便");
+    await page.getByRole("button", { name: "继续" }).click();
+    await expect(
+      page.getByText("没看懂这个时间,把它写成起止日期(如 11.20–11.30)再试试"),
+    ).toBeVisible();
+
+    // 有效答复 → 清单
+    await answer.fill("到月底");
+    await page.getByRole("button", { name: "继续" }).click();
+    await expect(page.getByRole("dialog").getByLabel("安排")).toHaveCount(3);
+  });
+
+  test("F-01 追问答复留空被拦,呈现 E-01 不发请求", async ({ page }) => {
+    await registerAndOpenMonth(page);
+    await createEntry(page, "学习next框架");
+
+    await openProposal(page);
+    await page.getByRole("button", { name: "继续" }).click();
+    await expect(page.getByText("请输入你打算的时间,或取消")).toBeVisible();
+  });
+
+  test("AC-4 演示态 4:非学习类条目明确告知不适用,日程不变", async ({ page }) => {
+    await registerAndOpenMonth(page);
+    await createEntry(page, "买牛奶");
+
+    await openProposal(page);
+    await expect(page.getByText("这条日程不需要找资料")).toBeVisible();
+    await expect(page.getByRole("dialog").getByLabel("安排")).toHaveCount(0);
+
+    await page.getByRole("dialog").getByRole("button", { name: "关闭" }).click();
+    await expect(page.getByText("AI 资料提案")).toHaveCount(0);
+    await expect(dayPanel(page).getByText("买牛奶")).toBeVisible();
+  });
+
+  test("AC-5 演示态 4:没找到连同理由一起告知,不出凑数清单", async ({ page }) => {
+    await registerAndOpenMonth(page);
+    await createEntry(page, "冷门主题调研 11.20-11.30");
+
+    await openProposal(page);
+    await expect(
+      page.getByText("没找到合适的资料:该主题缺少系统性的公开学习资料"),
+    ).toBeVisible();
+    await expect(page.getByRole("dialog").getByLabel("安排")).toHaveCount(0);
+  });
+
+  test("AC-6 演示态 5:服务不可用明确提示可重试;重试重新发起", async ({ page }) => {
+    await registerAndOpenMonth(page);
+    await createEntry(page, "触发AI故障 11.20-11.30");
+
+    await openProposal(page);
+    await expect(page.getByText("AI 服务暂时不可用,请稍后重试")).toBeVisible();
+    await expect(page.getByRole("button", { name: "重试" })).toBeVisible();
+
+    await page.getByRole("button", { name: "重试" }).click();
+    // stub 恒定不可用:重试后仍呈现 E-04(stub 语料不模拟恢复)
+    await expect(page.getByText("AI 服务暂时不可用,请稍后重试")).toBeVisible();
+  });
+
+  test("E-05 写入失败:整单未落,提案保留可重试;恢复后成功", async ({ page }) => {
+    await registerAndOpenMonth(page);
+    await createEntry(page, "学习next框架 11.20–11.30");
+
+    await openProposal(page);
+    const dialog = page.getByRole("dialog");
+    const d1 = offsetDate(1);
+
+    // 拦截确认写入 action(载荷含 days 字段),注入失败
+    await page.route("**/calendar*", (route) => {
+      const req = route.request();
+      const body = req.postData() ?? "";
+      if (
+        req.method() === "POST" &&
+        req.headers()["next-action"] !== undefined &&
+        body.includes('"days"')
+      ) {
+        return route.abort();
+      }
+      return route.continue();
+    });
+
+    await dialog.getByRole("button", { name: "确认写入" }).click();
+    await expect(
+      page.getByText("写入日程失败,你的日程未改动,请重试"),
+    ).toBeVisible();
+    // 提案保留可重试
+    await expect(dialog.getByLabel("安排")).toHaveCount(3);
+
+    // 解除拦截后重试成功
+    await page.unroute("**/calendar*");
+    await dialog.getByRole("button", { name: "确认写入" }).click();
+    await expect(page.getByText("AI 资料提案")).toHaveCount(0);
+    await page.goto(`/calendar?view=month&month=${d1.slice(0, 7)}`);
+    await expect(
+      page.locator(`[data-date="${d1}"]`).getByText("阅读 Next.js 官方文档基础篇"),
+    ).toBeVisible();
+  });
+});

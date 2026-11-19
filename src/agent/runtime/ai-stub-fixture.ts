@@ -122,7 +122,18 @@ export function stubStructured(messages: ModelMessage[]): StubStructured {
   if (text.includes("买牛奶")) {
     return { unavailable: false, object: intentNotApplicable };
   }
-  if (text.includes("追问答复") || /\d{1,2}[.\-/]\d{1,2}/.test(text)) {
+  // 日期样 token 只认点号形态(如「11.20」):今日行是横杠 YYYY-MM-DD,
+  // 不能参与命中,否则所有条目都会被判成 APPLICABLE
+  if (text.includes("追问答复")) {
+    // 答复「随便」→ 仍解析不出范围(E-06 语料);其余答复 → APPLICABLE
+    if (text.includes("随便")) {
+      return { unavailable: false, object: intentNeedsRange };
+    }
+    return { unavailable: false, object: intentApplicable };
+  }
+  // 日期样 token 只认点号形态(如「11.20」):今日行是横杠 YYYY-MM-DD,
+  // 不能参与命中,否则所有条目都会被判成 APPLICABLE
+  if (/\d{1,2}\.\d{1,2}/.test(text)) {
     return { unavailable: false, object: intentApplicable };
   }
   return { unavailable: false, object: intentNeedsRange };
