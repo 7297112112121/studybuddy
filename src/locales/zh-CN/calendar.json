@@ -54,5 +54,8 @@
     "createAt": "周{weekday} {time} 新建条目",
     "dialogCreate": "新建条目",
     "dialogEdit": "编辑条目"
+  },
+  "proposal": {
+    "answerRequired": "请输入你打算的时间,或取消"
   }
 }

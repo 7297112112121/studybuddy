@@ -21,6 +21,14 @@ import {
   type CalendarFieldErrors,
 } from "./schema";
 import { createEntry, deleteEntry, updateEntry } from "./service";
+import {
+  AiUnavailableError,
+  EntryNotFoundError,
+  confirmedProposalSchema,
+  requestEntryProposal,
+  confirmEntryProposal,
+  type EntryProposal,
+} from "./proposal";
 
 export type CalendarEntryActionResult =
   | { ok: true }
@@ -110,6 +118,89 @@ export async function deleteEntryAction(
   }
   if (!deleted) {
     return { ok: false, error: "NOT_FOUND" };
+  }
+  revalidatePath(ROUTES.calendar);
+  return { ok: true };
+}
+
+// ── AXY-24:AI 资料提案两 action(判别联合,基线流同款)────────────────
+
+export type ProposalActionResult =
+  | { ok: true; proposal: EntryProposal }
+  | { ok: false; error: "UNAUTHORIZED" } // 无有效会话,客户端跳 /login
+  | { ok: false; error: "NOT_FOUND" } // 条目不存在或不属该用户(E-02/E-03 经 proposal 承载)
+  | {
+      ok: false;
+      error: "INVALID_INPUT";
+      fieldErrors: { answer?: string }; // F-01 违反 → E-01(i18n key)
+    }
+  | { ok: false; error: "AI_UNAVAILABLE" }; // E-04
+
+const ANSWER_MAX = 200; // F-01:追问答复 1—200 字
+
+export async function requestProposalAction(
+  entryId: string,
+  userRangeAnswer: string | null,
+): Promise<ProposalActionResult> {
+  const session = await getCurrentSession();
+  if (!session) {
+    return { ok: false, error: "UNAUTHORIZED" };
+  }
+
+  if (userRangeAnswer !== null) {
+    const trimmed = userRangeAnswer.trim();
+    if (trimmed.length < 1 || trimmed.length > ANSWER_MAX) {
+      return {
+        ok: false,
+        error: "INVALID_INPUT",
+        fieldErrors: { answer: "calendar.proposal.answerRequired" },
+      };
+    }
+  }
+
+  try {
+    const proposal = await requestEntryProposal(
+      session.user.id,
+      entryId,
+      userRangeAnswer === null ? null : userRangeAnswer.trim(),
+    );
+    return { ok: true, proposal };
+  } catch (error) {
+    if (error instanceof EntryNotFoundError) {
+      return { ok: false, error: "NOT_FOUND" };
+    }
+    // AI 层失败与其余基础设施异常统一走 E-04 提示 + 重试口径
+    return { ok: false, error: "AI_UNAVAILABLE" };
+  }
+}
+
+export type ProposalWriteResult =
+  | { ok: true }
+  | { ok: false; error: "UNAUTHORIZED" }
+  | { ok: false; error: "NOT_FOUND" } // 来源条目不存在或不属该用户
+  | { ok: false; error: "INVALID_INPUT" } // 确认载荷结构违反
+  | { ok: false; error: "WRITE_FAILED" }; // E-05(含事务回滚)
+
+export async function confirmProposalAction(
+  proposal: unknown,
+): Promise<ProposalWriteResult> {
+  const session = await getCurrentSession();
+  if (!session) {
+    return { ok: false, error: "UNAUTHORIZED" };
+  }
+
+  const parsed = confirmedProposalSchema.safeParse(proposal);
+  if (!parsed.success) {
+    return { ok: false, error: "INVALID_INPUT" };
+  }
+
+  try {
+    const written = await confirmEntryProposal(session.user.id, parsed.data);
+    if (!written) {
+      return { ok: false, error: "NOT_FOUND" };
+    }
+  } catch {
+    return { ok: false, error: "WRITE_FAILED" };
   }
   revalidatePath(ROUTES.calendar);
   return { ok: true };

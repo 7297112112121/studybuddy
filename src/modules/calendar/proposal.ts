@@ -17,6 +17,7 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
+import { isValidDateString } from "./month";
 import {
   chainEntryIntent,
   entryIntentOutputSchema,
@@ -31,7 +32,7 @@ import {
   runWebSearchCompletion,
   type WebSearchSource,
 } from "@/agent/runtime/deepseek-web-search";
-import { calendarEntry } from "./schema";
+import { calendarEntry, calendarEntryInputSchema, entryResource } from "./schema";
 
 export type ProposalResource = { title: string; url: string };
 
@@ -222,4 +223,99 @@ export async function requestEntryProposal(
     return { kind: "NOT_FOUND", reason: "生成的安排未能通过资料来源校验" };
   }
   return { kind: "PLAN", days };
+}
+
+// ── 确认写入(D-12 整单原子)──────────────────────────────────────────
+
+/** 确认载荷:action 层只做结构校验;字段规则(长度/日期/URL scheme)在事务内逐天校验——
+ * 校验失败发生在事务内才能验证「零残留」回滚(Review Focus 2)。 */
+export const confirmedProposalSchema = z.object({
+  entryId: z.string().uuid(),
+  days: z
+    .array(
+      z.object({
+        date: z.string(),
+        text: z.string(),
+        resources: z
+          .array(z.object({ title: z.string(), url: z.string() }))
+          .min(1),
+      }),
+    )
+    .min(1), // 全部删光由客户端视为放弃不发请求(D-13)
+});
+
+export type ConfirmedProposal = z.infer<typeof confirmedProposalSchema>;
+
+const RESOURCE_URL_RE = /^https?:\/\//;
+
+/** 事务内逐天校验:复用 calendarEntryInputSchema(条目半边)+ 资料字段规则(F-04/F-05)。 */
+function validateDay(day: ConfirmedProposal["days"][number]): void {
+  const parsed = calendarEntryInputSchema.safeParse({
+    date: day.date,
+    title: day.text,
+    startTime: null,
+    endTime: null,
+  });
+  if (!parsed.success) {
+    throw new Error(`proposal day invalid: ${day.date}`);
+  }
+  if (day.resources.length === 0) {
+    throw new Error(`proposal day has no resources: ${day.date}`);
+  }
+  for (const resource of day.resources) {
+    if (resource.title.length < 1 || resource.title.length > 50) {
+      throw new Error(`proposal resource title invalid: ${day.date}`);
+    }
+    if (!RESOURCE_URL_RE.test(resource.url)) {
+      throw new Error(`proposal resource url invalid: ${day.date}`);
+    }
+  }
+}
+
+/**
+ * 确认写入:单事务内逐天 INSERT calendar_entry(标题=day.text、日期=day.date、
+ * 时间均 null)+ INSERT 其 entry_resource 行;任一步失败整体回滚(D-12 零残留)。
+ * 返回 false = 来源条目不存在或不属该用户(NOT_FOUND 同形,不泄漏存在性)。
+ */
+export async function confirmEntryProposal(
+  userId: string,
+  proposal: ConfirmedProposal,
+): Promise<boolean> {
+  const owned = await db
+    .select({ id: calendarEntry.id })
+    .from(calendarEntry)
+    .where(
+      and(
+        eq(calendarEntry.id, proposal.entryId),
+        eq(calendarEntry.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (owned.length === 0) {
+    return false;
+  }
+
+  await db.transaction(async (tx) => {
+    for (const day of proposal.days) {
+      validateDay(day); // 校验在事务内:失败即抛 → 整体回滚(零残留)
+      const [entry] = await tx
+        .insert(calendarEntry)
+        .values({
+          userId,
+          entryDate: day.date,
+          title: day.text,
+          startTime: null,
+          endTime: null,
+        })
+        .returning({ id: calendarEntry.id });
+      await tx.insert(entryResource).values(
+        day.resources.map((resource) => ({
+          entryId: entry.id,
+          title: resource.title,
+          url: resource.url,
+        })),
+      );
+    }
+  });
+  return true;
 }
