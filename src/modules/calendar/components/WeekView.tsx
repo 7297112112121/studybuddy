@@ -101,7 +101,7 @@ export default function WeekView({ days, entries }: WeekViewProps) {
       {/* 单一横滚容器:表头/全天区/网格同步滚动,纵轴列 sticky 不错位(D-09) */}
       <div className="overflow-x-auto">
         <div className="min-w-[720px]">
-          {/* 星期表头 */}
+          {/* 星期表头:星期名 + 日期数字两行堆叠;今天日期数字 primary 胶囊 */}
           <div className="grid grid-cols-[3rem_repeat(7,1fr)]">
             <div />
             {days.map((d) => (
@@ -110,12 +110,21 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                 data-testid={`week-col-${d.date}`}
                 aria-current={d.isToday ? "date" : undefined}
                 className={cn(
-                  "pb-1 text-center text-sm",
-                  d.isToday ? "font-bold text-primary" : "text-muted-foreground",
+                  "flex flex-col items-center gap-0.5 pb-2",
+                  d.isToday ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                <span>{t(`weekday.${d.weekdayKey}`)}</span>
-                <span className="ml-1 tabular-nums">{d.date.slice(8)}</span>
+                <span className="text-xs font-medium">
+                  {t(`weekday.${d.weekdayKey}`)}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-1.5 text-sm font-semibold tabular-nums",
+                    d.isToday && "bg-primary text-primary-foreground",
+                  )}
+                >
+                  {d.date.slice(8)}
+                </span>
               </div>
             ))}
           </div>
@@ -137,7 +146,7 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                       type="button"
                       data-testid={`all-day-${e.id}`}
                       onClick={() => setDialogState({ mode: "edit", entry: e })}
-                      className="truncate rounded bg-accent px-1.5 py-0.5 text-left text-xs hover:bg-accent/70"
+                      className="truncate rounded-full bg-accent px-2 py-0.5 text-left text-xs hover:bg-accent/70"
                     >
                       {e.title}
                     </button>
@@ -181,7 +190,10 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                 return (
                   <div
                     key={d.date}
-                    className="relative border-l border-border/60"
+                    className={cn(
+                      "relative border-l border-border/60",
+                      d.isToday && "bg-primary/5",
+                    )}
                   >
                     {/* 48 槽(F-05):点击打开创建卡,时间预填槽起点 */}
                     {Array.from({ length: SLOTS_PER_DAY }, (_, i) => (
@@ -220,7 +232,7 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                           onClick={() =>
                             setDialogState({ mode: "edit", entry: entryData })
                           }
-                          className="absolute z-10 flex flex-col overflow-hidden rounded-md bg-primary/15 px-1 text-left ring-1 ring-primary/40 hover:bg-primary/25"
+                          className="absolute z-10 flex flex-col overflow-hidden rounded-lg border-l-2 border-primary bg-primary/15 px-1.5 text-left ring-1 ring-primary/40 hover:bg-primary/25 hover:ring-primary/60"
                           style={{
                             top: b.startMinutes * PX_PER_MINUTE,
                             height: b.durationMinutes * PX_PER_MINUTE,
@@ -240,14 +252,19 @@ export default function WeekView({ days, entries }: WeekViewProps) {
                   </div>
                 );
               })}
-              {/* 实时线(D-05/F-06):仅今天所在周渲染 */}
+              {/* 实时线(D-05/F-06):仅今天所在周渲染;左端可见时间胶囊
+                  (房屋风格:destructive 15% 红底 + 红字,同 Button destructive) */}
               {hasToday && (
                 <div
                   data-testid="now-line"
                   aria-label={t("week.nowLine", { time: hhmm(nowMinutes) })}
                   className="pointer-events-none absolute right-0 z-20 border-t-2 border-destructive"
                   style={{ left: "3rem", top: nowMinutes * PX_PER_MINUTE }}
-                />
+                >
+                  <span className="absolute left-0 top-0 -translate-y-1/2 whitespace-nowrap rounded-full bg-destructive/15 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-destructive tabular-nums">
+                    {hhmm(nowMinutes)}
+                  </span>
+                </div>
               )}
             </div>
           </div>
