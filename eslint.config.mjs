@@ -4,24 +4,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 代码目录守护机制——依赖规则矩阵（裁判文档：docs/dev/代码目录.mdx「依赖规则」）
-//
-// 依赖方向：app → modules → agent → db(仅 schema) / lib
-// 路径别名 @/* → ./src/*，no-restricted-imports 为纯字符串匹配，无需模块真实存在。
-//
-// 注意：Flat Config 中同一文件命中多个块时，规则按块顺序浅合并——后块对同一
-// rule id 的赋值会整体覆盖前块（不深合并 paths/patterns）。因此下方每个块的
-// no-restricted-imports 都必须是该目录层所需的完整配置。
-// ─────────────────────────────────────────────────────────────────────────────
-
-// 边界规则豁免清单：
-// 规则自第一天生效、无历史违规，初始即为空。未来出现暂时无法修复的违规时，
-// 把文件路径显式列入此处，边界规则降级为 warn（不阻断 lint，但保持可见）；
-// 新增条目须在评审中说明理由，修复后即移除——禁止为绕过检查长期驻留。
 const BOUNDARY_EXEMPT_FILES = [];
-
-// modules 通用边界：禁反向依赖 app + 跨模块深路径。
 const moduleBoundaryPatterns = [
   {
     group: ["@/app", "@/app/**"],
@@ -37,8 +20,6 @@ const moduleBoundaryPatterns = [
   },
 ];
 
-// 类型禁推断：禁 Awaited<ReturnType<…>>（src/db/** 天然豁免——本规则只出现在
-// modules/components 两个块的 files 范围内）。
 const noInferredServerTypeRule = [
   "error",
   {
@@ -50,12 +31,6 @@ const noInferredServerTypeRule = [
   },
 ];
 
-// 枚举 src/modules 下的模块目录，为每个模块生成「禁自引用顶入口」块，
-// 防止 barrel 循环（模块内部 import @/modules/<自己>）。
-// 当前 src/modules 仅为含 .gitkeep 的空骨架，枚举结果为零块——机制先就位，
-// 模块目录一旦落地即自动生效，无需改动本文件。
-// 块内必须带上 moduleBoundaryPatterns 与 noInferredServerTypeRule 全集：
-// 本块排在 modules 通用块之后，会整体覆盖后者对同 rule 的赋值。
 const moduleDirPath = fileURLToPath(new URL("src/modules", import.meta.url));
 const moduleDirs = fs
   .readdirSync(moduleDirPath, { withFileTypes: true })
@@ -83,8 +58,6 @@ const moduleSelfImportBlocks = moduleDirs.map((moduleName) => ({
   },
 }));
 
-// 命中豁免清单的文件：边界规则整体降级为 warn。
-// （这两个规则只在上面的边界块中出现，降级不会波及 Next.js 预设。）
 const boundaryExemptBlocks =
   BOUNDARY_EXEMPT_FILES.length > 0
     ? [
@@ -114,7 +87,6 @@ const eslintConfig = defineConfig([
     "my-website/**",
   ]),
 
-  // ── agent 子系统：零业务知识 ──────────────────────────────────────────────
   {
     files: ["src/agent/**/*.{ts,tsx}"],
     rules: {
