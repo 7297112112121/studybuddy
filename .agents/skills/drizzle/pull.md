@@ -22,11 +22,11 @@ Minimal example — `drizzle.config.ts` carries the credentials, the CLI invocat
 
 ```typescript
 // drizzle.config.ts
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  dialect: 'postgresql',
-  out: './drizzle',
+  dialect: "postgresql",
+  out: "./drizzle",
   dbCredentials: { url: process.env.DATABASE_URL! },
 });
 ```
@@ -41,15 +41,15 @@ The process exits with the code that matches `status` (`0` for ok, `1` for error
 ## SDK form
 
 ```typescript
-import { pull } from 'drizzle-kit';
+import { pull } from "drizzle-kit";
 
 const response = await pull({
-  dialect: 'postgresql',
-  out: './drizzle',
+  dialect: "postgresql",
+  out: "./drizzle",
   url: process.env.DATABASE_URL!,
 });
 
-if (response.status === 'ok') {
+if (response.status === "ok") {
   // introspection succeeded; the manifest names the written files:
   //   response.schemaPath    — always present
   //   response.snapshotPath  — always present
@@ -89,7 +89,15 @@ When the `out` folder has no migrations yet, pull writes a new migration folder,
 The `'error'` envelope, when the driver cannot connect or introspection fails:
 
 ```json
-{ "status": "error", "error": { "code": "database_driver_error", "database": "postgresql", "packages": ["pg", "postgres"], "note": "<optional connection hint>" } }
+{
+  "status": "error",
+  "error": {
+    "code": "database_driver_error",
+    "database": "postgresql",
+    "packages": ["pg", "postgres"],
+    "note": "<optional connection hint>"
+  }
+}
 ```
 
 `database_driver_error` carries only `database`, `packages`, and an optional `note` — the connection string, sql, and params are deliberately kept out of the envelope, so no credential substring ever reaches stdout. [responses-and-errors.md](responses-and-errors.md) decodes this and the other error codes. Example payloads here use placeholder paths and dialects only — never a real connection string, url, or password.
