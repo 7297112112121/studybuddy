@@ -1,12 +1,26 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
   PASSWORD_RE,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
   USERNAME_RE,
+  confirmPasswordRuleStates,
   validateAccount,
   validatePassword,
   validateRegisterForm,
 } from "../../src/modules/auth/validators";
+
+describe("规则长度常量", () => {
+  it("长度界限与产品规则字面值一致，改动常量即有意变更规则，须同步本测试", () => {
+    expect(USERNAME_MIN_LENGTH).toBe(1);
+    expect(USERNAME_MAX_LENGTH).toBe(16);
+    expect(PASSWORD_MIN_LENGTH).toBe(8);
+    expect(PASSWORD_MAX_LENGTH).toBe(20);
+  });
+});
 
 describe("USERNAME_RE", () => {
   it("接受中文、字母、数字、下划线组合的 1-16 位账户名", () => {
@@ -53,6 +67,26 @@ describe("PASSWORD_RE", () => {
 
   it("拒绝超过 20 位的密码", () => {
     expect(PASSWORD_RE.test("abcd12345678901234567")).toBe(false);
+  });
+});
+
+describe("confirmPasswordRuleStates", () => {
+  it("确认密码非空且与 password 一致时 passed", () => {
+    expect(confirmPasswordRuleStates("abcd1234", "abcd1234")).toEqual([
+      { label: "与第一次输入一致", passed: true },
+    ]);
+  });
+
+  it("确认密码为空视为不一致（与 validateRegisterForm 同语义）", () => {
+    expect(confirmPasswordRuleStates("abcd1234", "")).toEqual([
+      { label: "与第一次输入一致", passed: false },
+    ]);
+  });
+
+  it("确认密码与 password 不一致时 passed 为 false", () => {
+    expect(confirmPasswordRuleStates("abcd1234", "abcd1235")).toEqual([
+      { label: "与第一次输入一致", passed: false },
+    ]);
   });
 });
 

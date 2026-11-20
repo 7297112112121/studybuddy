@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   account,
-  registerInputSchema,
   session,
   user,
   verification,
@@ -14,63 +13,6 @@ function columnMap(table: Parameters<typeof getTableConfig>[0]) {
   const { columns } = getTableConfig(table);
   return Object.fromEntries(columns.map((c) => [c.name, c]));
 }
-
-describe("registerInputSchema", () => {
-  const validInput = {
-    username: "xue_sheng01",
-    password: "abcd1234",
-    confirmPassword: "abcd1234",
-    agreementAccepted: true,
-  };
-
-  it("合法入参通过", () => {
-    expect(registerInputSchema.safeParse(validInput).success).toBe(true);
-  });
-
-  it("username 'zhang san!'（含空格等非法字符）拒绝", () => {
-    expect(
-      registerInputSchema.safeParse({ ...validInput, username: "zhang san!" })
-        .success,
-    ).toBe(false);
-  });
-
-  it("username 'abcdefghijklmnopq'（17 位，超长）拒绝", () => {
-    expect(
-      registerInputSchema.safeParse({
-        ...validInput,
-        username: "abcdefghijklmnopq",
-      }).success,
-    ).toBe(false);
-  });
-
-  it("password '12345678'（无字母）拒绝", () => {
-    expect(
-      registerInputSchema.safeParse({
-        ...validInput,
-        password: "12345678",
-        confirmPassword: "12345678",
-      }).success,
-    ).toBe(false);
-  });
-
-  it("confirmPassword 与 password 不一致拒绝", () => {
-    expect(
-      registerInputSchema.safeParse({
-        ...validInput,
-        confirmPassword: "abcd1235",
-      }).success,
-    ).toBe(false);
-  });
-
-  it("agreementAccepted: false 拒绝（z.literal(true)）", () => {
-    expect(
-      registerInputSchema.safeParse({
-        ...validInput,
-        agreementAccepted: false,
-      }).success,
-    ).toBe(false);
-  });
-});
 
 describe("user 表", () => {
   const config = getTableConfig(user);

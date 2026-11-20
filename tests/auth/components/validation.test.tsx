@@ -33,7 +33,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("../../../src/modules/auth/actions", () => ({
   registerAction: vi.fn(),
 }));
-vi.mock("../../../src/lib/auth-client", () => ({
+vi.mock("../../../src/lib/better-auth.client", () => ({
   authClient: {
     signIn: { username: signInMock },
     signOut: vi.fn(),

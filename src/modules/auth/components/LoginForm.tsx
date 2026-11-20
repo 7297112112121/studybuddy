@@ -19,7 +19,6 @@ type LoginFormProps = {
   accountInvalid?: boolean;
   passwordInvalid?: boolean;
   submitting: boolean;
-  /** R7 提交失败文案（内联于密码框底部）；无失败时缺省不渲染。 */
   errorText?: string;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onAccountChange: (value: string) => void;
