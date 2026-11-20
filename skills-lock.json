@@ -19,6 +19,11 @@
       "skillPath": "better-auth/create-auth/SKILL.md",
       "computedHash": "6f68253a5ab812aa8c9b70c57609aca763093a594e3b07163142e0fa7d64904a"
     },
+    "drizzle": {
+      "source": "./node_modules/drizzle-kit/skills",
+      "sourceType": "local",
+      "computedHash": "c91331769b0cf9a9f5592d9ea5cf0998fdfcd81c4ed1fb0d8784ada819a797e9"
+    },
     "email-and-password-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",

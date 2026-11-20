@@ -15,6 +15,11 @@
       "command": "uvx",
       "args": ["--with", "mcp<2", "mcp-server-git", "--repository", "."]
     },
+    "drizzle": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "--no-install", "drizzle-kit", "mcp"]
+    },
     "fetch": {
       "type": "stdio",
       "command": "uvx",
