@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@upstash/context7-mcp"]
+    },
+    "codegraph": {
+      "type": "stdio",
+      "command": "codegraph",
+      "args": ["serve", "--mcp"]
+    },
+    "git": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--with", "mcp<2", "mcp-server-git", "--repository", "."]
+    },
+    "fetch": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "@playwright/mcp@latest"]
+    },
+    "shadcn": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "shadcn@latest", "mcp"]
+    }
+  }
+}
