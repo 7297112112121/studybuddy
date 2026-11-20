@@ -9,7 +9,7 @@
  *   AuthRedirect 经工厂内动态 import 换入真实组件（布局渲染行为真实走通）；
  * - `next/navigation`：redirect 按 Next 语义 throw（NEXT_REDIRECT），
  *   useRouter 给 AuthRedirect / SignOutButton 桩接；
- * - `@/lib/auth-client`：signOut 注入（Task 10 裁决：失败 resolve
+ * - `@/lib/better-auth.client`：signOut 注入（Task 10 裁决：失败 resolve
  *   `{ data: null, error }` 而非 reject——两种形态都覆盖）。
  *
  * B6 断言形态：(app) 布局未登录时 redirect 以 '/login' 抛出、布局函数
@@ -45,16 +45,22 @@ const signOut = vi.hoisted(() => vi.fn());
 vi.mock("@/modules/auth", async () => {
   const { default: RealAuthRedirect } =
     await import("@/modules/auth/components/AuthRedirect");
+  const { default: RealAuroraBackground } =
+    await import("@/modules/auth/components/AuroraBackground");
+  const { default: RealPromoColumn } =
+    await import("@/modules/auth/components/PromoColumn");
   return {
     getCurrentSession,
     AuthRedirect: RealAuthRedirect,
+    AuroraBackground: RealAuroraBackground,
+    PromoColumn: RealPromoColumn,
   };
 });
 vi.mock("next/navigation", () => ({
   redirect: redirectMock,
   useRouter: () => ({ back: routerBack, replace: routerReplace }),
 }));
-vi.mock("@/lib/auth-client", () => ({
+vi.mock("@/lib/better-auth.client", () => ({
   authClient: { signOut },
 }));
 

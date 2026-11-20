@@ -73,7 +73,7 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     # 会话缓存/限流计数均为可丢失数据（ADR-0007 纪律）：内存上限内 LRU 淘汰，
-    # 会话本体双写 PG 兜底（src/lib/auth.ts），淘汰不造成登录态丢失
+    # 会话本体双写 PG 兜底（src/lib/better-auth.server.ts），淘汰不造成登录态丢失
     command: redis-server --maxmemory 96mb --maxmemory-policy allkeys-lru
     expose:
       - "6379"

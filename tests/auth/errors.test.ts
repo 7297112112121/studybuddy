@@ -17,10 +17,10 @@ describe("mapSignInError", () => {
     );
   });
 
-  it("status 400 + code INVALID_USERNAME_OR_PASSWORD → auth.error.invalidCredentials", () => {
-    expect(
-      mapSignInError({ status: 400, code: "INVALID_USERNAME_OR_PASSWORD" }),
-    ).toBe("auth.error.invalidCredentials");
+  it("status 400 → auth.error.invalidCredentials", () => {
+    expect(mapSignInError({ status: 400 })).toBe(
+      "auth.error.invalidCredentials",
+    );
   });
 
   it("status 429 → auth.error.tooManyAttempts", () => {

@@ -1,12 +1,24 @@
 /**
- * 登录/注册表单校验纯函数。零 IO、零副作用，仅依赖传入字符串。
- * USERNAME_RE 真源在 @/lib/username（依赖方向：lib 不得反向 import
- * modules，故真源上浮轻量 lib 文件，此处 re-export 保持既有导入路径）；
- * PASSWORD_RE 为密码域单一来源（R3/F-02），值逐字符固定，勿在此处改动。
+ * 登录/注册表单校验纯函数，账户名与密码业务规则的唯一来源。
+ * 规则界限禁止在本文件之外复写字面值，消费方一律引用本文件导出的常量、正则与类型。
  */
-import { USERNAME_RE } from "@/lib/username";
 
-export { USERNAME_RE };
+/** 账户名长度下界：最短字符数，正则量词、规则浮层与 Better Auth 插件配置同源引用。 */
+export const USERNAME_MIN_LENGTH = 1;
+
+/** 账户名长度上界：最长字符数，同源引用范围同下界。 */
+export const USERNAME_MAX_LENGTH = 16;
+
+/** 密码长度下界：最短位数，正则量词、规则浮层与 Better Auth 配置同源引用。 */
+export const PASSWORD_MIN_LENGTH = 8;
+
+/** 密码长度上界：最长位数，同源引用范围同下界。 */
+export const PASSWORD_MAX_LENGTH = 20;
+
+/** 账户名合法域：中文/字母/数字/下划线，长度界限由上述常量注入（区分大小写；输入不过滤）。 */
+export const USERNAME_RE = new RegExp(
+  `^[一-龥A-Za-z0-9_]{${USERNAME_MIN_LENGTH},${USERNAME_MAX_LENGTH}}$`,
+);
 
 /**
  * 账户名字符集（无长度量词）——仅供规则浮层做「字符集/长度」两条正交
@@ -15,7 +27,31 @@ export { USERNAME_RE };
  */
 const USERNAME_CHARSET_RE = /^[一-龥A-Za-z0-9_]+$/;
 
-export const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,20}$/;
+/** 密码域：字母与数字同时存在，长度界限由上述常量注入。 */
+export const PASSWORD_RE = new RegExp(
+  `^(?=.*[A-Za-z])(?=.*\\d).{${PASSWORD_MIN_LENGTH},${PASSWORD_MAX_LENGTH}}$`,
+);
+
+/**
+ * 校验错误承载的 messageKey 全集（与上方校验函数的返回键一一对应）。
+ * 显式枚举而非推断，键清单变更时在此同步；账户名无独立注册键，
+ * 登录/注册复用 auth.account.* 文案组。
+ */
+export type AuthMessageKey =
+  | "auth.account.required"
+  | "auth.account.invalid"
+  | "auth.password.required"
+  | "auth.password.invalid"
+  | "auth.register.passwordMismatch"
+  | "auth.agreement.required";
+
+/** 字段错误状态：协议勾选错误单列，其余以字段级文案呈现在各输入框下。 */
+export type AuthFormErrors = Partial<
+  Record<
+    "account" | "username" | "password" | "confirmPassword" | "agreement",
+    AuthMessageKey
+  >
+>;
 
 export type AccountCheck =
   | { ok: true }
@@ -67,7 +103,11 @@ const PASSWORD_MIX_RE = /^(?=.*[A-Za-z])(?=.*\d)/;
  */
 export function accountRuleStates(raw: string): FieldRuleState[] {
   return [
-    { label: "长度 1—16 个字符", passed: raw.length >= 1 && raw.length <= 16 },
+    {
+      label: `长度 ${USERNAME_MIN_LENGTH}—${USERNAME_MAX_LENGTH} 个字符`,
+      passed:
+        raw.length >= USERNAME_MIN_LENGTH && raw.length <= USERNAME_MAX_LENGTH,
+    },
     {
       label: "仅含中文、字母、数字或下划线",
       passed: USERNAME_CHARSET_RE.test(raw),
@@ -78,8 +118,28 @@ export function accountRuleStates(raw: string): FieldRuleState[] {
 /** 密码规则实时拆解。不变量：每条 passed 全真 ⇔ validatePassword.ok（required 除外）。 */
 export function passwordRuleStates(raw: string): FieldRuleState[] {
   return [
-    { label: "长度 8—20 位", passed: raw.length >= 8 && raw.length <= 20 },
+    {
+      label: `长度 ${PASSWORD_MIN_LENGTH}—${PASSWORD_MAX_LENGTH} 位`,
+      passed:
+        raw.length >= PASSWORD_MIN_LENGTH && raw.length <= PASSWORD_MAX_LENGTH,
+    },
     { label: "需同时含字母与数字", passed: PASSWORD_MIX_RE.test(raw) },
+  ];
+}
+
+/**
+ * 确认密码规则实时拆解。不变量：passed 等价于「非空且与 password 一致」，
+ * 与 validateRegisterForm 的确认密码判定同语义（空值视为不一致）。
+ */
+export function confirmPasswordRuleStates(
+  password: string,
+  confirmPassword: string,
+): FieldRuleState[] {
+  return [
+    {
+      label: "与第一次输入一致",
+      passed: confirmPassword !== "" && confirmPassword === password,
+    },
   ];
 }
 
@@ -90,12 +150,17 @@ export type RegisterFormErrors = Partial<{
   agreement: "auth.agreement.required";
 }>;
 
-export function validateRegisterForm(v: {
+/** 注册入参类型契约（传输层形状），validateRegisterForm 与服务端 action 共用。 */
+export type RegisterInput = {
   username: string;
   password: string;
   confirmPassword: string;
   agreementAccepted: boolean;
-}): RegisterFormErrors | null {
+};
+
+export function validateRegisterForm(
+  v: RegisterInput,
+): RegisterFormErrors | null {
   const errors: RegisterFormErrors = {};
 
   if (!USERNAME_RE.test(v.username)) {
@@ -106,9 +171,6 @@ export function validateRegisterForm(v: {
   if (!passwordCheck.ok) {
     errors.password = passwordCheck.messageKey;
   } else if (v.confirmPassword === "" || v.confirmPassword !== v.password) {
-    // R8：确认密码为空与不一致同归「两次输入的密码不一致」。
-    // 仅在密码自身校验通过时检查——确认密码的强度由「与 password 一致」
-    // 间接保证，密码为空/不合格时不再叠加 confirmPassword 错误。
     errors.confirmPassword = "auth.register.passwordMismatch";
   }
 
