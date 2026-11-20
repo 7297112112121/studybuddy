@@ -1,0 +1,200 @@
+"use client";
+
+/**
+ * 登录/注册屏的表单状态机。提交链携带凭据，日志与失败文案不得泄露凭据细节。
+ */
+import { useState } from "react";
+import type { FormEvent } from "react";
+
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+
+import { ROUTES } from "@/lib/routes";
+import { authClient } from "@/lib/better-auth.client";
+import { registerAction } from "./actions";
+import { mapSignInError, type AuthTopError } from "./errors";
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  validateAccount,
+  validatePassword,
+  validateRegisterForm,
+  type AuthFormErrors,
+  type AuthMessageKey,
+  type RegisterInput,
+} from "./validators";
+import type { AuthView } from "./components/AuthTabs";
+
+/** 表单值（login/register 共用一份，切换视图保留）。注册账户名复用 account。 */
+export type AuthFormValues = {
+  account: string;
+  password: string;
+  confirmPassword: string;
+  agreementAccepted: boolean;
+};
+
+/** 产出组合层渲染所需的全部状态、派生错误态与回调。 */
+export function useClientScreen(initialView: AuthView) {
+  const router = useRouter();
+  const [activeView, setActiveView] = useState<AuthView>(initialView);
+  const [values, setValues] = useState<AuthFormValues>({
+    account: "",
+    password: "",
+    confirmPassword: "",
+    agreementAccepted: false,
+  });
+  const [errors, setErrors] = useState<AuthFormErrors>({});
+  // 提交中禁用按钮、文案切「登录中…/注册中…」，不可重复提交。
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [topError, setTopError] = useState<AuthTopError | null>(null);
+  const t = useTranslations("auth");
+
+  /**
+   * 渲染文案：去掉 "auth." 命名空间前缀后交给 useTranslations。
+   * 规则界限经插值注入，文案模板的数字与 validators 常量单一来源衔接。
+   */
+  function errorText(key: AuthMessageKey | AuthTopError): string {
+    return t(key.slice("auth.".length), {
+      accountMin: USERNAME_MIN_LENGTH,
+      accountMax: USERNAME_MAX_LENGTH,
+      passwordMin: PASSWORD_MIN_LENGTH,
+      passwordMax: PASSWORD_MAX_LENGTH,
+    });
+  }
+
+  function updateValue<K extends keyof AuthFormValues>(
+    key: K,
+    value: AuthFormValues[K],
+  ): void {
+    setValues((prev) => ({ ...prev, [key]: value }));
+  }
+
+  /** 切换视图保留表单值、清空错误（含顶部错误），URL 同步但不导航。 */
+  function switchView(view: AuthView): void {
+    setActiveView(view);
+    setErrors({});
+    setTopError(null);
+    window.history.replaceState(
+      null,
+      "",
+      view === "login" ? ROUTES.login : ROUTES.register,
+    );
+  }
+
+  /** 登录/自动登录成功一律 replace 到工作台（不留登录页历史）。 */
+  async function signInWithUsername(): Promise<void> {
+    const result = await authClient.signIn.username({
+      username: values.account,
+      password: values.password,
+    });
+    if (result.error) {
+      setTopError(mapSignInError(result.error));
+      return;
+    }
+    router.replace(ROUTES.workbench);
+  }
+
+  /** 登录提交 */
+  async function submitSignIn(): Promise<void> {
+    if (submitting) {
+      return;
+    }
+    setSubmitting(true);
+    setTopError(null);
+    try {
+      await signInWithUsername();
+    } catch {
+      // 网络层异常归一为 unknown（errors.ts 兜底约定，不泄露失败细节）。
+      setTopError("auth.error.unknown");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  /** 注册提交：服务端复验注册，成功自动登录进工作台。 */
+  async function submitRegister(): Promise<void> {
+    if (submitting) {
+      return;
+    }
+    setSubmitting(true);
+    setTopError(null);
+    try {
+      const result = await registerAction({
+        username: values.account,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        agreementAccepted: values.agreementAccepted,
+      } satisfies RegisterInput);
+      if (!result.ok) {
+        if (result.error === "USERNAME_ALREADY_REGISTERED") {
+          setTopError("auth.error.usernameRegistered");
+          return;
+        }
+        setErrors(result.fieldErrors);
+        return;
+      }
+      await signInWithUsername();
+    } catch {
+      setTopError("auth.error.unknown");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  /** 登录校验链：任一项不过则呈现错误、不提交。 */
+  function handleLoginSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    const accountCheck = validateAccount(values.account);
+    const passwordCheck = validatePassword(values.password);
+    const nextErrors: AuthFormErrors = {};
+    if (!accountCheck.ok) {
+      nextErrors.account = accountCheck.messageKey;
+    }
+    if (!passwordCheck.ok) {
+      nextErrors.password = passwordCheck.messageKey;
+    }
+    setErrors(nextErrors);
+    if (!accountCheck.ok || !passwordCheck.ok) {
+      return;
+    }
+    void submitSignIn();
+  }
+
+  /** 注册校验链（validateRegisterForm 含协议勾选）。 */
+  function handleRegisterSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    const registerErrors: AuthFormErrors =
+      validateRegisterForm({
+        username: values.account,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        agreementAccepted: values.agreementAccepted,
+      }) ?? {};
+    setErrors(registerErrors);
+    if (Object.keys(registerErrors).length === 0) {
+      void submitRegister();
+    }
+  }
+
+  /** 字段错误态：仅以红框呈现（aria-invalid），文案不再渲染。 */
+  const isInvalid = (key: keyof Omit<AuthFormErrors, "agreement">) =>
+    errors[key] !== undefined;
+  const agreementInvalid = errors.agreement !== undefined;
+
+  return {
+    activeView,
+    values,
+    errors,
+    submitting,
+    topError,
+    errorText,
+    updateValue,
+    switchView,
+    isInvalid,
+    agreementInvalid,
+    handleLoginSubmit,
+    handleRegisterSubmit,
+  };
+}

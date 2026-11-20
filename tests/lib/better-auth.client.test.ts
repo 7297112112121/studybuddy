@@ -1,5 +1,5 @@
 /**
- * src/lib/auth-client.ts 单元测试（Task 4，design「src/lib/auth-client.ts」契约）。
+ * src/lib/better-auth.client.ts 单元测试（Task 4，design「src/lib/auth-client.ts」契约）。
  *
  * 此处闭合 design 开放问题 #2：`authClient.signIn.username` 方法名
  * 是否为 usernameClient 实际生成的 SDK 方法（契约锚点是端点
@@ -8,9 +8,9 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/better-auth.client";
 
-describe("authClient（src/lib/auth-client.ts）", () => {
+describe("authClient（src/lib/better-auth.client.ts）", () => {
   it("暴露 signIn.username 方法（开放问题 #2 运行时闭合）", () => {
     expect(typeof authClient.signIn.username).toBe("function");
   });

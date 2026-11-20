@@ -10,7 +10,7 @@
  */
 import { headers } from "next/headers";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/better-auth.server";
 
 export type AuthSession = {
   user: { id: string; name: string; username: string };

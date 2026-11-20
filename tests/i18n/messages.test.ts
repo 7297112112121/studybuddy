@@ -11,13 +11,15 @@ describe("auth.json 文案与 design 文案表逐字一致", () => {
   it("account：登录账号字段", () => {
     expect(auth.account.required).toBe("请输入账户名");
     expect(auth.account.invalid).toBe(
-      "格式不对：1—16 位中文、字母、数字或下划线",
+      "格式不对：{accountMin}—{accountMax} 位中文、字母、数字或下划线",
     );
   });
 
   it("password：密码字段", () => {
     expect(auth.password.required).toBe("请输入密码");
-    expect(auth.password.invalid).toBe("密码为 8—20 位，需含字母与数字");
+    expect(auth.password.invalid).toBe(
+      "密码为 {passwordMin}—{passwordMax} 位，需含字母与数字",
+    );
   });
 
   it("register：注册表单校验", () => {
