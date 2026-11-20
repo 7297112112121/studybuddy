@@ -10,7 +10,7 @@
  */
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/better-auth.client";
 import { Button } from "@/components/ui/button";
 
 export default function SignOutButton() {

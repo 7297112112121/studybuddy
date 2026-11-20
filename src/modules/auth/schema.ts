@@ -1,5 +1,5 @@
 /**
- * 认证域 drizzle 表定义 + 注册入参 zod 契约（design「数据模型」节）。
+ * 认证域 drizzle 表定义（design「数据模型」节）。
  *
  * 放置约定（本设计立样板）：模块属主文件；`src/db/schema.ts` 为公共契约 barrel
  * re-export 此处全部产物。列属性名使用 Better Auth 字段名（camelCase），
@@ -15,9 +15,6 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { z } from "zod";
-
-import { PASSWORD_RE, USERNAME_RE } from "./validators";
 
 const pgTable = snakeCase.table;
 
@@ -90,18 +87,3 @@ export const verification = pgTable("verification", {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
-
-/**
- * 注册入参校验（边界 #1 后端半边，design 代码原样）。
- * USERNAME_RE/PASSWORD_RE 为全仓单一来源（Task 2 validators）。
- */
-export const registerInputSchema = z
-  .object({
-    username: z.string().regex(USERNAME_RE),
-    password: z.string().regex(PASSWORD_RE),
-    confirmPassword: z.string(),
-    agreementAccepted: z.literal(true),
-  })
-  .refine((v) => v.password === v.confirmPassword);
-
-export type RegisterInput = z.infer<typeof registerInputSchema>;

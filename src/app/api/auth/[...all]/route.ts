@@ -1,7 +1,7 @@
 /**
  * Better Auth 全部认证端点挂载（design「路由层薄壳」）：
  * 含 /sign-in/username、/sign-out 等；/sign-up/email、/sign-in/email 与
- * /is-username-available 被 lib/auth.ts 的 before-hook 以 403 拦死
+ * /is-username-available 被 lib/better-auth.server.ts 的 before-hook 以 403 拦死
  * （边界 #2 无邮箱凭据形态；R7 不开放账户名存在性探测面）。
  *
  * Route Handler 约定（Next.js 16.4.6，node_modules/next/dist/docs/
@@ -11,6 +11,6 @@
  */
 import { toNextJsHandler } from "better-auth/next-js";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/better-auth.server";
 
 export const { GET, POST, PATCH, PUT, DELETE } = toNextJsHandler(auth.handler);

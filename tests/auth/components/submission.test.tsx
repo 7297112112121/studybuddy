@@ -3,7 +3,7 @@
  *
  * 网络边界全部桩化（vi.mock 按被测组件导入说明符的 resolved id 命中）：
  * - `../actions`（组件相对路径）→ 测试侧以 ../../../src/modules/auth/actions mock；
- * - `@/lib/auth-client` → signIn.username 返回 better-auth 客户端真实形态
+ * - `@/lib/better-auth.client` → signIn.username 返回 better-auth 客户端真实形态
  *   `{ data, error }`（@better-fetch 默认不 throw，错误在 error 字段）；
  *   桩沿用 T8 validation.test 的 vi.hoisted 注入形态；
  * - `next/navigation` 的 useRouter.replace。
@@ -37,7 +37,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("../../../src/modules/auth/actions", () => ({
   registerAction: vi.fn(),
 }));
-vi.mock("../../../src/lib/auth-client", () => ({
+vi.mock("../../../src/lib/better-auth.client", () => ({
   authClient: {
     signIn: { username: signInMock },
     signOut: vi.fn(),

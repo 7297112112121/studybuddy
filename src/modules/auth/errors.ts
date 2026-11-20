@@ -15,9 +15,16 @@ export type SignInErrorKey =
   | "auth.error.tooManyAttempts"
   | "auth.error.unknown";
 
-/** err 形状兼容 better-auth 客户端错误对象（status/code 均可选），空值兜底 unknown */
+/**
+ * 屏顶部错误键（auth.error.* 文案命名空间）：登录失败经 mapSignInError
+ * 归一；注册账户名已存在固定为 usernameRegistered（文案整体可点，
+ * 切回登录视图并带入账户名）。
+ */
+export type AuthTopError = SignInErrorKey | "auth.error.usernameRegistered";
+
+/** err 形状兼容 better-auth 客户端错误对象（status 可选），空值兜底 unknown */
 export function mapSignInError(
-  err: { status?: number; code?: string } | null | undefined,
+  err: { status?: number } | null | undefined,
 ): SignInErrorKey {
   if (!err) {
     return "auth.error.unknown";

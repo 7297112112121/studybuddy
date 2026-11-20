@@ -6,7 +6,7 @@
  *    「未注册账户名 / 错密码 / 空密码直连 POST」返回同状态码 + 同 code +
  *    同 message，无账号存在性探测面（design 开放问题 #1 闭合点）；
  * 2. hook 403 三路径：邮箱注册/登录端点与 /is-username-available 被
- *    lib/auth.ts before hook 拦死（B2；后者为 R7 不可探测纪律下的
+ *    lib/better-auth.server.ts before hook 拦死（B2；后者为 R7 不可探测纪律下的
  *    账户名枚举面）；
  * 3. immutable 守卫：immutableUsername=true 时已登录会话携新 username
  *    直连 /update-user 被拒（4xx），库内 username 不变（负空间无改名语义）；
@@ -23,7 +23,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db/client";
 import { session, user } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/better-auth.server";
 import { redis } from "@/lib/redis";
 import { directPost, signInAndGetCookie, uniqueUsername } from "../helpers";
 import {
