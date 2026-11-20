@@ -1,0 +1,16 @@
+# 统一行尾：仓库存储与工作区检出一律 LF，跨平台协作不产生 CRLF 噪音。
+# 需要本机配合：core.autocrlf 设为 false 或 input（Windows 安装器默认 true 会检出 CRLF）。
+
+* text=auto eol=lf
+
+# Windows 专属脚本如出现，需保留 CRLF（取消注释即可）：
+# *.bat text eol=crlf
+# *.cmd text eol=crlf
+
+# 二进制文件不做任何转换
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.woff binary
+*.woff2 binary
