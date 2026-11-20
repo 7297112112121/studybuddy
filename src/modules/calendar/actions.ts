@@ -16,12 +16,11 @@
  * 其他:
  * 1. userId 一律取自会话,不收客户端传入;
  * 2. 入参先经 zod 复验,fieldErrors 只装错误 key,不返回文案原文;
- * 3. 增改删走统一归一流:会话校验、入参复验、service 调用、刷新日历缓存。
+ * 3. 增改删走统一归一流(胶水单一来源 @/lib/action):会话校验、入参复验、service 调用、刷新日历缓存。
  */
 import { revalidatePath } from "next/cache";
 
-import { z } from "zod";
-
+import { ActionResult, runAction } from "@/lib/action";
 import { ROUTES } from "@/lib/routes";
 import { getCurrentSession } from "@/modules/auth";
 import {
@@ -38,27 +37,32 @@ import {
   type EntryProposal,
 } from "./proposal";
 
-export type CalendarEntryActionResult =
-  | { ok: true }
-  | { ok: false; error: "INVALID_INPUT"; fieldErrors: CalendarFieldErrors } // 字段校验失败,fieldErrors 供前端渲染错误文案
-  | { ok: false; error: "UNAUTHORIZED" } // 无有效会话,客户端跳登录页
-  | { ok: false; error: "NOT_FOUND" } // 条目不存在或不属于该用户,客户端静默刷新
-  | { ok: false; error: "SAVE_FAILED" }; // 数据库写入失败
+export type CalendarEntryActionResult = ActionResult<CalendarFieldErrors>;
 
 /** 作用:创建一条日历条目,走统一归一流。 */
 export async function createEntryAction(
   input: CalendarEntryInput,
 ): Promise<CalendarEntryActionResult> {
-  return runAction(input, null, (userId, data) => createEntry(userId, data));
+  return runAction(
+    await getCurrentSession(),
+    input,
+    calendarEntryInputSchema,
+    (userId, data) => createEntry(userId, data),
+    ROUTES.calendar,
+  );
 }
 
-/** 作用:更新指定条目,走统一归一流;entryId 为 null 时按条目不存在处理。 */
+/** 作用:更新指定条目,走统一归一流;条目不存在或不属于该用户按未找到处理。 */
 export async function updateEntryAction(
   entryId: string,
   input: CalendarEntryInput,
 ): Promise<CalendarEntryActionResult> {
-  return runAction(input, entryId, (userId, data, id) =>
-    id === null ? Promise.resolve(false) : updateEntry(userId, id, data),
+  return runAction(
+    await getCurrentSession(),
+    input,
+    calendarEntryInputSchema,
+    (userId, data) => updateEntry(userId, entryId, data),
+    ROUTES.calendar,
   );
 }
 
@@ -194,75 +198,7 @@ export async function confirmProposalAction(
   return { ok: true };
 }
 
-type WriteResult = boolean | void;
-
-/** 作用:把 zod 校验错误折算成字段级错误;同字段只取首条,值为文案 key。 */
-function toFieldErrors(error: z.ZodError): CalendarFieldErrors {
-  const fieldErrors: CalendarFieldErrors = {};
-  for (const issue of error.issues) {
-    const field = issue.path[0];
-    if (
-      typeof field === "string" &&
-      field in fieldErrors === false &&
-      (field === "date" ||
-        field === "title" ||
-        field === "startTime" ||
-        field === "endTime")
-    ) {
-      fieldErrors[field] = issue.message;
-    }
-  }
-  return fieldErrors;
-}
-
 /** 作用:会话守卫的单一收拢点;null 表示无有效会话,由调用点归一为未授权(UNAUTHORIZED)。 */
 async function requireSession() {
   return getCurrentSession();
-}
-
-/**
- * 作用:创建与更新 action 共用的归一流。
- *
- * 流程:
- * 1. 校验会话;无有效会话返回未授权(UNAUTHORIZED)。
- * 2. zod 复验入参;失败返回输入无效(INVALID_INPUT)并携带字段错误。
- * 3. 调用写入函数;数据库异常返回保存失败(SAVE_FAILED)。
- * 4. 写入函数返回 false 时归一为未找到(NOT_FOUND)。
- * 5. 成功刷新日历路径缓存并返回成功。
- */
-async function runAction(
-  input: CalendarEntryInput,
-  entryId: string | null,
-  write: (
-    userId: string,
-    input: CalendarEntryInput,
-    entryId: string | null,
-  ) => Promise<WriteResult>,
-): Promise<CalendarEntryActionResult> {
-  const session = await requireSession();
-  if (!session) {
-    return { ok: false, error: "UNAUTHORIZED" };
-  }
-
-  const parsed = calendarEntryInputSchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: "INVALID_INPUT",
-      fieldErrors: toFieldErrors(parsed.error),
-    };
-  }
-
-  let result: WriteResult;
-  try {
-    result = await write(session.user.id, parsed.data, entryId);
-  } catch {
-    return { ok: false, error: "SAVE_FAILED" };
-  }
-  if (result === false) {
-    return { ok: false, error: "NOT_FOUND" };
-  }
-
-  revalidatePath(ROUTES.calendar);
-  return { ok: true };
 }
