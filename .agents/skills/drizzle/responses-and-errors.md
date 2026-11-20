@@ -6,12 +6,12 @@ Both invocation surfaces share one envelope: the CLI prints it on stdout when `-
 
 The discriminated union (identical for CLI stdout and SDK return value):
 
-| status            | exit code | shape                                                   |
-| ----------------- | --------- | ------------------------------------------------------- |
-| `'ok'`            | 0         | `{ status, dialect, ... }` (per-operation extras below) |
+| status            | exit code | shape                                                                                         |
+| ----------------- | --------- | --------------------------------------------------------------------------------------------- |
+| `'ok'`            | 0         | `{ status, dialect, ... }` (per-operation extras below)                                       |
 | `'no_changes'`    | 0         | `{ status, dialect }`, plus `deleted_migrations` or `fix` (see below) after `--fix-conflicts` |
-| `'missing_hints'` | 2         | `{ status, unresolved: MissingHint[] }`                 |
-| `'error'`         | 1         | `{ status, error: { code, ...meta } }`                  |
+| `'missing_hints'` | 2         | `{ status, unresolved: MissingHint[] }`                                                       |
+| `'error'`         | 1         | `{ status, error: { code, ...meta } }`                                                        |
 
 Per-operation extras on `'ok'`:
 
@@ -36,25 +36,25 @@ Exit code is the canonical second signal — agents spawning the CLI can branch 
 
 The canonical subset surfacing from `generate` and `push`. `code` is the discriminator; `meta` keys are listed alongside.
 
-| code                                | when                                                                                | meta keys                                                       |
-| ----------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `invalid_hints`                     | hints payload could not be loaded, parsed, validated, or matched to the diff        | `source: 'file'\|'inline'`, `path?`, `issues?`, `kind?`, `from?` |
-| `unsupported_schema_change`         | the diff would emit DDL the target dialect cannot execute (see variants below)      | `kind`, plus per-variant keys                                   |
-| `check_error`                       | a command that reads the migrations folder found a snapshot-integrity problem or unreported branch conflicts (see below) | `kind: 'unsupported'\|'malformed'\|'non_latest'\|'order'\|'conflicts'`, `snapshot?`, `parentId?`, `parentSnapshot?`, `baseSnapshot?`, `conflicts?`, `details?` |
-| `query_error`                       | runtime SQL against the live DB threw                                               | `sql`, `params`                                                 |
-| `internal_error`                    | uncaught exception escaped the run boundary — likely a bug to report                | `message`                                                       |
-| `config_validation_error`           | `drizzle.config.ts` failed shape validation                                         | `issues?` (zod-style records)                                   |
-| `config_file_not_found_error`       | config path did not resolve to a file                                               | `path`                                                          |
-| `schema_files_not_found_error`      | schema glob(s) matched zero files                                                   | `paths`                                                         |
-| `missing_required_params_error`     | a required CLI flag or config field was absent                                      | `params`                                                        |
-| `ambiguous_params_error`            | a flag conflicts with a `defineConfig` field                                        | `command`, `configOption`                                       |
-| `unsupported_command_dialect_error` | the requested command or option isn't valid for the chosen dialect or with another option | `command`, `dialect?`, `option?`, `conflictsWith?`              |
-| `config_connection_error`           | `dbCredentials` shape doesn't match the chosen driver                               | `driver`, `params`, `command?`                                  |
-| `database_driver_error`             | driver-specific connect failure — usually a missing or version-mismatched package; also arises from `pull`'s connect/introspect span and its `--init` migrate span | `database`, `packages`, `note?`                                 |
-| `orm_version_error`                 | `drizzle-orm` is missing, too old, or `drizzle-kit` itself is outdated              | `kind: 'orm_missing'\|'orm_too_old'\|'kit_outdated'`            |
-| `required_packages_error`           | one or more dialect driver packages need installing                                 | `packages`                                                      |
-| `migrations_outdated_error`         | migrations folder format is outdated and needs upgrading                            | `out`                                                           |
-| `command_output_error`              | a command could not produce its result; for `up`, a snapshot could not be converted | `command`, plus per-command keys (for `up`: `kind`, `snapshot?`, `entity?`, `parentId?`, `baseSnapshot?`, `entry?`, `sql?`) |
+| code                                | when                                                                                                                                                               | meta keys                                                                                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `invalid_hints`                     | hints payload could not be loaded, parsed, validated, or matched to the diff                                                                                       | `source: 'file'\|'inline'`, `path?`, `issues?`, `kind?`, `from?`                                                                                               |
+| `unsupported_schema_change`         | the diff would emit DDL the target dialect cannot execute (see variants below)                                                                                     | `kind`, plus per-variant keys                                                                                                                                  |
+| `check_error`                       | a command that reads the migrations folder found a snapshot-integrity problem or unreported branch conflicts (see below)                                           | `kind: 'unsupported'\|'malformed'\|'non_latest'\|'order'\|'conflicts'`, `snapshot?`, `parentId?`, `parentSnapshot?`, `baseSnapshot?`, `conflicts?`, `details?` |
+| `query_error`                       | runtime SQL against the live DB threw                                                                                                                              | `sql`, `params`                                                                                                                                                |
+| `internal_error`                    | uncaught exception escaped the run boundary — likely a bug to report                                                                                               | `message`                                                                                                                                                      |
+| `config_validation_error`           | `drizzle.config.ts` failed shape validation                                                                                                                        | `issues?` (zod-style records)                                                                                                                                  |
+| `config_file_not_found_error`       | config path did not resolve to a file                                                                                                                              | `path`                                                                                                                                                         |
+| `schema_files_not_found_error`      | schema glob(s) matched zero files                                                                                                                                  | `paths`                                                                                                                                                        |
+| `missing_required_params_error`     | a required CLI flag or config field was absent                                                                                                                     | `params`                                                                                                                                                       |
+| `ambiguous_params_error`            | a flag conflicts with a `defineConfig` field                                                                                                                       | `command`, `configOption`                                                                                                                                      |
+| `unsupported_command_dialect_error` | the requested command or option isn't valid for the chosen dialect or with another option                                                                          | `command`, `dialect?`, `option?`, `conflictsWith?`                                                                                                             |
+| `config_connection_error`           | `dbCredentials` shape doesn't match the chosen driver                                                                                                              | `driver`, `params`, `command?`                                                                                                                                 |
+| `database_driver_error`             | driver-specific connect failure — usually a missing or version-mismatched package; also arises from `pull`'s connect/introspect span and its `--init` migrate span | `database`, `packages`, `note?`                                                                                                                                |
+| `orm_version_error`                 | `drizzle-orm` is missing, too old, or `drizzle-kit` itself is outdated                                                                                             | `kind: 'orm_missing'\|'orm_too_old'\|'kit_outdated'`                                                                                                           |
+| `required_packages_error`           | one or more dialect driver packages need installing                                                                                                                | `packages`                                                                                                                                                     |
+| `migrations_outdated_error`         | migrations folder format is outdated and needs upgrading                                                                                                           | `out`                                                                                                                                                          |
+| `command_output_error`              | a command could not produce its result; for `up`, a snapshot could not be converted                                                                                | `command`, plus per-command keys (for `up`: `kind`, `snapshot?`, `entity?`, `parentId?`, `baseSnapshot?`, `entry?`, `sql?`)                                    |
 
 Ordering above is roughly most-likely-first from `generate` / `push`. Other codes can surface (see the live `drizzle-kit` source); the table covers the curated subset relevant to the day-to-day workflow.
 
@@ -62,12 +62,12 @@ Ordering above is roughly most-likely-first from `generate` / `push`. Other code
 
 `unsupported_schema_change` is a discriminated meta union — `meta.kind` selects the variant.
 
-| meta.kind                            | dialect(s)         | meta keys                                                       |
-| ------------------------------------ | ------------------ | --------------------------------------------------------------- |
-| `drop_pk_dependency`                 | mysql, singlestore | `kind`, `table`, `columns`, `blocking_fks`                      |
-| `fk_target_not_unique`               | mysql, singlestore | `kind`, `table`, `columns`, `table_to`, `columns_to`            |
-| `rename_blocked_by_check_constraint` | mssql              | `kind`, `schema`, `table`, `from`, `to`                         |
-| `rename_schema_unsupported`          | mssql              | `kind`, `from`, `to`, `dialect: 'mssql'`                        |
+| meta.kind                            | dialect(s)         | meta keys                                            |
+| ------------------------------------ | ------------------ | ---------------------------------------------------- |
+| `drop_pk_dependency`                 | mysql, singlestore | `kind`, `table`, `columns`, `blocking_fks`           |
+| `fk_target_not_unique`               | mysql, singlestore | `kind`, `table`, `columns`, `table_to`, `columns_to` |
+| `rename_blocked_by_check_constraint` | mssql              | `kind`, `schema`, `table`, `from`, `to`              |
+| `rename_schema_unsupported`          | mssql              | `kind`, `from`, `to`, `dialect: 'mssql'`             |
 
 When fired:
 
@@ -80,25 +80,25 @@ When fired:
 
 `check_error` surfaces from the `check()` SDK export and `drizzle-kit check`, returning the envelope on integrity or conflict failures exactly as the CLI does. `generate` and `migrate` run the same check before they start, and `pull` reads the migrations folder through the same loader, so all of them can return it. `up` returns it for a folder that it converts. It exits with code 1 and carries a `kind` discriminator.
 
-| meta.kind     | meta keys                | when fired                                                              |
-| ------------- | ------------------------ | ---------------------------------------------------------------------- |
-| `unsupported` | `kind`, `snapshot`       | a snapshot was written by a newer drizzle-kit and cannot be read       |
-| `malformed`   | `kind`, `snapshot`, `parentId?`, `baseSnapshot?` | a snapshot cannot be read, or the postgres history of the folder is broken (cases below) |
-| `non_latest`  | `kind`, `snapshot`       | a snapshot is in an older format; run `drizzle-kit up`                 |
-| `order`       | `kind`, `snapshot`, `parentSnapshot` | postgres only: the folder of `snapshot` sorts before the folder of its parent `parentSnapshot`, so migrate could run it first; rename the folder of `snapshot` so that it sorts after the parent folder |
-| `conflicts`   | `kind`, `conflicts`, `details`, `fix?` | branches in the migrations folder do not commute |
+| meta.kind     | meta keys                                        | when fired                                                                                                                                                                                              |
+| ------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unsupported` | `kind`, `snapshot`                               | a snapshot was written by a newer drizzle-kit and cannot be read                                                                                                                                        |
+| `malformed`   | `kind`, `snapshot`, `parentId?`, `baseSnapshot?` | a snapshot cannot be read, or the postgres history of the folder is broken (cases below)                                                                                                                |
+| `non_latest`  | `kind`, `snapshot`                               | a snapshot is in an older format; run `drizzle-kit up`                                                                                                                                                  |
+| `order`       | `kind`, `snapshot`, `parentSnapshot`             | postgres only: the folder of `snapshot` sorts before the folder of its parent `parentSnapshot`, so migrate could run it first; rename the folder of `snapshot` so that it sorts after the parent folder |
+| `conflicts`   | `kind`, `conflicts`, `details`, `fix?`           | branches in the migrations folder do not commute                                                                                                                                                        |
 
 For the integrity kinds, `snapshot` is the path of the snapshot file that has the problem. `malformed` has these cases:
 
-| keys besides `kind` and `snapshot` | case | fix |
-| --- | --- | --- |
-| none | the file at `snapshot` is not valid JSON (for example because git left conflict markers in it), has no string `id`, or has no `prevIds` array | restore the file from git, or fix the JSON |
-| none | the file at `snapshot` is valid JSON but does not match the snapshot format of its dialect | restore the file from git |
-| none | postgres only: the history of `snapshot` reaches no base snapshot, because the first migration folder is gone | restore the first migration folder from git, or delete the migration of `snapshot` and every later migration, then run `generate` again |
-| `parentId` | postgres only: the parent with that id is missing from the folder | restore the missing migration folder from git, or delete the migration of `snapshot` and every later migration, then run `generate` again |
-| `baseSnapshot` | postgres only: the folder has two base snapshots, at `snapshot` and at `baseSnapshot`, because two git branches each started from an empty folder | delete one of the two migration folders together with every migration that follows it, then run `generate` again |
-| none | postgres only, and only from `generate`: the migration of `snapshot` is a leaf that does not reconstruct, because a delta in its history throws; `check` and `migrate` pass on this folder | restore the migration folder from git, or delete the migration of `snapshot` and every later migration, then run `generate` again |
-| none | postgres only, and only from `generate`: every leaf reconstructs, and their combined state does not, because a delta of the migration of `snapshot` gives one key to a second entity; `check` and `migrate` pass on this folder | restore the migration folder from git, or delete the migration of `snapshot` and every later migration, then run `generate` again |
+| keys besides `kind` and `snapshot` | case                                                                                                                                                                                                                            | fix                                                                                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| none                               | the file at `snapshot` is not valid JSON (for example because git left conflict markers in it), has no string `id`, or has no `prevIds` array                                                                                   | restore the file from git, or fix the JSON                                                                                                |
+| none                               | the file at `snapshot` is valid JSON but does not match the snapshot format of its dialect                                                                                                                                      | restore the file from git                                                                                                                 |
+| none                               | postgres only: the history of `snapshot` reaches no base snapshot, because the first migration folder is gone                                                                                                                   | restore the first migration folder from git, or delete the migration of `snapshot` and every later migration, then run `generate` again   |
+| `parentId`                         | postgres only: the parent with that id is missing from the folder                                                                                                                                                               | restore the missing migration folder from git, or delete the migration of `snapshot` and every later migration, then run `generate` again |
+| `baseSnapshot`                     | postgres only: the folder has two base snapshots, at `snapshot` and at `baseSnapshot`, because two git branches each started from an empty folder                                                                               | delete one of the two migration folders together with every migration that follows it, then run `generate` again                          |
+| none                               | postgres only, and only from `generate`: the migration of `snapshot` is a leaf that does not reconstruct, because a delta in its history throws; `check` and `migrate` pass on this folder                                      | restore the migration folder from git, or delete the migration of `snapshot` and every later migration, then run `generate` again         |
+| none                               | postgres only, and only from `generate`: every leaf reconstructs, and their combined state does not, because a delta of the migration of `snapshot` gives one key to a second entity; `check` and `migrate` pass on this folder | restore the migration folder from git, or delete the migration of `snapshot` and every later migration, then run `generate` again         |
 
 The cases without an extra key differ in the file at `snapshot`, so read that file to tell them apart. Under `--output text`, the message names the case and the fix. [migrations.md](migrations.md) explains the migrations folder, base and diff snapshots, and these fixes in more detail.
 
@@ -109,29 +109,33 @@ For `conflicts`, `conflicts` is the count and `details` is an array of length `c
 Narrow on `status` and then on `error.code`:
 
 ```typescript
-import { generate } from 'drizzle-kit';
+import { generate } from "drizzle-kit";
 
-const response = await generate({ dialect: 'postgresql', schema: './src/db/schema.ts', out: './drizzle' });
+const response = await generate({
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
+});
 
 switch (response.status) {
-  case 'ok':
+  case "ok":
     // response.dialect is present; response.migration_path when not in explain mode
     break;
-  case 'no_changes':
+  case "no_changes":
     // response.dialect is present; nothing to do
     break;
-  case 'missing_hints':
+  case "missing_hints":
     // response.unresolved holds the items to resolve (see hints.md)
     break;
-  case 'error':
+  case "error":
     switch (response.error.code) {
-      case 'config_file_not_found_error':
+      case "config_file_not_found_error":
         // response.error.path
         break;
-      case 'invalid_hints':
+      case "invalid_hints":
         // response.error.source, response.error.issues, etc.
         break;
-      case 'check_error':
+      case "check_error":
         // migrations-folder pre-flight gate failed; response.error.kind, response.error.snapshot / conflicts / details
         break;
       // ...other codes from the table above

@@ -22,11 +22,11 @@ Minimal example — `drizzle.config.ts` carries the credentials, the CLI invocat
 
 ```typescript
 // drizzle.config.ts
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  dialect: 'postgresql',
-  schema: './src/db/schema.ts',
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
   dbCredentials: { url: process.env.DATABASE_URL! },
 });
 ```
@@ -41,21 +41,21 @@ The process exits with the code that matches `status` (see Response envelope bel
 ## SDK form
 
 ```typescript
-import { push } from 'drizzle-kit';
+import { push } from "drizzle-kit";
 
 const response = await push({
-  dialect: 'postgresql',
-  schema: './src/db/schema.ts',
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
   url: process.env.DATABASE_URL!,
 });
 
-if (response.status === 'ok') {
+if (response.status === "ok") {
   // schema applied to the live database
-} else if (response.status === 'no_changes') {
+} else if (response.status === "no_changes") {
   // live DB already matches the schema — nothing executed
-} else if (response.status === 'missing_hints') {
+} else if (response.status === "missing_hints") {
   // response.unresolved lists ambiguities or destructive ops — see hints.md
-} else if (response.status === 'error') {
+} else if (response.status === "error") {
   // response.error.code identifies the failure — see responses-and-errors.md
 }
 ```
@@ -139,12 +139,12 @@ drizzle-kit push --output json --config drizzle.config.ts
 SDK equivalent of the happy path:
 
 ```typescript
-import { push } from 'drizzle-kit';
+import { push } from "drizzle-kit";
 
 const r = await push({
-  dialect: 'postgresql',
-  schema: './src/db/schema.ts',
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
   url: process.env.DATABASE_URL!,
 });
-if (r.status === 'ok') console.log('applied');
+if (r.status === "ok") console.log("applied");
 ```

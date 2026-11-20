@@ -20,31 +20,31 @@ The `confirm_data_loss` reply omits the `reason` and `reason_details` keys that 
 
 Each unresolved item maps to exactly one reply:
 
-| unresolved item type | reply type |
-|----------------------|------------|
-| `'rename_or_create'` | `'rename'` (pick a deleted entity of the same kind to be the `from`) OR `'create'` |
-| `'confirm_data_loss'` | `'confirm_data_loss'` (same `kind` + `entity`) |
+| unresolved item type  | reply type                                                                         |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `'rename_or_create'`  | `'rename'` (pick a deleted entity of the same kind to be the `from`) OR `'create'` |
+| `'confirm_data_loss'` | `'confirm_data_loss'` (same `kind` + `entity`)                                     |
 
 ## Rename-vs-create kinds
 
 The `kind` literal in the reply must match the literal in the unresolved item exactly. Note that `foreign key` carries a single space — it is the one remaining non-snake_case literal in the union.
 
-| kind | entity-tuple arity | dialect availability |
-|---|---|---|
-| `schema` | `[name]` | postgresql, cockroach, mssql |
-| `role` | `[name]` | postgresql, cockroach |
-| `table` | `[schema, name]` | all |
-| `enum` | `[schema, name]` | postgresql, cockroach |
-| `sequence` | `[schema, name]` | postgresql, cockroach |
-| `view` | `[schema, name]` | all |
-| `column` | `[schema, table, name]` | all |
-| `default` | `[schema, table, name]` | all |
-| `policy` | `[schema, table, name]` | postgresql, cockroach |
-| `check` | `[schema, table, name]` | all |
-| `index` | `[schema, table, name]` | all |
-| `unique` | `[schema, table, name]` | all |
-| `primary_key` | `[schema, table, name]` | all |
-| `foreign key` | `[schema, table, name]` | all |
+| kind          | entity-tuple arity      | dialect availability         |
+| ------------- | ----------------------- | ---------------------------- |
+| `schema`      | `[name]`                | postgresql, cockroach, mssql |
+| `role`        | `[name]`                | postgresql, cockroach        |
+| `table`       | `[schema, name]`        | all                          |
+| `enum`        | `[schema, name]`        | postgresql, cockroach        |
+| `sequence`    | `[schema, name]`        | postgresql, cockroach        |
+| `view`        | `[schema, name]`        | all                          |
+| `column`      | `[schema, table, name]` | all                          |
+| `default`     | `[schema, table, name]` | all                          |
+| `policy`      | `[schema, table, name]` | postgresql, cockroach        |
+| `check`       | `[schema, table, name]` | all                          |
+| `index`       | `[schema, table, name]` | all                          |
+| `unique`      | `[schema, table, name]` | all                          |
+| `primary_key` | `[schema, table, name]` | all                          |
+| `foreign key` | `[schema, table, name]` | all                          |
 
 The runtime only emits unresolved items for kinds that exist on the target dialect, so the dialect-availability column is informational — an agent that just echoes whatever shows up in `unresolved` never sees a kind that doesn't apply. For `rename`, both `from` and `to` are entity tuples of the same arity (the `from` is a deleted entity of the same kind that the new one is being matched against). For `create`, only `entity` is set.
 
@@ -52,14 +52,14 @@ The runtime only emits unresolved items for kinds that exist on the target diale
 
 Confirm-data-loss replies carry `type`, `kind`, and `entity` only — the `reason` and `reason_details` fields the request carries are runtime-only metadata and are dropped from the reply.
 
-| kind | entity-tuple arity | dialect availability |
-|---|---|---|
-| `schema` | `[name]` | postgresql, cockroach, mssql |
-| `table` | `[schema, name]` | all |
-| `view` | `[schema, name]` | postgresql, cockroach (materialized views only) |
-| `column` | `[schema, table, name]` | all |
-| `primary_key` | `[schema, table, name]` | all except sqlite / turso |
-| `add_not_null` | `[schema, table, name]` | sqlite / turso only |
+| kind           | entity-tuple arity      | dialect availability                            |
+| -------------- | ----------------------- | ----------------------------------------------- |
+| `schema`       | `[name]`                | postgresql, cockroach, mssql                    |
+| `table`        | `[schema, name]`        | all                                             |
+| `view`         | `[schema, name]`        | postgresql, cockroach (materialized views only) |
+| `column`       | `[schema, table, name]` | all                                             |
+| `primary_key`  | `[schema, table, name]` | all except sqlite / turso                       |
+| `add_not_null` | `[schema, table, name]` | sqlite / turso only                             |
 
 `add_not_null` is the only confirmation-triggering constraint addition, and it fires only on sqlite / turso. The server dialects (postgresql, mysql, mssql, cockroach, singlestore) add `NOT NULL` / `UNIQUE` constraints without triggering a confirmation request — the `ALTER` runs and the database enforces the constraint, rejecting a genuine violation cleanly — so neither `add_not_null` nor `add_unique` surfaces as a `confirm_data_loss` on those dialects.
 
@@ -67,11 +67,11 @@ Confirm-data-loss replies carry `type`, `kind`, and `entity` only — the `reaso
 
 The unresolved item for a `confirm_data_loss` carries a `reason` (and, for `type_change`, a `reason_details`). The reply does not carry the reason — it carries only `type`, `kind`, `entity`.
 
-| reason | applicable kinds | meaning | reason_details |
-|--------|------------------|---------|----------------|
-| `non_empty` | `table`, `column`, `schema`, `view`, `primary_key` | Target entity has ≥1 row (a `column`: ≥1 non-null value); drop will lose data | — |
-| `table_recreate` | `add_not_null` (sqlite / turso only) | Adding the `NOT NULL` column has no in-place path on SQLite, so confirming wipes all rows and recreates the table | — |
-| `type_change` | `column` | Existing column SQL type changes (e.g. mysql / singlestore `ALTER COLUMN`) | `{ from: string, to: string }` |
+| reason           | applicable kinds                                   | meaning                                                                                                           | reason_details                 |
+| ---------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `non_empty`      | `table`, `column`, `schema`, `view`, `primary_key` | Target entity has ≥1 row (a `column`: ≥1 non-null value); drop will lose data                                     | —                              |
+| `table_recreate` | `add_not_null` (sqlite / turso only)               | Adding the `NOT NULL` column has no in-place path on SQLite, so confirming wipes all rows and recreates the table | —                              |
+| `type_change`    | `column`                                           | Existing column SQL type changes (e.g. mysql / singlestore `ALTER COLUMN`)                                        | `{ from: string, to: string }` |
 
 ## Resolution loop
 
@@ -102,23 +102,32 @@ drizzle-kit push --output json --config drizzle.config.ts --hints-file ./hints.j
 Pass the reply array as a raw `Hint[]` via the `hints` option to `generate` / `push` (or use `hintsFile` with a file path instead):
 
 ```typescript
-import { generate, push } from 'drizzle-kit';
+import { generate, push } from "drizzle-kit";
 
 const r1 = await generate({
-  dialect: 'postgresql',
-  schema: './src/db/schema.ts',
-  out: './drizzle',
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
   hints: [
-    { type: 'rename', kind: 'column', from: ['public', 'users', 'email'], to: ['public', 'users', 'email_v2'] },
+    {
+      type: "rename",
+      kind: "column",
+      from: ["public", "users", "email"],
+      to: ["public", "users", "email_v2"],
+    },
   ],
 });
 
 const r2 = await push({
-  dialect: 'postgresql',
-  schema: './src/db/schema.ts',
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
   url: process.env.DATABASE_URL!,
   hints: [
-    { type: 'confirm_data_loss', kind: 'column', entity: ['public', 'users', 'legacy_id'] },
+    {
+      type: "confirm_data_loss",
+      kind: "column",
+      entity: ["public", "users", "legacy_id"],
+    },
   ],
 });
 ```
@@ -133,11 +142,17 @@ A first invocation against a SQLite database returns two ambiguities — one ren
 {
   "status": "missing_hints",
   "unresolved": [
-    { "type": "rename_or_create", "kind": "column",
-      "entity": ["public", "users", "email_v2"] },
-    { "type": "confirm_data_loss", "kind": "add_not_null",
+    {
+      "type": "rename_or_create",
+      "kind": "column",
+      "entity": ["public", "users", "email_v2"]
+    },
+    {
+      "type": "confirm_data_loss",
+      "kind": "add_not_null",
       "entity": ["public", "users", "handle"],
-      "reason": "table_recreate" }
+      "reason": "table_recreate"
+    }
   ]
 }
 ```
@@ -146,11 +161,17 @@ The `table_recreate` reason fires because SQLite has no in-place way to add a `N
 
 ```json
 [
-  { "type": "rename", "kind": "column",
+  {
+    "type": "rename",
+    "kind": "column",
     "from": ["public", "users", "email"],
-    "to":   ["public", "users", "email_v2"] },
-  { "type": "confirm_data_loss", "kind": "add_not_null",
-    "entity": ["public", "users", "handle"] }
+    "to": ["public", "users", "email_v2"]
+  },
+  {
+    "type": "confirm_data_loss",
+    "kind": "add_not_null",
+    "entity": ["public", "users", "handle"]
+  }
 ]
 ```
 

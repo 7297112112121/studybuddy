@@ -30,21 +30,21 @@ The process exits with the code that matches `status` (see Response envelope bel
 ## SDK form
 
 ```typescript
-import { generate } from 'drizzle-kit';
+import { generate } from "drizzle-kit";
 
 const response = await generate({
-  dialect: 'postgresql',
-  schema: './src/db/schema.ts',
-  out: './drizzle',
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
 });
 
-if (response.status === 'ok') {
+if (response.status === "ok") {
   // response.migration_path is the path to the new SQL file
-} else if (response.status === 'no_changes') {
+} else if (response.status === "no_changes") {
   // schema matches the most recent migration — nothing was written
-} else if (response.status === 'missing_hints') {
+} else if (response.status === "missing_hints") {
   // response.unresolved lists ambiguities — see hints.md
-} else if (response.status === 'error') {
+} else if (response.status === "error") {
   // response.error.code identifies the failure — see responses-and-errors.md
 }
 ```
@@ -92,8 +92,12 @@ drizzle-kit generate --output json --config missing.ts
 SDK equivalent of the happy path:
 
 ```typescript
-import { generate } from 'drizzle-kit';
+import { generate } from "drizzle-kit";
 
-const r = await generate({ dialect: 'postgresql', schema: './src/db/schema.ts', out: './drizzle' });
-if (r.status === 'ok') console.log(r.migration_path);
+const r = await generate({
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
+});
+if (r.status === "ok") console.log(r.migration_path);
 ```
