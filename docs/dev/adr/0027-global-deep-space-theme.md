@@ -15,7 +15,7 @@ description: 将 calendar 页局部深空品牌主题提升为全站默认主题
 
 ## 背景
 
-- calendar 页在 AXY-22/23 期间以 `.calendar-theme` 页面局部作用域试验了深空品牌主题（`src/app/globals.css`：ink 深空底、aqua 主色、白 12% 边框、半透明卡面），当时用户显式豁免前端设计规范的颜色消费规则，并约定「试验转正需按色彩搭配记录『新页面用色指引』走 ADR 评估泛化」。
+- calendar 页在 AXY-22/23 期间以 `.calendar-theme` 页面局部作用域试验了深空品牌主题（`src/app/globals.css`：ink 深空底、aqua 主色、白 12% 边框、半透明卡面），当时用户显式豁免了颜色消费规则，并约定「试验转正需按色彩搭配记录『新页面用色指引』走 ADR 评估泛化」。
 - 现状全站三套观感割裂：workbench 等页面为亮色 shadcn neutral token，auth 页为 `.aurora-theme` 局部暗色，calendar 页为 `.calendar-theme` 局部暗色。三者的语义 token 校准值高度重叠（`.aurora-theme` 与 `.calendar-theme` 仅 accent 一项有差异），页面级作用域已是纯胶水。
 - 星点视差背景（`StarsBackground`）目前是 calendar 模块专属组件，挂在 `/calendar` 页面内。
 
@@ -48,14 +48,14 @@ description: 将 calendar 页局部深空品牌主题提升为全站默认主题
 ### 正面
 - 全站单一品牌观感，token 单源，删除两处页面级作用域胶水。
 - shadcn 组件在所有页面继承 aqua 品牌色，无需按页覆盖。
-- 色彩搭配记录的「作用域」豁免条款消失，前端设计规范的颜色消费规则恢复无豁免状态。
+- 色彩搭配记录的「作用域」豁免条款消失，颜色消费规则恢复无豁免状态。
 
 ### 负面
 - 全站无亮色模式：偏好亮色的用户无选择余地。
 - 存量亮色页面（workbench 等）的直书浅色假设样式需逐处检查适配；auth 的 accent 由白 8% 洗色变为 aqua 15% 洗色（视觉有细微变化，需实机验证）。
 
 ### 风险
-- 文档漂移：前端设计规范与 `src/app/globals.css` 的语义注释须随同一 PR 修订，否则「真源声明」失真（前端设计规范真源现居技能区 `.agents/skills/shared/前端设计规范.md`；色彩搭配记录已删除，主题依据收敛到 globals.css）。
+- 文档漂移：`src/app/globals.css` 的语义注释须随同一 PR 修订，否则「真源声明」失真（色彩搭配记录已删除，主题依据收敛到 globals.css）。
 - 星点为持续运行的 CSS 动画，全站挂载后低性能设备上每页都承担该开销（`prefers-reduced-motion` 已兜底停漂移，但静态星点渲染仍在）。
 
 ## 相关决策

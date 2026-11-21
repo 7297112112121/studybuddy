@@ -35,9 +35,9 @@ sidebar_position: 4
 
 | 编号 | 要求(逐字/逐项) | 实现落点 | 一致性证据 |
 | ---- | ---- | ---- | ---- |
-| F-01 | 必填 1—50 字,输入框 50 字硬上限,不做提交时字符过滤(D-07) | schema.ts min(1)/max(50);EntryForm.tsx maxLength={50},无字符过滤代码 | schema.test title 组(51 字拒/50 字过);留空 → E-01 |
+| F-01 | 必填 1—50 字,输入框 50 字硬上限,不做提交时字符过滤(D-07) | schema.ts min(1)/max(50);EntryForm.tsx `maxLength={50}`,无字符过滤代码 | schema.test title 组(51 字拒/50 字过);留空 → E-01 |
 | F-02 | `HH:MM` 分钟粒度 | TIME_HHMM_RE;EntryForm `<input type="time" step={60}>` | schema.test "00:00"/"23:59" 过,"24:00"/"7:00"/"14:0" 拒 |
-| F-03 | 开始留空时结束禁用;须晚于开始;同属所选日期不跨午夜 | EntryForm disabled={startTime===""};schema refine#1/#2;零填充字符串比较,时间仅为日期内时刻 | EntryForm.test ③;schema.test refine 组;注入验证 1 |
+| F-03 | 开始留空时结束禁用;须晚于开始;同属所选日期不跨午夜 | `EntryForm disabled={startTime===""}`;schema refine#1/#2;零填充字符串比较,时间仅为日期内时刻 | EntryForm.test ③;schema.test refine 组;注入验证 1 |
 | F-04 | 由选中天决定,编辑可修改(R11);过去/未来均可(AC-5) | page.tsx 所选日期;EntryForm 编辑模式 date 控件;isValidDateString 仅验真实日历日 | schema.test date 组;e2e R5/R11 |
 | E-01 | 「请填写事项内容」表单文本字段下方 | calendar.json error.titleRequired(逐字);EntryForm title 字段下渲染 | messages.test 逐字断言;EntryForm.test ①;e2e R8 逐字 |
 | E-02 | 「保存失败,请重试」表单提示区 | calendar.json(逐字);EntryForm role="alert" 提示区 | messages.test;EntryForm.test ⑦⑦';e2e R12 逐字 |

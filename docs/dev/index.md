@@ -1,20 +1,17 @@
 ---
 title: 技术文档
-description: 学习陪伴伙伴技术文档
+description: 学习陪伴伙伴技术文档索引
 sidebar_position: 10
 ---
 
-# 目录说明
+# 技术文档
 
-- `adr/` — 架构决策记录（一决策一文档）；
-- `代码目录.md` — 代码目录约定；
-- `AXY-<N>-<slug>/` — 特性开发工件目录，每个特性一个，汇集开发落地阶段的产物（架构设计、实现计划、审查报告）：
-
-```
-docs/dev/AXY-<N>-<slug>/
-├── design.md      # 架构设计（dev_architecture_design 产出，落盘时建目录）
-├── tasks.md       # 实现计划（dev_plan_writing 产出）
-└── review.md      # 审查报告（dev_spec_review 产出）
-```
-
-上游用户故事与需求规范（proposal）在 `docs/product/`；编号 `AXY-<N>` 与 slug 沿用对应用户故事。
+| 条目 | 链接 |
+| --- | --- |
+| ADR（技术选型） | [index](./adr) |
+| 代码目录约定 | [代码目录](./代码目录) |
+| 前端设计规范 | [前端设计规范](./前端设计规范) |
+| 编码排版纪律 | [编码排版纪律](./编码排版纪律) |
+| AXY-8-auth（登录注册） | [design](./AXY-8-auth/design) / [tasks](./AXY-8-auth/tasks) / [review](./AXY-8-auth/review) |
+| AXY-22-study-calendar（个人日程日历） | [design](./AXY-22-study-calendar/design) / [tasks](./AXY-22-study-calendar/tasks) / [review](./AXY-22-study-calendar/review) |
+| AXY-23-week-view（日程周视图） | [adr](./AXY-23-week-view/adr) / [contracts](./AXY-23-week-view/contracts) / [design](./AXY-23-week-view/design) / [tasks](./AXY-23-week-view/tasks) / [testing](./AXY-23-week-view/testing) |

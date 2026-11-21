@@ -33,7 +33,7 @@ sidebar_position: 1
 
 ## 完成定义（DoD）
 
-通用 DoD（团队级，单一真源）见 [dod](../dod)，此处只登记本故事特有的工作项。
+通用 DoD（团队级，单一真源）见 product_design 技能 `references/dod.md`，此处只登记本故事特有的工作项。
 
 | 阶段 | 完成状态 | 验证方式 | 状态 |
 | - | - | - | - |

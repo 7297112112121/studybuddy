@@ -1,48 +1,10 @@
 ---
 title: 技术选型（ADR）
-description: 学习陪伴伙伴的架构决策记录（ADR）——流程约定、决策日志与待决策清单
+description: 学习陪伴伙伴的架构决策记录（ADR）索引
 sidebar_position: 1
 ---
 
 # 技术选型（ADR）
-
-ADR（Architecture Decision Record，架构决策记录）是一份只记录**一个**决策的短文档，回答四个问题：**背景是什么、决定了什么、考虑过哪些替代方案、带来什么后果**。代码展示「做了什么」，ADR 保存「为什么这样做」。模板与流程参考 [Architecture Decision Records: The Complete Guide](https://www.archyl.com/blog/architecture-decision-records-complete-guide)。
-
-## 约定
-
-- **存储**：ADR 统一放在 `docs/dev/adr/`，与代码同仓库版本化管理，随 PR 走评审。
-- **粒度**：一个 ADR 只写一个决策；一页以内写不下说明拆分成了多个决策。
-- **命名**：`NNNN-英文短横线标题.md`，编号顺序递增、永不复用。
-- **生命周期**：提议中（Proposed）→ 已接受（Accepted）→（已取代 Superseded / 已废弃 Deprecated）。决策被取代时**旧 ADR 不删除**，仅改状态并由新 ADR 回链。
-- **回顾**：每季度检查一次既有 ADR 的假设是否失效。
-- **PR 检查**：涉及架构影响的 PR 需附「架构影响」说明：无变更，或附 ADR 链接。
-
-## 模板
-
-```markdown
-# ADR-NNNN：一句话标题
-
-## 状态
-提议中（Proposed）| 已接受（Accepted）| 已取代（Superseded by ADR-XXXX）
-
-## 日期
-YYYY-MM-DD
-
-## 背景
-问题、约束、团队与规模等事实。
-
-## 决策
-明确、主动语态的结论（「我们采用 X」，不是「建议考虑 X」）。
-
-## 备选方案
-逐个列出：优点 / 缺点 / 否决原因。
-
-## 后果
-正面 / 负面 / 风险。承认代价是 ADR 的诚信所在。
-
-## 相关决策
-关联 ADR 编号。
-```
 
 ## 决策日志
 
@@ -75,11 +37,9 @@ YYYY-MM-DD
 | [0025](client-data-layer) | 2026-11-13 | 客户端数据层：TanStack Query + Server Actions（取代 ADR-0008 的 tRPC） | 已接受 |
 | [0026](ci-path-filtering) | 2026-11-19 | CI 按变更路径裁剪：dorny/paths-filter（PR 层 + push master 层 job 级裁剪，兜底式全跑；修订 0022 白名单条款） | 已接受 |
 | [0027](global-deep-space-theme) | 2026-11-19 | 全局主题：calendar 深空主题转正（固定暗色 + 星点背景全站挂载） | 已接受 |
-| [0028](0028-deepseek-provider-web-search) | 2026-11-19 | LLM 提供方：DeepSeek（deepseek-flash）+ 声明式服务端联网工具，结构化与检索两段式调用（AXY-24 首个 AI 特性） | 已接受 |
+| [0028](deepseek-provider-web-search) | 2026-11-19 | LLM 提供方：DeepSeek（deepseek-flash）+ 声明式服务端联网工具，结构化与检索两段式调用（项目首个 AI 特性） | 已接受 |
 
 ## 现行技术栈速查
-
-给架构设计期（dev_architecture_design 第 2 步）主会话**内联核对**用：设计技术要点逐条对照本表，能判定的「一致 / 冲突」直接写进 design 的 adr.md；「需回读全文的信号」命中时才打开对应 ADR 原文。已取代的 ADR（0008）不列。新 ADR 接受时随同一 PR 在本表登记一行，并同步提炼硬约束。
 
 | ADR | 技术 | 硬约束（设计必须遵守） | 需回读全文的信号 |
 | --- | --- | --- | --- |
@@ -109,7 +69,3 @@ YYYY-MM-DD
 | [0024](telemetry-opentelemetry) | OpenTelemetry | OTel 唯一埋点；涉敏链路关 recordInputs/Outputs | 新增采集点或涉敏链路决策时 |
 | [0025](client-data-layer) | TanStack Query + Server Actions | 错误经判别联合返回不抛裸异常；首屏数据走 RSC 直读 | 并行分发、乐观更新或 GET 缓存语义时 |
 | [0027](global-deep-space-theme) | 全局深空主题（固定暗色） | 全站只有暗色主题：语义 token 暗色校准、禁直书浅色假设色值；星点背景经根布局 StarsBackground 挂载，页面不自带背景层 | 需要亮色模式、手动切换或页面级主题覆盖时 |
-
-## 待决策清单
-
-本轮选型清单（0001–0024）已全部完成；0020–0022 由 ADR-0018 拆分而来，0023–0024 由 ADR-0019 拆分而来（2026-11-13）。0025 是首次选型复盘的产物：以 TanStack Query + Server Actions 取代 ADR-0008 的 tRPC（2026-11-13）。0026 是 CI 流程裁剪决策：dorny/paths-filter 引入 PR 校验与 push master 部署两条流水线，并修订 ADR-0022 的 action 白名单条款（2026-11-19，已接受；实施另行开工）。后续出现新决策时按同一模板新增 ADR 并登记于决策日志。

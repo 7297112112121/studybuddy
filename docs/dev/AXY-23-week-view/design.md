@@ -6,11 +6,11 @@ sidebar_position: 2
 
 # Design: AXY-23 日程周视图
 
-| 对应 Proposal | [AXY-23](/product/AXY-23-week-view/proposal) | 状态 | 已批准 |
+| 对应 Proposal | [AXY-23](../../product/AXY-23-week-view/proposal) | 状态 | 已批准 |
 | ---- | ---- | ---- | ---- |
 | 日期 | 2026-11-19 | 批准人 | 海渝(2026-11-19) |
 
-> 本文件为 design 主文件,**唯一批准状态真源**;拆出文件([contracts](/dev/AXY-23-week-view/contracts) / [testing](/dev/AXY-23-week-view/testing) / [adr](/dev/AXY-23-week-view/adr))头部不另设状态列。
+> 本文件为 design 主文件,**唯一批准状态真源**;拆出文件([contracts](../../dev/AXY-23-week-view/contracts) / [testing](../../dev/AXY-23-week-view/testing) / [adr](../../dev/AXY-23-week-view/adr))头部不另设状态列。
 
 ## 架构总览
 
@@ -115,6 +115,6 @@ sidebar_position: 2
 
 | 拆出文件 | 内容 | 模板与合格判据 |
 | ---- | ---- | ---- |
-| [contracts.md](/dev/AXY-23-week-view/contracts) | 数据模型(零迁移声明)与契约(week.ts / queries / 组件,含路由行为落点表) | templates/contracts.md |
-| [testing.md](/dev/AXY-23-week-view/testing) | 测试接缝(TDD red 阶段直接输入) | templates/testing.md |
-| [adr.md](/dev/AXY-23-week-view/adr) | 与 ADR 的关系(一页纸)+ Q 条目去向 | templates/adr.md |
+| [contracts.md](../../dev/AXY-23-week-view/contracts) | 数据模型(零迁移声明)与契约(week.ts / queries / 组件,含路由行为落点表) | templates/contracts.md |
+| [testing.md](../../dev/AXY-23-week-view/testing) | 测试接缝(TDD red 阶段直接输入) | templates/testing.md |
+| [adr.md](../../dev/AXY-23-week-view/adr) | 与 ADR 的关系(一页纸)+ Q 条目去向 | templates/adr.md |

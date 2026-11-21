@@ -50,7 +50,7 @@ sidebar_position: 40
 
 - **单一持久资产**:故事文档 = 目标 / 非目标 / 反目标 + 三桶范围 + AC↔演示态双向映射(每条 AC 标〔走查:演示态 N / 行为说明 N〕)+ 可构建级原型契约(≤ 150 行)。
 - **新流程**:侦察 → 澄清对话(superpowers 协议,见 product-design `references/questioning.md`)→ 边界确认与 MVP 切割(演示态 ≤ 5、AC ≤ 6,6–8 豁免登记,> 8 必拆)→ (可选 spike)→ 落盘 → Builder Check(`references/builder-check.md`)→ 人工批准门。
-- **存量重切结果**:7 故事 → 7 保留段 + 5 个拆分新故事(名单见 `docs/product/index.mdx`「拆分故事」节,编号待平台下发)。
+- **存量重切结果**:7 故事 → 7 保留段 + 5 个拆分新故事(名单见 `docs/product/index.md`「拆分故事」节,编号待平台下发)。
 - **删除**:`website/src/components/wireframe/` 整目录(14 文件,375KB)。
 
 ## 五、改革前后对比

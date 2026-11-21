@@ -1,14 +1,10 @@
 ---
 title: 其他
-description: 其他
+description: 其他文档索引
 sidebar_position: 10
 ---
 
 # 其他
-
-本目录收录不归属产品 / 技术 / 测试分类的参考性文档。
-
-## 文档索引
 
 | 文档 | 核心内容 |
 | --- | --- |

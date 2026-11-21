@@ -203,7 +203,7 @@ R1→T1/T10 · R2→T8/T10 · R3→T7/T10 · R4→T2/T7/T10 · R5→T8/T10 · R6
 
 - 裁决: 全部任务内联执行,未用子代理 — 单链上下文已热,逐任务 TDD token 最省;链间并行收益不抵冷启动 — 无并行墙钟收益。
 - 裁决: 单测调用统一走 `npm run test` — 裸 `npx vitest run` 在本仓库因 configLoader 兼容问题整套炸掉(runner 层,非测试问题) — 无代价,统一脚本入口。
-- 裁决: Task 3 键清单补口——新增 `week.dialogCreate/dialogEdit`(编辑卡标题)、`createAt` 值改为「周{weekday} {time}」 — Task 7 实现需要,计划键清单遗漏 — locale 文件由 T7/T8 触碰(内联执行无并行冲突)。
+- 裁决: Task 3 键清单补口——新增 `week.dialogCreate/dialogEdit`(编辑卡标题)、`createAt` 值改为「周\{weekday\} \{time\}」 — Task 7 实现需要,计划键清单遗漏 — locale 文件由 T7/T8 触碰(内联执行无并行冲突)。
 - 裁决: Task 3 断言仅覆盖 zh-CN — locale 目录实际只有 zh-CN(ADR-0010 单语言),无 en 文件 — 计划「en 侧键齐全」行作废。
 - 裁决: EntryForm 追加 `initialStartTime?: string` prop — create 模式预填通道(T7 契约要求预填,既有组件无初值入口) — design contracts 的 EntryForm 改动仅列 showDateField,此项随 spec-review 一并核对。
 - 裁决: WeekEntryDialog 的 AlertDialog 移出 Dialog JSX 嵌套(fragment 兄弟结构) — E2E 调试;经 MCP 实机验证 Radix 卸载行为正常(取消后遮罩干净卸载,产品无 bug),重构保留为防御性简化 — 无行为变化,组件测试 5/5 绿。
