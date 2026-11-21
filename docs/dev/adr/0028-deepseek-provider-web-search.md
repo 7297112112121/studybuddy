@@ -10,7 +10,7 @@
 
 ## 背景
 
-- AXY-24「条目 AI 资料提案」是项目首个 AI 特性：从几个字的日程条目里读懂意图，检索真实学习资料（官方文档 / 教程），产出按天拆解的结构化提案。Q3 要求 AI 产出资料链接抽检可达率 ≥ 90%——**链接必须来自真实检索**，纯模型记忆生成的 URL 幻觉不可接受，因此联网检索是硬前提。
+- 项目首个 AI 特性（条目 AI 资料提案）：从几个字的日程条目里读懂意图，检索真实学习资料（官方文档 / 教程），产出按天拆解的结构化提案。Q3 要求 AI 产出资料链接抽检可达率 ≥ 90%——**链接必须来自真实检索**，纯模型记忆生成的 URL 幻觉不可接受，因此联网检索是硬前提。
 - 接入层已定 Vercel AI SDK（ADR-0014），其「提供商姿态」条款明确接入层与模型解耦、更换提供商只改 provider 包与 model 标识；但具体提供方未定。部署为境内单机自托管 Docker（ADR-0016），成本敏感（学生项目），服务器无稳定出境网络。
 - DeepSeek 官方《联网工具》文档（2026-11 查证）：声明 `deepseek_web_search` / `deepseek_read_url` 工具即启用服务端联网搜索与网页阅读，**搜索与抓取在服务端完成，客户端不执行任何工具**；文档指定「请使用 `deepseek-flash` 模型」；服务端工具不计费（仅模型 Token 计费）。同一 API 平台另有绑定 `deepseek-v4-pro` 的通用 `web_search` 工具（英文文档），与本决策无关。
 - 关键 API 约束（官方文档）：① 声明联网工具的请求**不能用结构化输出**（Messages/Responses/Chat Completions 三协议中 `text.format` / `response_format` 非 `text` 均返回 400）；② `tool_choice` 不能强制联网工具（是否搜索由模型自判，指定即 400）；③ 联网工具不可与 function 工具同时声明；④ Chat Completions 的扩展结果在 `message.server_tool_calls`，Responses 在 `web_search_call` item，引用在 `annotations.url_citation`。

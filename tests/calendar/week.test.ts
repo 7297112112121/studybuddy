@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   addWeeks,
   buildWeekDays,
-  isValidWeekStart,
-  weekRange,
   weekStartFor,
-} from "@/modules/calendar/week";
+} from "@/modules/calendar/service";
+import { isValidWeekStart } from "@/modules/calendar/validators";
+import { weekRange } from "@/modules/calendar/queries";
 
 /**
- * calendar/week.ts 周数学纯函数单测(AXY-23 design「契约」节)。
+ * calendar 周视图纯函数单测(AXY-23 design「契约」节)。
  * 断言值逐字取自 tasks.md Task 1「失败测试」行。
  */
 describe("weekStartFor:任意日期 → 所在周周一", () => {
@@ -127,7 +127,7 @@ import {
   slotPrefillStart,
   timeToMinutes,
   type WeekBlock,
-} from "@/modules/calendar/week";
+} from "@/modules/calendar/useClientScreen";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 /** 构造带时间条目视图(startTime 恒非 null,全天条目不进 layoutDayBlocks)。 */

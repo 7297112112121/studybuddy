@@ -22,12 +22,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/lib/routes";
 
+import type { CalendarEntryView } from "../queries";
 import {
   calendarEntryInputSchema,
   type CalendarEntryInput,
   type CalendarFieldErrors,
-} from "../schema";
-import type { CalendarEntryView } from "../queries";
+} from "../validators";
 import {
   createEntryAction,
   updateEntryAction,

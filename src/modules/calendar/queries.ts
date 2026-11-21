@@ -1,24 +1,44 @@
 /**
- * 文件作用:日历读路径的数据库查询,RSC 页面直接调用。
- *
- * 成员:
- * 1. 月度条目查询(listMonthEntries):按账号读一个月的条目视图;
- * 2. 周度条目查询(listWeekEntries):按账号读一周的条目视图;
- * 3. 条目资料查询(listEntryResources):按日期读条目附属资料并按条目分组;
- * 4. 条目视图(CalendarEntryView):条目列表单行结构;
- * 5. 资料视图(EntryResourceView):附属资料的标题与网址结构。
- *
- * 其他:
- * 1. 仅本人可见:查询恒带 userId 条件,不收客户端未过滤集合;
- * 2. 数据库异常向上抛,页面渲染失败由 Next 错误边界兜底,本层不做归一。
+ * 文件作用:日历读路径的数据库查询,RSC 页面直接调用;
+ * 读入参在查询入口做服务端校验(规则单一来源 validators.ts)。
  */
-import { and, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 
 import { db } from "@/db/client";
+import { daysInMonth, formatUtcDate, MS_PER_DAY } from "@/lib/date";
 
-import { formatHhmm, monthRange } from "./month";
-import { calendarEntry, entryResource } from "./schema";
-import { weekRange } from "./week";
+import { calendarEntry } from "./schema";
+import {
+  isValidEntryId,
+  isValidWeekStart,
+  isValidYearMonth,
+} from "./validators";
+
+/** 业务错误名:条目不存在或不属于该用户;调用方按 name 判别归一为未找到(NOT_FOUND)。 */
+export const ENTRY_NOT_FOUND = "EntryNotFoundError";
+
+/** 业务错误名:读入参未过服务端校验;调用方按 name 判别,属编程错误而非 UI 文案来源。 */
+export const ENTRY_INVALID_INPUT = "EntryInvalidInputError";
+
+/** 作用:给出该月的日期闭区间("YYYY-MM-DD"),作为月度条目查询的入参来源。 */
+export function monthRange(
+  year: number,
+  month: number,
+): { start: string; end: string } {
+  return {
+    start: `${year}-${String(month).padStart(2, "0")}-01`,
+    end: `${year}-${String(month).padStart(2, "0")}-${String(daysInMonth(year, month)).padStart(2, "0")}`,
+  };
+}
+
+/** 作用:由周一锚点给出该周闭区间(周一至周日),作为周度条目查询的入参来源。 */
+export function weekRange(weekStart: string): { start: string; end: string } {
+  const startMs = Date.parse(`${weekStart}T00:00:00Z`);
+  return {
+    start: weekStart,
+    end: formatUtcDate(startMs + 6 * MS_PER_DAY),
+  };
+}
 
 /** 作用:按账号与月份区间读条目,排序为日期升序、同日按开始时间先后。 */
 export async function listMonthEntries(
@@ -26,6 +46,7 @@ export async function listMonthEntries(
   year: number,
   month: number,
 ): Promise<CalendarEntryView[]> {
+  assertValidInput(isValidYearMonth(year, month), "year/month");
   const { start, end } = monthRange(year, month);
   return listEntriesInRange(userId, start, end);
 }
@@ -35,49 +56,9 @@ export async function listWeekEntries(
   userId: string,
   weekStart: string,
 ): Promise<CalendarEntryView[]> {
+  assertValidInput(isValidWeekStart(weekStart), "weekStart");
   const { start, end } = weekRange(weekStart);
   return listEntriesInRange(userId, start, end);
-}
-
-/**
- * 作用:按条目 id 分组读本人条目的附属资料。
- * 流程:
- * 1. 日期列表为空时直接返回空映射;
- * 2. 资料表经条目表连接传导账号隔离(资料表无 userId,归属由条目决定);
- * 3. 结果按条目 id 分组返回。
- */
-export async function listEntryResources(
-  userId: string,
-  dates: string[],
-): Promise<Map<string, EntryResourceView[]>> {
-  if (dates.length === 0) {
-    return new Map();
-  }
-  const rows = await db
-    .select({
-      entryId: entryResource.entryId,
-      title: entryResource.title,
-      url: entryResource.url,
-    })
-    .from(entryResource)
-    .innerJoin(calendarEntry, eq(entryResource.entryId, calendarEntry.id))
-    .where(
-      and(
-        eq(calendarEntry.userId, userId),
-        inArray(calendarEntry.entryDate, dates),
-      ),
-    );
-
-  const grouped = new Map<string, EntryResourceView[]>();
-  for (const row of rows) {
-    const list = grouped.get(row.entryId);
-    if (list) {
-      list.push({ title: row.title, url: row.url });
-    } else {
-      grouped.set(row.entryId, [{ title: row.title, url: row.url }]);
-    }
-  }
-  return grouped;
 }
 
 export type CalendarEntryView = {
@@ -88,7 +69,29 @@ export type CalendarEntryView = {
   endTime: string | null; // "HH:MM" 或 null
 };
 
-export type EntryResourceView = { title: string; url: string };
+/**
+ * 作用:读取指定条目的 id 与标题,查询必须带 userId 条件;
+ * 入参先过服务端校验(条目 id 须为 uuid 形状);条目不存在或不属于
+ * 该用户时,抛条目不存在错误(EntryNotFoundError)。
+ */
+export async function readEntry(
+  userId: string,
+  entryId: string,
+): Promise<{ id: string; title: string }> {
+  assertValidInput(isValidEntryId(entryId), "entryId");
+  const rows = await db
+    .select({ id: calendarEntry.id, title: calendarEntry.title })
+    .from(calendarEntry)
+    .where(and(eq(calendarEntry.id, entryId), eq(calendarEntry.userId, userId)))
+    .limit(1);
+  if (rows.length === 0) {
+    // 业务错误零 class:name 标识供调用方判别,不泄漏条目存在性
+    throw Object.assign(new Error("entry not found for user"), {
+      name: ENTRY_NOT_FOUND,
+    });
+  }
+  return rows[0];
+}
 
 /**
  * 作用:按账号读闭区间内的条目主体,供月度与周度查询共用;
@@ -132,4 +135,21 @@ function compareEntries(a: CalendarEntryView, b: CalendarEntryView): number {
   if (a.startTime === null) return -1;
   if (b.startTime === null) return 1;
   return a.startTime < b.startTime ? -1 : a.startTime > b.startTime ? 1 : 0;
+}
+
+/**
+ * 作用:读路径入参守卫,单一收拢点(与 actions 的会话守卫同风格);
+ * 规则来自 validators.ts,非法入参抛入参无效错误(EntryInvalidInputError)。
+ */
+function assertValidInput(valid: boolean, param: string): void {
+  if (!valid) {
+    throw Object.assign(new Error(`invalid query input: ${param}`), {
+      name: ENTRY_INVALID_INPUT,
+    });
+  }
+}
+
+/** 作用:"HH:MM:SS" 截短为 "HH:MM"(time 列查询结果归一,秒位不泄漏到 UI)。 */
+export function formatHhmm(time: string): string {
+  return time.slice(0, 5);
 }

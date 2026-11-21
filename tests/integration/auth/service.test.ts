@@ -16,7 +16,6 @@ import { db } from "@/db/client";
 import { account, user } from "@/db/schema";
 import { uniqueUsername } from "../helpers";
 import {
-  AGREEMENT_VERSION,
   registerWithUsername,
   usernameToPlaceholderEmail,
 } from "../../../src/modules/auth/service";
@@ -48,7 +47,7 @@ describe("registerWithUsername（tests/integration/auth/service）", () => {
     expect(u.name).toBe(username);
     expect(u.email).toBe(usernameToPlaceholderEmail(username));
     expect(u.username).toBe(username);
-    expect(u.agreementVersion).toBe(AGREEMENT_VERSION);
+    expect(u.agreementVersion).toBe("v1");
     expect(u.agreedAt.getTime()).toBeGreaterThan(startedAt.getTime());
 
     const accounts = await db

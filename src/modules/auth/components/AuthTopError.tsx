@@ -1,7 +1,7 @@
 /** 注册视图的顶部错误条（AuthTopError），账户名已存在文案可点击切回登录并带入账户名。 */
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import type { AuthTopError as AuthTopErrorKey } from "../errors";
+import type { AuthTopError as AuthTopErrorKey } from "../useClientScreen";
 
 type AuthTopErrorProps = {
   topError: AuthTopErrorKey;

@@ -1,14 +1,11 @@
 import { describe, expect, it } from "vitest";
-import {
-  addMonths,
-  buildMonthGrid,
-  formatHhmm,
-  isValidDateString,
-  monthRange,
-} from "@/modules/calendar/month";
+import { buildMonthGrid } from "@/modules/calendar/useClientScreen";
+import { addMonths } from "@/modules/calendar/service";
+import { isValidDateString } from "@/modules/calendar/validators";
+import { formatHhmm, monthRange } from "@/modules/calendar/queries";
 
 /**
- * calendar/month.ts 日历数学纯函数单测（AXY-22 design「契约」节）。
+ * calendar 月视图纯函数单测（AXY-22 design「契约」节）。
  * 断言值逐字取自 tasks.md Task 1「失败测试」行。
  */
 describe("buildMonthGrid：6×7 月网格，周一为每周首日", () => {

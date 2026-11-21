@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * 登录/注册屏的表单状态机。提交链携带凭据，日志与失败文案不得泄露凭据细节。
+ * 登录/注册屏的表单状态机与登录错误文案映射。提交链携带凭据，日志与失败文案不得泄露凭据细节。
  */
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -12,7 +12,6 @@ import { useTranslations } from "next-intl";
 import { ROUTES } from "@/lib/routes";
 import { authClient } from "@/lib/better-auth.client";
 import { registerAction } from "./actions";
-import { mapSignInError, type AuthTopError } from "./errors";
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -34,6 +33,31 @@ export type AuthFormValues = {
   confirmPassword: string;
   agreementAccepted: boolean;
 };
+
+/** 登录失败映射后的文案键（auth.error.* 命名空间）。 */
+export type SignInErrorKey =
+  | "auth.error.invalidCredentials"
+  | "auth.error.tooManyAttempts"
+  | "auth.error.unknown";
+
+/** 屏顶部错误键：登录失败经 mapSignInError 归一；注册账户名已存在固定为账户名已存在（usernameRegistered）。 */
+export type AuthTopError = SignInErrorKey | "auth.error.usernameRegistered";
+
+/** 把 better-auth 客户端错误对象（status 可选）映射为登录文案键，空值兜底未知（unknown）。 */
+export function mapSignInError(
+  err: { status?: number } | null | undefined,
+): SignInErrorKey {
+  if (!err) {
+    return "auth.error.unknown";
+  }
+  if (err.status === 429) {
+    return "auth.error.tooManyAttempts";
+  }
+  if (err.status === 401 || err.status === 400) {
+    return "auth.error.invalidCredentials";
+  }
+  return "auth.error.unknown";
+}
 
 /** 产出组合层渲染所需的全部状态、派生错误态与回调。 */
 export function useClientScreen(initialView: AuthView) {
@@ -106,7 +130,7 @@ export function useClientScreen(initialView: AuthView) {
     try {
       await signInWithUsername();
     } catch {
-      // 网络层异常归一为 unknown（errors.ts 兜底约定，不泄露失败细节）。
+      // 网络层异常归一为未知（unknown），不泄露失败细节。
       setTopError("auth.error.unknown");
     } finally {
       setSubmitting(false);
