@@ -4,7 +4,7 @@ import calendar from "@/locales/zh-CN/calendar.json";
 
 /**
  * auth 命名空间 12 键文案与 design 文案表逐字对照
- * （docs/dev/AXY-8-auth/design.mdx「文案」节；E2E 断言以渲染文案为准，
+ * （docs/dev/AXY-8-auth/design.md「文案」节；E2E 断言以渲染文案为准，
  *  本测试锁定 JSON 源值：全角标点、省略号「…」、破折号「—」、ICU 占位符不得漂移）。
  */
 describe("auth.json 文案与 design 文案表逐字一致", () => {

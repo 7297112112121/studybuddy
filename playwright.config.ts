@@ -42,11 +42,8 @@ export default defineConfig({
     command: "npm run build && npm run start",
     url: `http://localhost:${e2ePort}`,
     reuseExistingServer: !process.env.CI,
-    // AXY-24:E2E 全程走 AI stub(design 边界 #6,ADR-0017 LLM 一律 mock),
-    // stub 语料与门控见 src/agent/runtime/ai-stub-fixture.ts
     env: {
       ...process.env,
-      DEEPSEEK_STUB_FIXTURE: "1",
       PORT: e2ePort,
       // Better Auth trustedOrigins 随端口对齐(auth.ts 读 BETTER_AUTH_URL)
       BETTER_AUTH_URL: `http://localhost:${e2ePort}`,

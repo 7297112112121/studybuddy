@@ -3,6 +3,8 @@
  *
  * 断言值逐字取自 tasks.md Task 4「失败测试」行:周区间过滤(含跨月周)、
  * 账号隔离(R7)、空周空数组、排序口径与 listMonthEntries 一致。
+ * 另覆盖读入参校验(queries 入口守卫):非法年月 / 非周一锚点 / 非 uuid
+ * 条目 id 在触达数据库前抛 EntryInvalidInputError(不需造号)。
  * 造号直插 user 行(与 service.test.ts 同款,不经 auth service)。
  */
 import { afterAll, describe, expect, it } from "vitest";
@@ -10,7 +12,12 @@ import { afterAll, describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { user } from "@/db/schema";
 import { createEntry } from "@/modules/calendar/service";
-import { listWeekEntries } from "@/modules/calendar/queries";
+import {
+  ENTRY_INVALID_INPUT,
+  listMonthEntries,
+  listWeekEntries,
+  readEntry,
+} from "@/modules/calendar/queries";
 
 afterAll(async () => {
   await db.$client.end();
@@ -102,5 +109,28 @@ describe("listWeekEntries(AXY-23 Task 4)", () => {
       "上午条目",
       "下午条目",
     ]);
+  });
+});
+
+describe("读入参校验(queries 入口守卫)", () => {
+  it("listMonthEntries 非法年月 → 抛 EntryInvalidInputError,不触达数据库", async () => {
+    await expect(
+      listMonthEntries("guard-user", 2026, 13),
+    ).rejects.toMatchObject({ name: ENTRY_INVALID_INPUT });
+    await expect(listMonthEntries("guard-user", 2026, 0)).rejects.toMatchObject(
+      { name: ENTRY_INVALID_INPUT },
+    );
+  });
+
+  it("listWeekEntries 非周一锚点 → 抛 EntryInvalidInputError", async () => {
+    await expect(
+      listWeekEntries("guard-user", "2026-11-18"),
+    ).rejects.toMatchObject({ name: ENTRY_INVALID_INPUT });
+  });
+
+  it("readEntry 非 uuid 条目 id → 抛 EntryInvalidInputError", async () => {
+    await expect(readEntry("guard-user", "not-a-uuid")).rejects.toMatchObject({
+      name: ENTRY_INVALID_INPUT,
+    });
   });
 });

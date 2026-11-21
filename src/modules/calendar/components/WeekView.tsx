@@ -17,12 +17,12 @@ import { useTranslations } from "next-intl";
 import { cn } from "cn";
 
 import type { CalendarEntryView } from "../queries";
-import { layoutDayBlocks, slotPrefillStart, type WeekDay } from "../week";
-import dynamic from "next/dynamic";
+import {
+  layoutDayBlocks,
+  slotPrefillStart,
+  type WeekDay,
+} from "../useClientScreen";
 import WeekEntryDialog, { type WeekEntryDialogState } from "./WeekEntryDialog";
-
-// 提案浮层按需加载(模块作用域,避免每次渲染重建 dynamic 组件)
-const ProposalDialog = dynamic(() => import("./ProposalDialog"));
 
 const PX_PER_MINUTE = 2;
 const SLOT_MINUTES = 30;
@@ -61,9 +61,6 @@ export default function WeekView({ days, entries }: WeekViewProps) {
   const t = useTranslations("calendar");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [dialogState, setDialogState] = useState<WeekEntryDialogState | null>(
-    null,
-  );
-  const [proposalEntry, setProposalEntry] = useState<CalendarEntryView | null>(
     null,
   );
 
@@ -305,18 +302,7 @@ export default function WeekView({ days, entries }: WeekViewProps) {
       <WeekEntryDialog
         state={dialogState}
         onClose={() => setDialogState(null)}
-        onAssist={(assistTarget) => {
-          setProposalEntry(assistTarget);
-          setDialogState(null);
-        }}
       />
-      {proposalEntry !== null && (
-        <ProposalDialog
-          entryId={proposalEntry.id}
-          entryTitle={proposalEntry.title}
-          onClose={() => setProposalEntry(null)}
-        />
-      )}
     </div>
   );
 }

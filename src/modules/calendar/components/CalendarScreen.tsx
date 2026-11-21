@@ -9,7 +9,7 @@
  */
 import { useState } from "react";
 
-import type { CalendarEntryView, EntryResourceView } from "../queries";
+import type { CalendarEntryView } from "../queries";
 import DayPanel from "./DayPanel";
 import MonthGrid from "./MonthGrid";
 
@@ -18,8 +18,6 @@ type CalendarScreenProps = {
   month: number;
   today: string;
   entries: CalendarEntryView[];
-  /** 条目 id → 资料(AXY-24 T7)。 */
-  resources?: Map<string, EntryResourceView[]>;
 };
 
 export default function CalendarScreen({
@@ -27,7 +25,6 @@ export default function CalendarScreen({
   month,
   today,
   entries,
-  resources,
 }: CalendarScreenProps) {
   const monthPrefix = `${year}-${String(month).padStart(2, "0")}`;
   const [selectedDate, setSelectedDate] = useState(
@@ -53,12 +50,7 @@ export default function CalendarScreen({
         </section>
       </div>
       <div className="lg:w-2/5">
-        <DayPanel
-          date={selectedDate}
-          entries={dayEntries}
-          today={today}
-          resources={resources}
-        />
+        <DayPanel date={selectedDate} entries={dayEntries} today={today} />
       </div>
     </div>
   );

@@ -11,21 +11,14 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import type { CalendarEntryView, EntryResourceView } from "../queries";
-import dynamic from "next/dynamic";
+import type { CalendarEntryView } from "../queries";
 import EntryForm from "./EntryForm";
 import EntryRow from "./EntryRow";
-
-// 提案浮层按需加载:主路由 chunk 不含浮层实现(Q4 首屏不劣化),
-// 首次发起时才拉取
-const ProposalDialog = dynamic(() => import("./ProposalDialog"));
 
 type DayPanelProps = {
   date: string;
   entries: CalendarEntryView[];
   today: string;
-  /** 条目 id → 资料(AXY-24 T7,经 page 服务端查询 props 下行)。 */
-  resources?: Map<string, EntryResourceView[]>;
 };
 
 /** "YYYY-MM-DD" → "M月D日"（去前导零）。 */
@@ -34,17 +27,9 @@ function formatMonthDay(date: string): string {
   return `${Number(m)}月${Number(d)}日`;
 }
 
-export default function DayPanel({
-  date,
-  entries,
-  today,
-  resources,
-}: DayPanelProps) {
+export default function DayPanel({ date, entries, today }: DayPanelProps) {
   const t = useTranslations("calendar");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [assistEntry, setAssistEntry] = useState<CalendarEntryView | null>(
-    null,
-  );
   const editingEntry =
     editingId === null ? undefined : entries.find((e) => e.id === editingId);
 
@@ -66,8 +51,6 @@ export default function DayPanel({
               key={entry.id}
               entry={entry}
               onEdit={() => setEditingId(entry.id)}
-              onAssist={() => setAssistEntry(entry)}
-              resources={resources?.get(entry.id)}
             />
           ))}
         </ul>
@@ -81,14 +64,6 @@ export default function DayPanel({
         entry={editingEntry}
         onSaved={() => setEditingId(null)}
       />
-
-      {assistEntry !== null && (
-        <ProposalDialog
-          entryId={assistEntry.id}
-          entryTitle={assistEntry.title}
-          onClose={() => setAssistEntry(null)}
-        />
-      )}
     </section>
   );
 }

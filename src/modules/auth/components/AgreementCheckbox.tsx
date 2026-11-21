@@ -4,7 +4,7 @@
  *
  * 刻意保留原生 input[type=checkbox]（组件测试按 HTMLInputElement 断言
  * aria-invalid），仅以 token 类替换裸灰阶/红色；Radix Checkbox 渲染
- * button[role=checkbox]，语义不兼容（见 docs/dev/前端设计规范.md 表单策略）。
+ * button[role=checkbox]，语义不兼容。
  */
 type AgreementCheckboxProps = {
   id: string;

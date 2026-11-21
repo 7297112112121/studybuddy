@@ -1,14 +1,11 @@
 /**
- * mapSignInError 单元测试（Task 7，design「modules/auth/errors.ts」契约）。
- *
- * R7 错误映射表：任一登录失败（401 凭证错误族 / 400 格式拒绝族）→
- * invalidCredentials；429 限流 → tooManyAttempts；其余（500、空值）
- * → unknown。设计依据：Task 6 实测三失败情形均为 401 +
- * INVALID_USERNAME_OR_PASSWORD（design 开放问题 #1 闭合记录）。
+ * mapSignInError 单元测试：任一登录失败（401 凭证错误族 / 400 格式
+ * 拒绝族）→ invalidCredentials；429 限流 → tooManyAttempts；
+ * 其余（500、空值）→ unknown。
  */
 import { describe, expect, it } from "vitest";
 
-import { mapSignInError } from "../../src/modules/auth/errors";
+import { mapSignInError } from "../../src/modules/auth/useClientScreen";
 
 describe("mapSignInError", () => {
   it("status 401 → auth.error.invalidCredentials", () => {

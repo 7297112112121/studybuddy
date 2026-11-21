@@ -9,18 +9,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import WeekView from "@/modules/calendar/components/WeekView";
-import { buildWeekDays } from "@/modules/calendar/week";
+import { buildWeekDays } from "@/modules/calendar/service";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-const requestProposalMock = vi.hoisted(() => vi.fn());
-const confirmProposalMock = vi.hoisted(() => vi.fn());
 vi.mock("@/modules/calendar/actions", () => ({
   createEntryAction: vi.fn(),
   updateEntryAction: vi.fn(),
   deleteEntryAction: vi.fn(),
-  requestProposalAction: requestProposalMock,
-  confirmProposalAction: confirmProposalMock,
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
@@ -155,29 +151,5 @@ describe("WeekView(AXY-23 Task 8)", () => {
     expect(
       screen.getByRole("button", { name: "周三 14:30 新建条目" }),
     ).toBeTruthy();
-  });
-});
-
-describe("WeekView 发起入口(AXY-24 T7)", () => {
-  it("编辑卡(edit)含「帮我找资料」,点击挂载提案浮层", async () => {
-    requestProposalMock.mockResolvedValue({
-      ok: true,
-      proposal: { kind: "NEEDS_RANGE" },
-    });
-    const { fireEvent } = await import("@testing-library/react");
-    renderView([entry("e1", "2026-11-16", "学习next框架", "14:00", "15:30")]);
-    fireEvent.click(screen.getByTestId("week-block-e1"));
-    expect(await screen.findByText("编辑条目")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "帮我找资料" }));
-    expect(await screen.findByText("AI 资料提案")).toBeTruthy();
-    expect(requestProposalMock).toHaveBeenCalledWith("e1", null);
-  });
-
-  it("创建卡(create)不含「帮我找资料」", async () => {
-    const { fireEvent } = await import("@testing-library/react");
-    renderView([]);
-    fireEvent.click(screen.getAllByLabelText(/新建条目/)[0]);
-    expect(await screen.findByText("新建条目")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "帮我找资料" })).toBeNull();
   });
 });

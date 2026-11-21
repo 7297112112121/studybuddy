@@ -30,10 +30,6 @@ import { deleteEntryAction } from "../actions";
 type EntryRowProps = {
   entry: CalendarEntryView;
   onEdit: () => void;
-  /** 传入才渲染「帮我找资料」发起动作(AXY-24 T7,D-06)。 */
-  onAssist?: () => void;
-  /** 条目附属资料(AXY-24 R5);无则不渲染资料区。 */
-  resources?: { title: string; url: string }[];
 };
 
 /** 时间前缀：双时间「HH:MM–HH:MM」、仅开始「HH:MM」、无时间 null。 */
@@ -44,12 +40,7 @@ function timePrefix(entry: CalendarEntryView): string | null {
     : `${entry.startTime}–${entry.endTime}`;
 }
 
-export default function EntryRow({
-  entry,
-  onEdit,
-  onAssist,
-  resources,
-}: EntryRowProps) {
+export default function EntryRow({ entry, onEdit }: EntryRowProps) {
   const t = useTranslations("calendar");
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -82,11 +73,6 @@ export default function EntryRow({
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-sm font-medium">{entry.title}</span>
           <div className="flex shrink-0 items-center gap-1">
-            {onAssist !== undefined && (
-              <Button variant="ghost" size="sm" onClick={onAssist}>
-                {t("proposal.assistButton")}
-              </Button>
-            )}
             <Button variant="ghost" size="sm" onClick={onEdit}>
               {t("entry.edit")}
             </Button>
@@ -114,22 +100,6 @@ export default function EntryRow({
             </AlertDialog>
           </div>
         </div>
-        {resources !== undefined && resources.length > 0 && (
-          <ul className="flex flex-col gap-0.5 pl-1">
-            {resources.map((resource) => (
-              <li key={resource.url}>
-                <a
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary text-xs underline underline-offset-2"
-                >
-                  {resource.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </li>
   );

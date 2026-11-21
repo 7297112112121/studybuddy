@@ -21,18 +21,17 @@ import { ROUTES } from "@/lib/routes";
 import { getCurrentSession } from "@/modules/auth";
 import CalendarScreen from "@/modules/calendar/components/CalendarScreen";
 import WeekView from "@/modules/calendar/components/WeekView";
-import { addMonths } from "@/modules/calendar/month";
+import { listMonthEntries, listWeekEntries } from "@/modules/calendar/queries";
 import {
-  listEntryResources,
-  listMonthEntries,
-  listWeekEntries,
-} from "@/modules/calendar/queries";
-import {
+  addMonths,
   addWeeks,
   buildWeekDays,
-  isValidWeekStart,
   weekStartFor,
-} from "@/modules/calendar/week";
+} from "@/modules/calendar/service";
+import {
+  isValidWeekStart,
+  isValidYearMonth,
+} from "@/modules/calendar/validators";
 
 export const instant = false;
 
@@ -54,7 +53,7 @@ function parseMonthParam(
 ): { year: number; month: number } | null {
   if (raw === undefined || !/^\d{4}-\d{2}$/.test(raw)) return null;
   const [year, month] = raw.split("-").map(Number);
-  if (month < 1 || month > 12 || year < 1 || year > 9999) return null;
+  if (!isValidYearMonth(year, month)) return null;
   return { year, month };
 }
 
@@ -101,24 +100,10 @@ export default async function CalendarPage({
   const shown = parseViewParams(params, today);
   const currentWeekStart = weekStartFor(today);
 
-  // AXY-24 T7:条目附属资料(仅月视图当日详情展示),账号隔离由查询传导;
-  // 日期域直接取整月,与 entries 并行取,不拖迟页面载荷
-  const monthDates: string[] = [];
-  if (shown.view === "month") {
-    const dayCount = new Date(shown.year, shown.month, 0).getDate();
-    for (let d = 1; d <= dayCount; d++) {
-      monthDates.push(
-        `${shown.year}-${String(shown.month).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
-      );
-    }
-  }
-  const [entries, resources, t] = await Promise.all([
+  const [entries, t] = await Promise.all([
     shown.view === "week"
       ? listWeekEntries(session.user.id, shown.weekStart)
       : listMonthEntries(session.user.id, shown.year, shown.month),
-    shown.view === "month"
-      ? listEntryResources(session.user.id, monthDates)
-      : Promise.resolve(undefined),
     getTranslations("calendar"),
   ]);
 
@@ -219,7 +204,6 @@ export default async function CalendarPage({
           month={shown.month}
           today={today}
           entries={entries}
-          resources={resources}
         />
       )}
     </main>
