@@ -1,6 +1,13 @@
 {
   "version": 2,
   "skills": {
+    "ai-sdk": {
+      "source": "vercel/ai",
+      "commit": "d55f3cfc456d1b7bc7db3a4b70fbf602ddc8647d",
+      "sourceType": "github",
+      "skillPath": "skills/ai-sdk/SKILL.md",
+      "computedHash": "59cd2dc82c5458f2819992fc3d27204ed16edfc9170870c6f8f04c44bac17772"
+    },
     "better-auth-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
