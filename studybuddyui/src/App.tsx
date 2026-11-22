@@ -7,6 +7,8 @@ import CalendarGridLayout from "../layouts/calendar-grid-layout/code";
 import MonthCalendar from "../components/month-calendar/month-calendar";
 import EventCard from "../components/event-card/event-card";
 import CategoryFilterList from "../components/category-filter-list/category-filter-list";
+import SearchInput from "../components/search-input/search-input";
+import SearchInputWithButton from "../components/search-input-with-button/search-input-with-button";
 
 type DraftKey =
   | "week-view-calendar"
@@ -16,7 +18,9 @@ type DraftKey =
   | "calendar-grid-layout"
   | "month-calendar"
   | "event-card"
-  | "category-filter-list";
+  | "category-filter-list"
+  | "search-input"
+  | "search-input-with-button";
 
 const DRAFTS: { key: DraftKey; label: string; node: React.ReactNode }[] = [
   { key: "week-view-calendar", label: "周视图日程日历", node: <WeekViewCalendar /> },
@@ -27,6 +31,8 @@ const DRAFTS: { key: DraftKey; label: string; node: React.ReactNode }[] = [
   { key: "month-calendar", label: "月历日期选择器", node: <MonthCalendar /> },
   { key: "event-card", label: "日程事件卡片", node: <EventCard /> },
   { key: "category-filter-list", label: "分类筛选列表", node: <CategoryFilterList /> },
+  { key: "search-input", label: "搜索输入框", node: <SearchInput /> },
+  { key: "search-input-with-button", label: "带按钮搜索输入框", node: <SearchInputWithButton /> },
 ];
 
 export default function App() {
