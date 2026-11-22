@@ -1,29 +1,14 @@
 import { useState } from "react";
 import WeekViewCalendar from "../components/week-view-calendar/week-view-calendar";
 import CreateActivityModal from "../components/create-activity-modal/create-activity-modal";
-import AuthBrandHeader from "../components/auth-brand-header/auth-brand-header";
-import AuthSchedulePreview from "../components/auth-schedule-preview/auth-schedule-preview";
-import AuthFormCard from "../components/auth-form-card/auth-form-card";
-import AuthSplitPage from "../layouts/auth-split-page/auth-split-page";
-import AuthAuroraDark from "../backgrounds/auth-aurora-dark/auth-aurora-dark";
+import ChatPageLayout from "../layouts/chat-page-layout/code";
 
-type DraftKey =
-  | "week-view-calendar"
-  | "create-activity-modal"
-  | "auth-split-page"
-  | "auth-aurora-dark"
-  | "auth-brand-header"
-  | "auth-schedule-preview"
-  | "auth-form-card";
+type DraftKey = "week-view-calendar" | "create-activity-modal" | "chat-page-layout";
 
 const DRAFTS: { key: DraftKey; label: string; node: React.ReactNode }[] = [
   { key: "week-view-calendar", label: "周视图日程日历", node: <WeekViewCalendar /> },
   { key: "create-activity-modal", label: "创建活动弹窗", node: <CreateActivityModal /> },
-  { key: "auth-split-page", label: "认证页布局骨架", node: <AuthSplitPage /> },
-  { key: "auth-aurora-dark", label: "认证页极光背景", node: <AuthAuroraDark /> },
-  { key: "auth-brand-header", label: "认证品牌标题块", node: <AuthBrandHeader /> },
-  { key: "auth-schedule-preview", label: "认证日程示例列表", node: <AuthSchedulePreview /> },
-  { key: "auth-form-card", label: "认证表单卡片", node: <AuthFormCard /> },
+  { key: "chat-page-layout", label: "聊天页布局骨架", node: <ChatPageLayout /> },
 ];
 
 export default function App() {
