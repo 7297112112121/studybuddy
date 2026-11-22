@@ -12,8 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // 文档站独立工具链（Docusaurus 自带 lint 约定与构建产物）:
     "website/**",
+    "studybuddyui/**",
     // 开发服务器遗留空目录,不属于项目:
     "my-website/**",
   ]),

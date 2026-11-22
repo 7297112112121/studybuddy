@@ -47,6 +47,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# ui-draft workspace（studybuddyui）构建产物与副产物
+/studybuddyui/dist
+/studybuddyui/dist-ssr
+/studybuddyui/.vite
+/studybuddyui/**/*.local
+/studybuddyui/node_modules
+
 # playwright-mcp 本地产物
 .playwright-mcp/
 docs/dev/**/evidence/

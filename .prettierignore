@@ -1,9 +1,9 @@
 docs/
 website/
 my-website/
+studybuddyui/
 .next/
 playwright-report/
 test-results/
 
-# AGENTS.md 的 Next.js agent 块由 next dev 生成与还原,不做格式化以免噪音
 AGENTS.md

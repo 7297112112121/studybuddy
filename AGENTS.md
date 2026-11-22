@@ -34,6 +34,7 @@ npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 
 - 通用 DoD 基线在 `.agents/skills/product_design/references/dod.md`;交互原型不入库,按 proposal 的原型契约现场生成一次性 HTML,看完即弃。
 - 调研存档在 `docs/other/`;测试文档在 `docs/test/`。
 - SKILL/MCP 接入提示词(新环境建 symlink 并逐项检查)在 `.agents/prompt/skill-mcp-setup.md`。
+- UI 草稿工作区说明与 AI 使用约束在 [studybuddyui/README.md](studybuddyui/README.md);不对任何模块公开接口,禁止直接引用其 `components/` 与 `layouts/` 代码,消费走截图与 prompt.md。
 - 项目主题色在 `src/app/globals.css`。
 
 ## Git 与版本约定

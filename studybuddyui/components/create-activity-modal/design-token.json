@@ -1,0 +1,25 @@
+{
+  "modal": {
+    "width": "288px",
+    "radius": "16px",
+    "padding": "24px",
+    "background": "#FFFFFF",
+    "shadow": "0 20px 50px -12px rgba(31,32,51,0.25)"
+  },
+  "color": {
+    "primary": "#593BFF",
+    "textPrimary": "#23243A",
+    "textSecondary": "#8B8DA6",
+    "divider": "#ECECF1",
+    "workBg": "#FFF1E6", "workText": "#F2994A",
+    "clientsBg": "#F0EDFC", "clientsText": "#6C5CE7",
+    "personalBg": "#EAF3FD", "personalText": "#3B82F6"
+  },
+  "font": {
+    "title": "18px / 600",
+    "body": "14px / 400",
+    "chip": "12px / 500",
+    "button": "14px / 500"
+  },
+  "radius": { "card": "16px", "chip": "8px", "button": "12px" }
+}
