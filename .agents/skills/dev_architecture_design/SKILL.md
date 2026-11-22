@@ -19,7 +19,7 @@ description: 当 proposal 已获人工批准,需要产出架构设计(design)时
 
 **流程前后继**：上游——product_proposal_writing（已批准 proposal 已合并进 `master`）；下游——dev_plan_writing（承接已批准 design）。
 
-本技能是 feat 分支的开启点：开工前确认 proposal 已随 docs 分支合并进 master（未合并时先走 branch-wrapup 收尾 docs 分支），再从最新 `master` 新建 `feat/AXY-<N>-<slug>`。design 四件套落盘与批准、后续实现全部在该分支上进行。生命周期真源见 [README](../README.md)「总流程与分支生命周期」。
+本技能是 feat 分支的开启点：开工前确认 proposal 已随 docs 分支合并进 master（未合并时先走 branch-wrapup 收尾 docs 分支），再从最新 `master` 新建 `feat/AXY-<N>-<slug>`。design 四件套落盘与批准、后续实现全部在该分支上进行。
 
 ## 流程
 

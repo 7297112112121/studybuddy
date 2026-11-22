@@ -40,7 +40,7 @@ npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 
 ## Git 与版本约定
 
 - **提交信息**:`Conventional Commits`(如 `feat:`、`fix:`、`chore:`;仓库现有提交使用中文描述)。
-- **分支模型**:GitHub Flow 两段式——产品侧(创建/修订用户故事 → proposal 批准)走 `docs/<slug>` 分支,开发侧(design → plan → TDD)走 `feat/AXY-<N>-<slug>` 分支,各自完工经 PR 合并回 `master`;细则真源见 `.agents/skills/README.md`「总流程与分支生命周期」(人类侧叙述见 [docs/研发流程.md](docs/研发流程.md))。
+- **分支模型**:GitHub Flow 两段式——产品侧(创建/修订用户故事 → proposal 批准)走 `docs/<slug>` 分支,开发侧(design → plan → TDD)走 `feat/AXY-<N>-<slug>` 分支,各自完工经 PR 合并回 `master`;流程叙述见 [docs/研发流程.md](docs/研发流程.md)。
 - **版本管理**:语义化版本(SemVer),当前版本 `0.1.0`(见 `package.json`)。
 - **输出语言**:面向用户的回复与提交说明使用中文。
 
