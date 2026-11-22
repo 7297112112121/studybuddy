@@ -2,13 +2,19 @@ import { useState } from "react";
 import WeekViewCalendar from "../components/week-view-calendar/week-view-calendar";
 import CreateActivityModal from "../components/create-activity-modal/create-activity-modal";
 import ChatPageLayout from "../layouts/chat-page-layout/code";
+import AchievementsLayout from "../layouts/achievements-layout/code";
 
-type DraftKey = "week-view-calendar" | "create-activity-modal" | "chat-page-layout";
+type DraftKey =
+  | "week-view-calendar"
+  | "create-activity-modal"
+  | "chat-page-layout"
+  | "achievements-layout";
 
 const DRAFTS: { key: DraftKey; label: string; node: React.ReactNode }[] = [
   { key: "week-view-calendar", label: "周视图日程日历", node: <WeekViewCalendar /> },
   { key: "create-activity-modal", label: "创建活动弹窗", node: <CreateActivityModal /> },
   { key: "chat-page-layout", label: "聊天页布局骨架", node: <ChatPageLayout /> },
+  { key: "achievements-layout", label: "成就展示页布局骨架", node: <AchievementsLayout /> },
 ];
 
 export default function App() {
