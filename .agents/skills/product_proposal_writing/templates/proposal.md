@@ -159,7 +159,7 @@ normative_language: zh-CN
 
 ## 14. 原型契约
 
-原型的唯一入库资产与 AI 唯一接口（规范见 `.agents/skills/product_proposal_writing/references/prototype-contract.md`）。交互原型不入库；需要看效果时按本契约现场生成一次性 HTML，看完即弃。交互逻辑一律回引 R / F / E 编号，不复述验收标准。
+页面设计的文字接口：视觉真源是 `studybuddyui/` 布局草稿条目（截图 + `prompt.md`），契约以条目名引用、不复述外观，承载交互逻辑、状态与边界的唯一事实源（规范见 `.agents/skills/product_proposal_writing/references/prototype-contract.md`）。交互逻辑一律回引 R / F / E 编号，不复述验收标准。
 
 ### 14.1 演示态清单（≤ 5 个 AC 演示态）
 
@@ -172,7 +172,8 @@ normative_language: zh-CN
 **演示态 1 · <名称>**
 
 - 入口：<从哪进入；页面级跳转引用路由行为 #N>；
-- 布局块：<自上而下逐块一句话，字段旁标注 F 编号>；
+- 布局条目：<`studybuddyui/layouts/<条目名>`（视觉真源，含块级布局与动效规格）；无条目写「豁免 · 文字定义」并登记「开放问题」>；
+- 布局块：<自上而下逐块一句话，字段旁标注 F 编号；块级比例与编排以条目为准，契约只写条目呈现不了的行为（动态显隐、滚动加载等）>；
 - 视觉 / 交互状态：<不可从 R 推导的 UI 细节（提交中置灰、错误高亮位置、提示消除时机等）>；
 - 空态 / 边界：<无数据、加载、异常时的呈现>；
 - 关联 R：<本态交互逻辑覆盖的需求编号>。
