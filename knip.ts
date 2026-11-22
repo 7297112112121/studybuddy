@@ -5,16 +5,10 @@ const config: KnipConfig = {
   // 工作区（独立 Vite 工具链），均不纳入主应用死代码分析。
   ignoreWorkspaces: ["website", "studybuddyui"],
 
-  ignoreDependencies: [
-
-    "lint-staged",
-
-    "@next/playwright",
-  ],
+  ignoreDependencies: ["lint-staged", "@next/playwright"],
 
   workspaces: {
     ".": {
-
       entry: [
         "src/app/**/*.{ts,tsx}",
 
