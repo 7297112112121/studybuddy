@@ -3,28 +3,21 @@ import WeekViewCalendar from "../components/week-view-calendar/week-view-calenda
 import CreateActivityModal from "../components/create-activity-modal/create-activity-modal";
 import ChatPageLayout from "../layouts/chat-page-layout/code";
 import AchievementsLayout from "../layouts/achievements-layout/code";
-import CalendarPageLayout from "../layouts/calendar-page-layout/code";
-import CalendarPageLayoutWithTasks from "../layouts/calendar-page-layout-with-tasks/code";
+import CalendarGridLayout from "../layouts/calendar-grid-layout/code";
 
 type DraftKey =
   | "week-view-calendar"
   | "create-activity-modal"
   | "chat-page-layout"
   | "achievements-layout"
-  | "calendar-page-layout"
-  | "calendar-page-layout-with-tasks";
+  | "calendar-grid-layout";
 
 const DRAFTS: { key: DraftKey; label: string; node: React.ReactNode }[] = [
   { key: "week-view-calendar", label: "周视图日程日历", node: <WeekViewCalendar /> },
   { key: "create-activity-modal", label: "创建活动弹窗", node: <CreateActivityModal /> },
   { key: "chat-page-layout", label: "聊天页布局骨架", node: <ChatPageLayout /> },
   { key: "achievements-layout", label: "成就展示页布局骨架", node: <AchievementsLayout /> },
-  { key: "calendar-page-layout", label: "日程页布局骨架", node: <CalendarPageLayout /> },
-  {
-    key: "calendar-page-layout-with-tasks",
-    label: "日程页任务侧栏布局骨架",
-    node: <CalendarPageLayoutWithTasks />,
-  },
+  { key: "calendar-grid-layout", label: "日程页栅格布局骨架", node: <CalendarGridLayout /> },
 ];
 
 export default function App() {
