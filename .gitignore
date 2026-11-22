@@ -58,3 +58,7 @@ next-env.d.ts
 .playwright-mcp/
 docs/dev/**/evidence/
 .agents/skills/page-design-flow-workspace/
+
+# 技能评测工作区(本地迭代基线,不入库)
+.agents/skills/dev-architecture-workspace/
+.agents/skills/dev-plan-impl-workspace/
