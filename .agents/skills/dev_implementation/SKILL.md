@@ -13,7 +13,7 @@ description: 当实现计划(tasks.md)已获人工批准,需要按计划执行�
 
 ## 流程前后继
 
-上游：dev_plan_writing（已批准的 tasks.md，本技能唯一输入）。下游：branch-wrapup（实现完工后收束 feat 分支）。生命周期真源见 [README](../README.md)「总流程与分支生命周期」。
+上游：dev_plan_writing（已批准的 tasks.md，本技能唯一输入）。下游：branch-wrapup（实现完工后收束 feat 分支）。
 
 ## 触发范围
 

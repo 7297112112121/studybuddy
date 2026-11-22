@@ -57,6 +57,13 @@
       "skillPath": "SKILL.md",
       "computedHash": "efd6436f239eb7fd9fc268ee94bbf060b0bcb8269f01c997a66ca3b218101f95"
     },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "commit": "e4bb5d960d87126ff3b3a8af1a104b7db67560ba",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "computedHash": "2bac3218c256cd9ff16ede13898148d6a71e4ddee73cbcada158851d7b192f89"
+    },
     "two-factor-authentication-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",

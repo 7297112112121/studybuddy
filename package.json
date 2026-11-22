@@ -4,6 +4,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
+    "studybuddyui",
     "website"
   ],
   "scripts": {
@@ -26,6 +27,7 @@
     "docs:dev": "npm run start --workspace website",
     "docs:build": "npm run build --workspace website",
     "docs:serve": "npm run serve --workspace website",
+    "ui": "npm run dev --workspace @studybuddy/ui-draft",
     "prepare": "git config core.hooksPath .githooks"
   },
   "lint-staged": {

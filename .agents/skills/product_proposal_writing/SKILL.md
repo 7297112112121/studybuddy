@@ -81,7 +81,7 @@ description: 当已批准的用户故事需要转化为需求规范(proposal)时
 
 **流程前后继**：上游——product_design（已批准用户故事）；下游——dev_architecture_design（proposal 经 branch-wrapup 合并进 `master` 后承接）。
 
-proposal 在 product_design 开出的 `docs/<slug>` 分支上编写与修订，不另开分支。生命周期真源见 [README](../README.md)「总流程与分支生命周期」。
+proposal 在 product_design 开出的 `docs/<slug>` 分支上编写与修订，不另开分支。
 
 ## 合理化对照表
 

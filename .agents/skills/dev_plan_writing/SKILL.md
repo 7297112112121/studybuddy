@@ -13,7 +13,7 @@ description: 当 design(架构设计)已获人工批准,需要将其拆分为可
 
 ## 流程前后继
 
-上游：dev_architecture_design（已批准的 design 四件套，本技能唯一输入）。下游：dev_implementation（执行已批准的 tasks）。本技能无分支动作——tasks 随 feat 分支落盘，分支收束由下游技能负责；生命周期真源见 [README](../README.md)「总流程与分支生命周期」。
+上游：dev_architecture_design（已批准的 design 四件套，本技能唯一输入）。下游：dev_implementation（执行已批准的 tasks）。本技能无分支动作——tasks 随 feat 分支落盘，分支收束由下游技能负责。
 
 ## 触发范围与档位
 
