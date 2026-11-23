@@ -2,8 +2,8 @@
  * calendar_entry 迁移落库查证（AXY-22 Task 2，design「数据模型」节）。
  *
  * 真实 Postgres（compose.dev.yaml）查库断言，覆盖迁移生成物而非表定义对象：
- * 1. information_schema.columns：8 列名集恰等，关键列类型与可空性（uuid PK、
- *    entry_date date notNull、start_time/end_time time 可空、时间戳列带时区）；
+ * 1. information_schema.columns：9 列名集恰等，关键列类型与可空性（uuid PK、
+ *    entry_date date notNull、content/start_time/end_time 可空、时间戳列带时区）；
  * 2. pg_indexes 含复合索引 calendar_entry_user_date（非唯一，双列）；
  * 3. 无 DB 级 FK（跨模块引用按 barrel 裁决不建外键）。
  */
@@ -17,7 +17,7 @@ afterAll(async () => {
 });
 
 describe("calendar_entry 迁移落库（tests/integration/calendar/migration）", () => {
-  it("8 列名集恰等，关键列类型与可空性正确", async () => {
+  it("9 列名集恰等，关键列类型与可空性正确", async () => {
     const rows = await db.execute<{
       column_name: string;
       data_type: string;
@@ -29,6 +29,7 @@ describe("calendar_entry 迁移落库（tests/integration/calendar/migration）"
 
     expect(Object.keys(byName).sort()).toEqual(
       [
+        "content",
         "created_at",
         "end_time",
         "entry_date",
@@ -51,6 +52,10 @@ describe("calendar_entry 迁移落库（tests/integration/calendar/migration）"
     expect(byName["title"]).toMatchObject({
       data_type: "text",
       is_nullable: "NO",
+    });
+    expect(byName["content"]).toMatchObject({
+      data_type: "text",
+      is_nullable: "YES",
     });
     expect(byName["start_time"]).toMatchObject({
       data_type: "time without time zone",

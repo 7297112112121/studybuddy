@@ -140,6 +140,7 @@ function entry(
     id,
     date: "2026-11-18",
     title: `条目${id}`,
+    content: null,
     startTime: start,
     endTime: end,
   };

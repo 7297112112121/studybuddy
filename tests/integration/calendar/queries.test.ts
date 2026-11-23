@@ -40,6 +40,7 @@ async function makeUser(tag: string): Promise<string> {
 type Input = {
   date: string;
   title: string;
+  content: string | null;
   startTime: string | null;
   endTime: string | null;
 };
@@ -49,8 +50,9 @@ function input(
   title: string,
   startTime: string | null,
   endTime: string | null,
+  content: string | null = null,
 ): Input {
-  return { date, title, startTime, endTime };
+  return { date, title, content, startTime, endTime };
 }
 
 describe("listWeekEntries(AXY-23 Task 4)", () => {

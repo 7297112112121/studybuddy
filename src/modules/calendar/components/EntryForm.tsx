@@ -3,14 +3,6 @@
 /**
  * 条目新建/编辑表单（AXY-22 design「UI 与组件」节）。
  *
- * 校验单一来源：客户端与服务端共用 calendarEntryInputSchema（safeParse
- * 即地呈现，失败不调 action）；zod message 为 i18n key，经根作用域
- * useTranslations() 渲染（键含命名空间前缀）。编辑模式（entry 在场）
- * 预填原值并展示所属日期控件（R11 改期入口）；新建模式日期由选中天决定。
- *
- * 展示态：E-01 在事项字段下方、E-03 在结束时间字段下方、E-02 在表单
- * 提示区；修正后即时消除（对应字段 change 时清错）；提交中按钮置灰
- * 不可重复提交（R12）；UNAUTHORIZED → /login、NOT_FOUND → 静默刷新。
  */
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +12,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ROUTES } from "@/lib/routes";
 
 import type { CalendarEntryView } from "../queries";
@@ -59,6 +52,7 @@ export default function EntryForm({
   const router = useRouter();
 
   const [title, setTitle] = useState(entry?.title ?? "");
+  const [content, setContent] = useState(entry?.content ?? "");
   const [startTime, setStartTime] = useState(
     entry?.startTime ?? initialStartTime,
   );
@@ -81,6 +75,10 @@ export default function EntryForm({
     setTitle(e.target.value);
     clearFieldError("title");
   }
+  function handleContentChange(e: ChangeEvent<HTMLTextAreaElement>): void {
+    setContent(e.target.value);
+    clearFieldError("content");
+  }
   function handleStartTimeChange(e: ChangeEvent<HTMLInputElement>): void {
     setStartTime(e.target.value);
     clearFieldError("startTime");
@@ -101,6 +99,7 @@ export default function EntryForm({
     const payload: CalendarEntryInput = {
       date: editing ? entryDate : date,
       title,
+      content: content === "" ? null : content,
       startTime: startTime === "" ? null : startTime,
       endTime: endTime === "" ? null : endTime,
     };
@@ -113,6 +112,7 @@ export default function EntryForm({
           !errors[field as keyof CalendarFieldErrors] &&
           (field === "date" ||
             field === "title" ||
+            field === "content" ||
             field === "startTime" ||
             field === "endTime")
         ) {
@@ -143,6 +143,7 @@ export default function EntryForm({
 
     if (result.ok) {
       setTitle("");
+      setContent("");
       setStartTime("");
       setEndTime("");
       onSaved?.();
@@ -180,6 +181,22 @@ export default function EntryForm({
         />
         {fieldErrors.title && (
           <p className="text-destructive text-sm">{tRoot(fieldErrors.title)}</p>
+        )}
+      </div>
+
+      {/* 具体内容:纯文本记录,不做格式化;可空 */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="calendar-entry-content">{t("form.contentLabel")}</Label>
+        <Textarea
+          id="calendar-entry-content"
+          value={content}
+          maxLength={2000}
+          onChange={handleContentChange}
+        />
+        {fieldErrors.content && (
+          <p className="text-destructive text-sm">
+            {tRoot(fieldErrors.content)}
+          </p>
         )}
       </div>
 

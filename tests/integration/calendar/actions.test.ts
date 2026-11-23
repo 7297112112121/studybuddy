@@ -68,7 +68,8 @@ const input = (
   title: string,
   startTime: string | null,
   endTime: string | null,
-) => ({ date, title, startTime, endTime });
+  content: string | null = null,
+) => ({ date, title, content, startTime, endTime });
 
 describe("calendar Server Actions（tests/integration/calendar/actions）", () => {
   it("① 无会话：三 action 各返回 UNAUTHORIZED", async () => {
@@ -166,7 +167,7 @@ describe("calendar Server Actions（tests/integration/calendar/actions）", () =
 
     expect(
       await createEntryAction(
-        input("2026-11-17", "高数复习", "14:00", "15:30"),
+        input("2026-11-17", "高数复习", "14:00", "15:30", "重点看例题"),
       ),
     ).toEqual({
       ok: true,
@@ -177,6 +178,7 @@ describe("calendar Server Actions（tests/integration/calendar/actions）", () =
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       title: "高数复习",
+      content: "重点看例题",
       startTime: "14:00",
       endTime: "15:30",
     });
@@ -195,7 +197,11 @@ describe("calendar Server Actions（tests/integration/calendar/actions）", () =
       ),
     ).toEqual({ ok: true });
     let rows = await listMonthEntries(userId, 2026, 11);
-    expect(rows[0]).toMatchObject({ title: "新标题", startTime: "09:00" });
+    expect(rows[0]).toMatchObject({
+      title: "新标题",
+      content: null, // 更新未带 content → 归一清空
+      startTime: "09:00",
+    });
 
     expect(await deleteEntryAction(entryId)).toEqual({ ok: true });
     rows = await listMonthEntries(userId, 2026, 11);

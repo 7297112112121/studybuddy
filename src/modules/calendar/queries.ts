@@ -65,6 +65,7 @@ export type CalendarEntryView = {
   id: string;
   date: string; // 即数据库列 entryDate,"YYYY-MM-DD"
   title: string;
+  content: string | null; // 具体内容,纯文本;null 表示未填写
   startTime: string | null; // "HH:MM" 或 null
   endTime: string | null; // "HH:MM" 或 null
 };
@@ -107,6 +108,7 @@ async function listEntriesInRange(
       id: calendarEntry.id,
       date: calendarEntry.entryDate,
       title: calendarEntry.title,
+      content: calendarEntry.content,
       startTime: calendarEntry.startTime,
       endTime: calendarEntry.endTime,
     })

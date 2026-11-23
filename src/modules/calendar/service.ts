@@ -19,6 +19,7 @@ export async function createEntry(
     userId,
     entryDate: input.date,
     title: input.title,
+    content: input.content,
     startTime: input.startTime,
     endTime: input.endTime,
   });
@@ -38,6 +39,7 @@ export async function updateEntry(
     .set({
       entryDate: input.date,
       title: input.title,
+      content: input.content,
       startTime: input.startTime,
       endTime: input.endTime,
       updatedAt: new Date(),
