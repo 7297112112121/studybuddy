@@ -117,7 +117,10 @@ describe("calendarEntryInputSchema：content 规则", () => {
       true,
     );
     expect(() =>
-      calendarEntryInputSchema.parse({ ...validBase, content: "x".repeat(2000) }),
+      calendarEntryInputSchema.parse({
+        ...validBase,
+        content: "x".repeat(2000),
+      }),
     ).not.toThrow();
   });
 

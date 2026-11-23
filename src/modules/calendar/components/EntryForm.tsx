@@ -75,9 +75,7 @@ export default function EntryForm({
     setTitle(e.target.value);
     clearFieldError("title");
   }
-  function handleContentChange(
-    e: ChangeEvent<HTMLTextAreaElement>,
-  ): void {
+  function handleContentChange(e: ChangeEvent<HTMLTextAreaElement>): void {
     setContent(e.target.value);
     clearFieldError("content");
   }
@@ -188,9 +186,7 @@ export default function EntryForm({
 
       {/* 具体内容:纯文本记录,不做格式化;可空 */}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="calendar-entry-content">
-          {t("form.contentLabel")}
-        </Label>
+        <Label htmlFor="calendar-entry-content">{t("form.contentLabel")}</Label>
         <Textarea
           id="calendar-entry-content"
           value={content}
