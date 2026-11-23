@@ -23,11 +23,13 @@
     "saveFailed": "保存失败,请重试",
     "endTimeAfterStart": "结束时间需晚于开始时间",
     "titleTooLong": "事项内容不能超过 50 字",
+    "contentTooLong": "具体内容不能超过 2000 字",
     "invalidDate": "日期不合法",
     "invalidTime": "时间不合法"
   },
   "form": {
     "titleLabel": "事项",
+    "contentLabel": "具体内容",
     "startTimeLabel": "开始时间",
     "endTimeLabel": "结束时间",
     "dateLabel": "所属日期",

@@ -1,0 +1,1 @@
+ALTER TABLE "calendar_entry" ADD COLUMN "content" text;

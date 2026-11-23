@@ -23,6 +23,7 @@ export const calendarEntry = pgTable(
     userId: text().notNull(),
     entryDate: date({ mode: "string" }).notNull(),
     title: text().notNull(),
+    content: text(), // 具体内容,纯文本不做格式化;可空(1.0 RC:列默认可空)
     startTime: time(), // 1.0 RC:列默认可空,无 .nullable() 链
     endTime: time(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

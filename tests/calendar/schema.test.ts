@@ -32,6 +32,7 @@ function hasIssue(
 const validBase = {
   date: "2026-11-17",
   title: "高数复习",
+  content: null,
   startTime: null,
   endTime: null,
 } as const;
@@ -39,10 +40,11 @@ const validBase = {
 describe("calendarEntry 表定义", () => {
   const config = getTableConfig(calendarEntry);
 
-  it("表名为 calendar_entry，列集恰为 8 列（snake_case 烘焙）", () => {
+  it("表名为 calendar_entry，列集恰为 9 列（snake_case 烘焙）", () => {
     expect(config.name).toBe("calendar_entry");
     const names = config.columns.map((c) => c.name).sort();
     expect(names).toEqual([
+      "content",
       "created_at",
       "end_time",
       "entry_date",
@@ -54,11 +56,12 @@ describe("calendarEntry 表定义", () => {
     ]);
   });
 
-  it("可空性：userId/entryDate/title/createdAt/updatedAt notNull，startTime/endTime 可空", () => {
+  it("可空性：userId/entryDate/title/createdAt/updatedAt notNull，content/startTime/endTime 可空", () => {
     const byName = Object.fromEntries(config.columns.map((c) => [c.name, c]));
     for (const col of ["id", "user_id", "entry_date", "title"]) {
       expect(byName[col]?.notNull, col).toBe(true);
     }
+    expect(byName["content"]?.notNull).toBe(false);
     expect(byName["start_time"]?.notNull).toBe(false);
     expect(byName["end_time"]?.notNull).toBe(false);
   });
@@ -103,6 +106,24 @@ describe("calendarEntryInputSchema：title 规则（E-01/F-01）", () => {
     expect(hasIssue(issues, "title", "calendar.error.titleTooLong")).toBe(true);
     expect(() =>
       calendarEntryInputSchema.parse({ ...validBase, title: "x".repeat(50) }),
+    ).not.toThrow();
+  });
+});
+
+describe("calendarEntryInputSchema：content 规则", () => {
+  it("content 2001 字 → calendar.error.contentTooLong；2000 字通过", () => {
+    const issues = issuesOf({ ...validBase, content: "x".repeat(2001) });
+    expect(hasIssue(issues, "content", "calendar.error.contentTooLong")).toBe(
+      true,
+    );
+    expect(() =>
+      calendarEntryInputSchema.parse({ ...validBase, content: "x".repeat(2000) }),
+    ).not.toThrow();
+  });
+
+  it("content null（未填写）通过", () => {
+    expect(() =>
+      calendarEntryInputSchema.parse({ ...validBase, content: null }),
     ).not.toThrow();
   });
 });
