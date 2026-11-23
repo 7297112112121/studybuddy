@@ -1,0 +1,37 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "7f124f17-154e-4b55-a7a9-45fb7d4a9365",
+  "prevIds": ["3ca7c1f6-a7ac-40a7-abc0-77efab986187"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "calendar_entry", "content"],
+      "writes": [
+        "s|col|public.calendar_entry.content",
+        "n|col|public.calendar_entry.content",
+        "e|col|public.calendar_entry.content"
+      ],
+      "reads": ["n|tbl|public.calendar_entry", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "calendar_entry",
+        "name": "content",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

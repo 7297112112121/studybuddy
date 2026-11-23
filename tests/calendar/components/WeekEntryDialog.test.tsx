@@ -40,6 +40,7 @@ const entry = {
   id: "e1",
   date: "2026-11-18",
   title: "组会",
+  content: null,
   startTime: "14:30",
   endTime: null,
 };
@@ -106,6 +107,7 @@ describe("WeekEntryDialog(AXY-23 Task 7)", () => {
     expect(createEntryActionMock).toHaveBeenCalledWith({
       date: "2026-11-18",
       title: "组会",
+      content: null,
       startTime: "14:30",
       endTime: null,
     });

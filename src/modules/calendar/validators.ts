@@ -67,6 +67,10 @@ export const calendarEntryInputSchema = z
       .string()
       .min(1, { message: "calendar.error.titleRequired" }) // 标题必填
       .max(50, { message: "calendar.error.titleTooLong" }), // 上限 50 字(UI 已被 maxLength=50 挡住,此处后端兜底)
+    content: z
+      .string()
+      .max(2000, { message: "calendar.error.contentTooLong" })
+      .nullable(), // 具体内容,纯文本不做格式化;上限 2000 字(UI 已被 maxLength=2000 挡住,此处后端兜底)
     startTime: z
       .string()
       .regex(TIME_HHMM_RE, { message: "calendar.error.invalidTime" })
@@ -97,5 +101,5 @@ export type CalendarEntryInput = z.infer<typeof calendarEntryInputSchema>;
 
 /** 字段级错误:键为字段,值为 i18n messageKey(前端渲染错误文案的唯一来源)。 */
 export type CalendarFieldErrors = Partial<
-  Record<"date" | "title" | "startTime" | "endTime", string>
+  Record<"date" | "title" | "content" | "startTime" | "endTime", string>
 >;

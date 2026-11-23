@@ -34,7 +34,7 @@ function entry(
   startTime: string | null,
   endTime: string | null,
 ): CalendarEntryView {
-  return { id, date, title, startTime, endTime };
+  return { id, date, title, content: null, startTime, endTime };
 }
 
 function renderView(

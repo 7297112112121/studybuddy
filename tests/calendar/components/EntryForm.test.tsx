@@ -65,6 +65,11 @@ function fillStart(value: string): void {
 function fillEnd(value: string): void {
   fireEvent.change(screen.getByLabelText("结束时间"), { target: { value } });
 }
+function fillContent(value: string): void {
+  fireEvent.change(screen.getByLabelText("具体内容"), {
+    target: { value },
+  });
+}
 function submit(): void {
   fireEvent.click(screen.getByRole("button", { name: "添加" }));
 }
@@ -109,6 +114,7 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     expect(createEntryActionMock).toHaveBeenCalledWith({
       date: "2026-11-17",
       title: "晨读",
+      content: null,
       startTime: "14:00",
       endTime: null,
     });
@@ -124,6 +130,24 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     expect(createEntryActionMock).toHaveBeenCalledWith({
       date: "2026-11-17",
       title: "交英语作业",
+      content: null,
+      startTime: null,
+      endTime: null,
+    });
+  });
+
+  it("④'' 填写具体内容提交 → action 以 content 形态被调(纯文本直存)", async () => {
+    createEntryActionMock.mockResolvedValue({ ok: true });
+    renderForm();
+    fillTitle("晨读");
+    fillContent("第三章第二节,重点看例题");
+    submit();
+
+    await waitFor(() => expect(createEntryActionMock).toHaveBeenCalledOnce());
+    expect(createEntryActionMock).toHaveBeenCalledWith({
+      date: "2026-11-17",
+      title: "晨读",
+      content: "第三章第二节,重点看例题",
       startTime: null,
       endTime: null,
     });
@@ -136,6 +160,7 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
         id: "e1",
         date: "2026-11-16",
         title: "旧标题",
+        content: "旧内容",
         startTime: "10:00",
         endTime: "11:00",
       },
@@ -145,6 +170,9 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     const dateInput = screen.getByLabelText("所属日期") as HTMLInputElement;
     expect(title.value).toBe("旧标题");
     expect(dateInput.value).toBe("2026-11-16");
+    expect(
+      (screen.getByLabelText("具体内容") as HTMLTextAreaElement).value,
+    ).toBe("旧内容");
     expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe(
       "10:00",
     );
@@ -154,6 +182,7 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     expect(updateEntryActionMock).toHaveBeenCalledWith("e1", {
       date: "2026-11-16",
       title: "旧标题",
+      content: "旧内容",
       startTime: "10:00",
       endTime: "11:00",
     });
@@ -251,6 +280,7 @@ describe("EntryForm showDateField(AXY-23)", () => {
     id: "e1",
     date: "2026-11-16",
     title: "旧标题",
+    content: null,
     startTime: "10:00",
     endTime: "11:00",
   };
@@ -266,6 +296,7 @@ describe("EntryForm showDateField(AXY-23)", () => {
     expect(updateEntryActionMock).toHaveBeenCalledWith("e1", {
       date: "2026-11-16",
       title: "旧标题",
+      content: null,
       startTime: "10:00",
       endTime: "11:00",
     });

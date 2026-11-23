@@ -41,8 +41,9 @@ function input(
   title: string,
   startTime: string | null,
   endTime: string | null,
+  content: string | null = null,
 ) {
-  return { date, title, startTime, endTime };
+  return { date, title, content, startTime, endTime };
 }
 
 describe("calendar 读写链路（tests/integration/calendar/service）", () => {
@@ -145,14 +146,17 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
 
   it("updateEntry 正向路径：命中本人条目 → true 且库行变更", async () => {
     const userId = await makeUser("upd");
-    await createEntry(userId, input("2026-11-17", "旧标题", "14:00", "15:30"));
+    await createEntry(
+      userId,
+      input("2026-11-17", "旧标题", "14:00", "15:30", "旧内容"),
+    );
     const entryId = (await listMonthEntries(userId, 2026, 11))[0].id;
 
     expect(
       await updateEntry(
         userId,
         entryId,
-        input("2026-11-18", "新标题", "09:00", "10:00"),
+        input("2026-11-18", "新标题", "09:00", "10:00", "新内容"),
       ),
     ).toBe(true);
 
@@ -162,6 +166,7 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
       id: entryId,
       date: "2026-11-18",
       title: "新标题",
+      content: "新内容",
       startTime: "09:00",
       endTime: "10:00",
     });
