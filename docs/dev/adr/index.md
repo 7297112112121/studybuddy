@@ -34,6 +34,7 @@ sidebar_position: 1
 | [0029](agentscope) | 2026-11-23 | AI 服务框架：AgentScope 2.0（ReAct 循环/工具技能/长期记忆/多用户隔离内建，DeepSeek 一等支持） | 已接受 |
 | [0030](sse-streaming) | 2026-11-23 | AI 流式链路：SSE 全链（Agent Service 会话流 → Next Route Handler 加工 → 前端打字机；不引入 WebSocket/gRPC） | 已接受 |
 | [0031](ai-sdk-ui) | 2026-11-23 | AI UI 流式渲染：AI SDK（useChat + message parts 生成式 UI，transport 指向自有 Route Handler；不引入第二套聊天组件库） | 已接受 |
+| [0032](agent-memory-mem0-pgvector) | 2026-11-23 | AI 长期记忆：Mem0 OSS + pgvector 落自有 PostgreSQL（条款级修订：修订记忆方案条款——mem0 后端替代向量记忆自对接预期） | 已接受 |
 
 ## 现行技术栈速查
 
@@ -60,6 +61,7 @@ sidebar_position: 1
 | [0022](ci-secrets) | CI 机密管理 | 应用运行时机密零过 CI 只存服务器；action 钉完整 SHA；个人组织 action 例外须显式 ADR 评审 | 新增 CI 机密或引第三方 action 时 |
 | [0026](ci-path-filtering) | dorny/paths-filter | PR 层与 push master 层裁剪；未命中显式跳过清单一律全跑（deploy 层跳过仅限镜像产物无差异清单），filter 与 .github/** 变更强制全跑 | 改 CI 触发面、新增顶层目录或升级该 action 时 |
 | [0025](client-data-layer) | Route Handler + Server Actions | 错误经判别联合返回不抛裸异常；首屏数据走 RSC 直读；客户端查询与轮询走 Route Handler | 需乐观更新编排、客户端缓存/去重或对 Server Actions 串行分发有疑虑时 |
-| [0029](agentscope) | AgentScope 2.0 | 模型接入一律经 Credential 配置切换，禁止代码硬编码提供方；版本钉 2.x minor，跨 minor 升级先核对 breaking change；用户隔离对接 Better Auth 会话，AI 侧不另建身份体系 | 启用新 Toolkit/Context 能力、对接 pgvector 记忆或跨 minor 升级时 |
+| [0029](agentscope) | AgentScope 2.0 | 模型接入一律经 Credential 配置切换，禁止代码硬编码提供方；版本钉 2.x minor，跨 minor 升级先核对 breaking change；用户隔离对接 Better Auth 会话，AI 侧不另建身份体系 | 启用新 Toolkit/Context 能力、更换记忆中间件或跨 minor 升级时 |
 | [0030](sse-streaming) | SSE 全链 | python 侧用 Agent Service 会话事件流不自建协议；Next Route Handler 关闭代理缓冲；用户输入走普通 POST 不经流通道；双向实时需求出现时另立 ADR 不改造本通道 | 调通中转层缓冲/背压、前端重连续流或评估实时通道时 |
 | [0031](ai-sdk-ui) | AI SDK | AI SDK 代码以随包安装、版本完全匹配的文档与源码为真源，禁止凭训练记忆书写；transport 指向自有 Route Handler，不用自带服务端实现；版本钉 minor，major 升级逐次评估；不引入第二套聊天组件库 | 写 AI SDK 代码、升级 major 或新增消息部件类型时 |
+| [0032](agent-memory-mem0-pgvector) | AgentScope 记忆：Mem0 OSS + pgvector | 记忆经内建 Mem0Middleware 承载 mem0 OSS AsyncMemory，vector store 与 history 落自有 PostgreSQL pgvector；不用托管平台，不引 ReMe/文件式与独立向量库；embedding 用智谱 Embedding-3（经 OpenAI 兼容端点，凭据走环境变量）；mem0 表结构自管不进业务迁移体系 | 记忆抽取/检索质量不足或 mem0 依赖升级时 |
