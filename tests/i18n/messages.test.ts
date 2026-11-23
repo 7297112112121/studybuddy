@@ -72,6 +72,7 @@ describe("calendar.json 文案与 design 键表逐字一致（AXY-22）", () => 
     expect(calendar.error.saveFailed).toBe("保存失败,请重试");
     expect(calendar.error.endTimeAfterStart).toBe("结束时间需晚于开始时间");
     expect(calendar.error.titleTooLong).toBe("事项内容不能超过 50 字");
+    expect(calendar.error.contentTooLong).toBe("具体内容不能超过 2000 字");
     expect(calendar.error.invalidDate).toBe("日期不合法");
     expect(calendar.error.invalidTime).toBe("时间不合法");
   });
@@ -82,9 +83,10 @@ describe("calendar.json 文案与 design 键表逐字一致（AXY-22）", () => 
     expect(calendar.entryPoint).toBe("日程日历");
   });
 
-  it("结构：error 六键齐全，无残留手机号时代占位键", () => {
+  it("结构：error 七键齐全，无残留手机号时代占位键", () => {
     expect(Object.keys(calendar.error).sort()).toEqual(
       [
+        "contentTooLong",
         "endTimeAfterStart",
         "invalidDate",
         "invalidTime",
