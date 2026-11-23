@@ -1,13 +1,13 @@
 ---
 name: component-upgrade
-description: 当开发者要对一个已存在的组件条目进行升级、改造或衍生时使用——复制该组件为副本,在副本上修改,完成后作为新组件保存,原条目保持只读;触发语如「把 month-calendar 升级一下,加个年份切换」「基于 event-card 出个带封面的变体」「这个组件改改另存一个」;触发词包括组件升级、组件变体、改造、另存为新组件。从零新建组件时改用 component-wireframe(有参考截图/URL)或 component-blank(无参考,一句话组件用途);本技能的基底固定为 studybuddyui/components/ 下已存在条目。修改策略未经开发者选定不动副本,原条目任何文件不得修改,组件未经审阅确认不得归档。
+description: 当开发者要对一个已存在的组件条目进行升级、改造或衍生时使用——复制该组件为副本,在副本上修改,完成后作为新组件保存,原条目保持只读;触发语如「把 month-calendar 升级一下,加个年份切换」「基于 event-card 出个带封面的变体」「这个组件改改另存一个」;触发词包括组件升级、组件变体、改造、另存为新组件。从零新建组件时改用 component-draft(有参考截图/URL 或一句话组件用途均可);本技能的基底固定为 studybuddyui/components/ 下已存在条目。修改策略未经开发者选定不动副本,原条目任何文件不得修改,组件未经审阅确认不得归档。
 ---
 
 # 组件升级草稿(component-upgrade)
 
 ## 定位
 
-输入为 `studybuddyui/components/` 下一个已存在的组件条目(基底)加一句升级意图,输出为一个新组件条目(副本):复制基底、按选定策略修改副本、归档为新组件。原条目自始至终保持只读——升级永远发生在副本上,这是本技能与直接改组件的本质区别。从零新建走 [component-wireframe](../component-wireframe/SKILL.md) 或 [component-blank](../component-blank/SKILL.md);页面级布局升级归 layout-upgrade。
+输入为 `studybuddyui/components/` 下一个已存在的组件条目(基底)加一句升级意图,输出为一个新组件条目(副本):复制基底、按选定策略修改副本、归档为新组件。原条目自始至终保持只读——升级永远发生在副本上,这是本技能与直接改组件的本质区别。从零新建走 [component-draft](../component-draft/SKILL.md);页面级布局升级归 layout-upgrade。
 
 产物约定与家族技能一致:`studybuddyui/components/<新组件名>/` 下 `<新组件名>.tsx` + `prompt.md` + `result.png`,目录名即新组件名称。真实组件规范不变:结构、样式、全部交互状态一次给全,全状态陈列,不写死业务文案。
 

@@ -1,6 +1,6 @@
 ---
 name: motion-design
-description: 当 UI 设计需要动画设计时使用——component-wireframe、component-blank、component-upgrade、layout 系列等草稿技能的流程询问「是否需要动画设计」且开发者选择需要时,必须加载本技能;开发者直接要求设计交互动画、过渡效果、出现/消失动效、动效规格时也触发;触发词包括动画、动效、过渡、缓动、转场、微交互、hover 反馈。本技能只产出动画设计决策与规格,不产出独立草稿条目、不创建文件;组件/布局结构产出归 component-* / layout-* 家族技能。
+description: 当 UI 设计需要动画设计时使用——component-draft、component-upgrade、layout 系列等草稿技能的流程询问「是否需要动画设计」且开发者选择需要时,必须加载本技能;开发者直接要求设计交互动画、过渡效果、出现/消失动效、动效规格时也触发;触发词包括动画、动效、过渡、缓动、转场、微交互、hover 反馈。本技能只产出动画设计决策与规格,不产出独立草稿条目、不创建文件;组件/布局结构产出归 component-* / layout-* 家族技能。
 ---
 
 # 动画设计规范(motion-design)

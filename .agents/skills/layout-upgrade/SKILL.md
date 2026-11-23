@@ -1,13 +1,13 @@
 ---
 name: layout-upgrade
-description: 当开发者要对一个已存在的布局条目进行升级、改造或衍生时使用——复制该布局为副本,在副本上修改,完成后作为新布局保存,原条目保持只读;触发语如「把 achievements-layout 升级一下,加个排行榜」「基于 chat-page-layout 出个带历史面板的变体」「这个布局改改另存一个」;触发词包括布局升级、布局变体、改造、另存为新布局。从零新建布局时改用 layout-wireframe(有参考截图/URL)或 layout-blank(无参考,一句话页面用途);本技能的基底固定为 studybuddyui/layouts/ 下已存在条目。修改策略未经开发者选定不动副本,原条目任何文件不得修改,布局未经审阅确认不得归档。
+description: 当开发者要对一个已存在的布局条目进行升级、改造或衍生时使用——复制该布局为副本,在副本上修改,完成后作为新布局保存,原条目保持只读;触发语如「把 achievements-layout 升级一下,加个排行榜」「基于 chat-page-layout 出个带历史面板的变体」「这个布局改改另存一个」;触发词包括布局升级、布局变体、改造、另存为新布局。从零新建布局时改用 layout-draft(有参考截图/URL 或一句话页面用途均可);本技能的基底固定为 studybuddyui/layouts/ 下已存在条目。修改策略未经开发者选定不动副本,原条目任何文件不得修改,布局未经审阅确认不得归档。
 ---
 
 # 布局升级草稿(layout-upgrade)
 
 ## 定位
 
-输入为 `studybuddyui/layouts/` 下一个已存在的布局条目(基底)加一句升级意图,输出为一个新布局条目(副本):复制基底、按选定策略修改副本、归档为新布局。原条目自始至终保持只读——升级永远发生在副本上,这是本技能与直接改布局的本质区别。从零新建走 [layout-wireframe](../layout-wireframe/SKILL.md) 或 [layout-blank](../layout-blank/SKILL.md)。
+输入为 `studybuddyui/layouts/` 下一个已存在的布局条目(基底)加一句升级意图,输出为一个新布局条目(副本):复制基底、按选定策略修改副本、归档为新布局。原条目自始至终保持只读——升级永远发生在副本上,这是本技能与直接改布局的本质区别。从零新建走 [layout-draft](../layout-draft/SKILL.md)。
 
 产物约定与家族技能一致:`studybuddyui/layouts/<新布局名>/` 下 `code.tsx` + `prompt.md` + `result.png`,目录名即新布局名称。布局骨架规范不变:纯白背景、灰色盒子(`#D9D9D9`)表示区域、白色文字标注编号与区域名、禁止具体组件。
 

@@ -10,7 +10,7 @@ sidebar_position: 10
 | --- | --- |
 | ADR（技术选型） | [index](./adr) |
 | 代码目录约定 | [代码目录](./代码目录) |
-| 前端设计规范 | [前端设计规范](./前端设计规范) |
+| 组件划分方法 | [组件划分方法](./组件划分方法) |
 | 编码排版纪律 | [编码排版纪律](./编码排版纪律) |
 | AXY-8-auth（登录注册） | [design](./AXY-8-auth/design) / [tasks](./AXY-8-auth/tasks) / [review](./AXY-8-auth/review) |
 | AXY-22-study-calendar（个人日程日历） | [design](./AXY-22-study-calendar/design) / [tasks](./AXY-22-study-calendar/tasks) / [review](./AXY-22-study-calendar/review) |

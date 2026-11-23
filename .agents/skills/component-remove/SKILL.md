@@ -1,13 +1,13 @@
 ---
 name: component-remove
-description: 当开发者要求删除、移除、下线 studybuddy UI 草稿工作区(studybuddyui/)里的组件条目时使用——如「删掉 event-card」「把测试用的那个组件清了」「这个组件不要了」;触发词包括删除组件、移除组件、清理组件。范围仅限 studybuddyui/(components/<条目> 目录与 src/App.tsx 注册),禁止删除 layouts/、backgrounds/、技能文件、docs、主项目任何文件;仅删除开发者明确指定的条目,未指定时列出现有条目供挑选,删除执行前必须经开发者确认。新建组件用 component-wireframe / component-blank,升级组件用 component-upgrade;删除布局条目用 layout-remove。
+description: 当开发者要求删除、移除、下线 studybuddy UI 草稿工作区(studybuddyui/)里的组件条目时使用——如「删掉 event-card」「把测试用的那个组件清了」「这个组件不要了」;触发词包括删除组件、移除组件、清理组件。范围仅限 studybuddyui/(components/<条目> 目录与 src/App.tsx 注册),禁止删除 layouts/、backgrounds/、技能文件、docs、主项目任何文件;仅删除开发者明确指定的条目,未指定时列出现有条目供挑选,删除执行前必须经开发者确认。新建组件用 component-draft,升级组件用 component-upgrade;删除布局条目用 layout-remove。
 ---
 
 # 删除组件草稿(component-remove)
 
 ## 定位
 
-输入为开发者指定的一个或多个组件条目名,输出为清理后的草稿工作区:条目目录与 `src/App.tsx` 注册一并移除,工作区保持可编译。本技能只做减法,是组件技能家族(`component-wireframe` / `component-blank` / `component-upgrade`)的逆操作;家族产物约定见 [component-wireframe](../component-wireframe/SKILL.md)。
+输入为开发者指定的一个或多个组件条目名,输出为清理后的草稿工作区:条目目录与 `src/App.tsx` 注册一并移除,工作区保持可编译。本技能只做减法,是组件技能家族(`component-draft` / `component-upgrade`)的逆操作;家族产物约定见 [component-draft](../component-draft/SKILL.md)。
 
 ## 硬门禁
 
