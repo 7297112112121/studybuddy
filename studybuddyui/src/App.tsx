@@ -4,6 +4,7 @@ import CreateActivityModal from "../components/create-activity-modal/create-acti
 import ChatPageLayout from "../layouts/chat-page-layout/code";
 import AchievementsLayout from "../layouts/achievements-layout/code";
 import CalendarGridLayout from "../layouts/calendar-grid-layout/code";
+import WorkbenchLayout from "../layouts/workbench-layout/code";
 import MonthCalendar from "../components/month-calendar/month-calendar";
 import EventCard from "../components/event-card/event-card";
 import CategoryFilterList from "../components/category-filter-list/category-filter-list";
@@ -16,6 +17,7 @@ type DraftKey =
   | "chat-page-layout"
   | "achievements-layout"
   | "calendar-grid-layout"
+  | "workbench-layout"
   | "month-calendar"
   | "event-card"
   | "category-filter-list"
@@ -28,6 +30,7 @@ const DRAFTS: { key: DraftKey; label: string; node: React.ReactNode }[] = [
   { key: "chat-page-layout", label: "聊天页布局骨架", node: <ChatPageLayout /> },
   { key: "achievements-layout", label: "成就展示页布局骨架", node: <AchievementsLayout /> },
   { key: "calendar-grid-layout", label: "日程页栅格布局骨架", node: <CalendarGridLayout /> },
+  { key: "workbench-layout", label: "工作台布局骨架", node: <WorkbenchLayout /> },
   { key: "month-calendar", label: "月历日期选择器", node: <MonthCalendar /> },
   { key: "event-card", label: "日程事件卡片", node: <EventCard /> },
   { key: "category-filter-list", label: "分类筛选列表", node: <CategoryFilterList /> },
