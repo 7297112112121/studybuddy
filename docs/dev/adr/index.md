@@ -31,7 +31,6 @@ sidebar_position: 1
 | [0022](ci-secrets) | 2026-11-12 | CI 机密管理：分环境隔离与三层分界（应用机密零过 CI） | 已接受 |
 | [0025](client-data-layer) | 2026-11-23 | 客户端数据层：Route Handler + Server Actions | 已接受 |
 | [0026](ci-path-filtering) | 2026-11-19 | CI 按变更路径裁剪：dorny/paths-filter（PR 层 + push master 层 job 级裁剪，兜底式全跑；修订 0022 白名单条款） | 已接受 |
-| [0028](deepseek-provider-web-search) | 2026-11-19 | LLM 提供方：DeepSeek（deepseek-flash）+ 声明式服务端联网工具，结构化与检索两段式调用（项目首个 AI 特性） | 已接受 |
 | [0029](agentscope) | 2026-11-23 | AI 服务框架：AgentScope 2.0（ReAct 循环/工具技能/长期记忆/多用户隔离内建，DeepSeek 一等支持） | 已接受 |
 | [0030](sse-streaming) | 2026-11-23 | AI 流式链路：SSE 全链（Agent Service 会话流 → Next Route Handler 加工 → 前端打字机；不引入 WebSocket/gRPC） | 已接受 |
 | [0031](ai-sdk-ui) | 2026-11-23 | AI UI 流式渲染：AI SDK（useChat + message parts 生成式 UI，transport 指向自有 Route Handler；不引入第二套聊天组件库） | 已接受 |

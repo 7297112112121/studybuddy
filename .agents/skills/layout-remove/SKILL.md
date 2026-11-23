@@ -1,13 +1,13 @@
 ---
 name: layout-remove
-description: 当开发者要求删除、移除、下线 studybuddy UI 草稿工作区(studybuddyui/)里的布局条目时使用——如「删掉 chat-page-layout」「把日程页那几个布局都删了」「这个布局不要了」;触发词包括删除布局、移除布局、清理布局。范围仅限 studybuddyui/(layouts/<条目> 目录与 src/App.tsx 注册),禁止删除 components/、backgrounds/、技能文件、docs、主项目任何文件;仅删除开发者明确指定的条目,未指定时列出现有条目供挑选,删除执行前必须经开发者确认。新建布局用 layout-wireframe / layout-blank,升级布局用 layout-upgrade。
+description: 当开发者要求删除、移除、下线 studybuddy UI 草稿工作区(studybuddyui/)里的布局条目时使用——如「删掉 chat-page-layout」「把日程页那几个布局都删了」「这个布局不要了」;触发词包括删除布局、移除布局、清理布局。范围仅限 studybuddyui/(layouts/<条目> 目录与 src/App.tsx 注册),禁止删除 components/、backgrounds/、技能文件、docs、主项目任何文件;仅删除开发者明确指定的条目,未指定时列出现有条目供挑选,删除执行前必须经开发者确认。新建布局用 layout-draft,升级布局用 layout-upgrade。
 ---
 
 # 删除布局草稿(layout-remove)
 
 ## 定位
 
-输入为开发者指定的一个或多个布局条目名,输出为清理后的草稿工作区:条目目录与 `src/App.tsx` 注册一并移除,工作区保持可编译。本技能只做减法,是布局技能家族(`layout-wireframe` / `layout-blank` / `layout-upgrade`)的逆操作;四者的产物约定见 [layout-wireframe](../layout-wireframe/SKILL.md)。
+输入为开发者指定的一个或多个布局条目名,输出为清理后的草稿工作区:条目目录与 `src/App.tsx` 注册一并移除,工作区保持可编译。本技能只做减法,是布局技能家族(`layout-draft` / `layout-upgrade`)的逆操作;三者的产物约定见 [layout-draft](../layout-draft/SKILL.md)。
 
 ## 硬门禁
 
