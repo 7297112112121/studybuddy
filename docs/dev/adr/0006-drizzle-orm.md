@@ -21,7 +21,7 @@ description: drizzle-orm + drizzle-kit，SQL 直译心智、轻量运行时、pg
 
 ## 决策
 
-采用 drizzle-orm + drizzle-kit：schema 用 TS 定义，迁移由 drizzle-kit 生成 SQL 文件并纳入版本库评审；pgvector 使用其官方 `vector` 列类型。查询保持 SQL 直译心智；混合检索排序等复杂查询允许直接使用 drizzle 的 `sql` 模板或原生 SQL。schema 作为类型源，向 zod 推导供 Server Function 入参校验复用（消费方经 ADR-0025 由 tRPC procedure 改为 Server Actions，2026-11-13 修订）。
+采用 drizzle-orm + drizzle-kit：schema 用 TS 定义，迁移由 drizzle-kit 生成 SQL 文件并纳入版本库评审；pgvector 使用其官方 `vector` 列类型。查询保持 SQL 直译心智；混合检索排序等复杂查询允许直接使用 drizzle 的 `sql` 模板或原生 SQL。schema 作为类型源，向 zod 推导供 Server Function 入参校验复用（消费方约定见 ADR-0025）。
 
 ## 备选方案
 
@@ -54,7 +54,3 @@ description: drizzle-orm + drizzle-kit，SQL 直译心智、轻量运行时、pg
 ### 风险
 - Drizzle API 仍在快速演进：锁定 minor 版本，升级时通读 changelog 并跑全量回归。
 
-## 相关决策
-
-- [ADR-0005：PostgreSQL 17 + pgvector](./postgresql-pgvector)
-- [ADR-0025：客户端数据层 TanStack Query + Server Actions](./client-data-layer)（zod schema 消费方）

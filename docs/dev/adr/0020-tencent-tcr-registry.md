@@ -66,13 +66,3 @@ description: 镜像读者在哪 registry 就在哪——两台腾讯云国内服
 
 ### 风险
 - TCR 固定密码无自动轮换；季度轮换入回顾清单（ADR-0013 / 0015 同款纪律）。
-
-## 相关决策
-
-- [ADR-0005：PostgreSQL 17 + pgvector](./postgresql-pgvector)
-- [ADR-0013：认证与会话 Better Auth](./better-auth)
-- [ADR-0015：对象存储 SeaweedFS](./seaweedfs)
-- [ADR-0016：部署编排 Docker Compose](./docker-compose)
-- [ADR-0018：CI/CD 流水线 GitHub Actions](./cicd-github-actions)
-- [ADR-0021：安全扫描采用 Trivy + Dependabot](./trivy-dependabot)
-- [ADR-0022：CI 机密管理分环境隔离与三层分界](./ci-secrets)

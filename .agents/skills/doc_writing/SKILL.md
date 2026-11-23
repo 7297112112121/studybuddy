@@ -22,7 +22,7 @@ description: 编写或修改仓库内任何 md/mdx 文档一律先读本技能�
 ## MDX 编译纪律
 
 - 行内代码包住一切含 `{`、`<`、`>` 的片段;段落不以 `import` 开头;
-- 站内链接用相对路径;ADR 互链写无编号 slug(numberPrefixParser 剥前缀);
+- 站内链接用相对路径;
 - `docs/` 内改动,提交前 `cd website && npm run build` 验证(门禁 `onBrokenLinks: 'throw'`)。
 
 ## 自查表
@@ -33,7 +33,7 @@ description: 编写或修改仓库内任何 md/mdx 文档一律先读本技能�
 - [ ] 无「不再/不是……而是/是」转折、无变更说明、无废弃标记
 - [ ] 改动条目读起来像首次写就
 - [ ] 含 `{}`/`<>` 片段已包行内代码;无段落以 `import` 开头
-- [ ] 站内链接为相对路径;ADR 链接为无编号 slug
+- [ ] 站内链接为相对路径
 - [ ] `cd website && npm run build` 通过(docs/ 内改动时)
 
 ## 合理化对照表

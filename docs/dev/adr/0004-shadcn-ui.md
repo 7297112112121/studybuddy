@@ -55,7 +55,3 @@ description: 基于 Radix UI 原语与 Tailwind 的 shadcn/ui，组件源码进�
 ### 风险
 - CLI 复制进来的代码默认被视为「正确」，反而少被 review——约定：引入新组件的提交单独成 commit，便于后续 diff 定位。
 
-## 相关决策
-
-- [ADR-0003：Tailwind CSS 4](./tailwindcss-4)
-- [ADR-0001：Next.js 16 全栈框架](./nextjs-fullstack-framework)

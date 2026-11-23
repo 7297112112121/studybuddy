@@ -53,7 +53,4 @@ description: Tailwind CSS 4 原子类 + @theme inline 设计 token 作为唯一�
 ### 风险
 - 自由度带来样式蔓延：评审中约束「新增颜色/间距/圆角必须先进 `@theme` 变量」。
 
-## 相关决策
 
-- [ADR-0004：组件基础采用 shadcn/ui](./shadcn-ui)
-- [ADR-0011：ESLint + Prettier](./eslint-prettier)

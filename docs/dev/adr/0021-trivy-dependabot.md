@@ -60,12 +60,3 @@ description: Trivy（锁定 0.76.2）以 --exit-code 1 阻断 HIGH/CRITICAL，.t
 ### 风险
 - **第三方 action 供应链**：Trivy 生态 2026 年发生过"supply chain was briefly compromised"的官方通告（OSV GO-2026-4919 / GHSA-69fq-xp46-6x23，修复于 0.70.0）——全部 action 钉完整 commit SHA（纪律见 ADR-0022）。
 - **Trivy 自身通告**：OSV 收录 10 条（均含修复版本，当前 0.76.2 已全部覆盖）；扫描器是 runner 内短生命周期进程，锁版本 + 季度升级可控。
-
-## 相关决策
-
-- [ADR-0013：认证与会话 Better Auth](./better-auth)
-- [ADR-0015：对象存储 SeaweedFS](./seaweedfs)
-- [ADR-0016：部署编排 Docker Compose](./docker-compose)
-- [ADR-0018：CI/CD 流水线 GitHub Actions](./cicd-github-actions)
-- [ADR-0020：镜像仓库采用腾讯云 TCR 个人版](./tencent-tcr-registry)
-- [ADR-0022：CI 机密管理分环境隔离与三层分界](./ci-secrets)

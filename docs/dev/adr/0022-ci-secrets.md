@@ -59,11 +59,3 @@ CI 机密管理采用**分环境隔离 + 三层分界**，核心原则是**应�
 ### 风险
 - **fork PR 恶意触发的作业**：PR 校验作业不引用任何 environment secret——即使被恶意触发，机密接触面为零。
 - TCR 固定密码与部署 SSH key 无自动轮换；季度轮换入回顾清单。机密清单短（一个 registry 凭证 + 每台一把 key），轮换操作量可控。
-
-## 相关决策
-
-- [ADR-0016：部署编排 Docker Compose](./docker-compose)
-- [ADR-0018：CI/CD 流水线 GitHub Actions](./cicd-github-actions)
-- [ADR-0026：CI 按变更路径裁剪（修订本 ADR 白名单条款）](./ci-path-filtering)
-- [ADR-0020：镜像仓库采用腾讯云 TCR 个人版](./tencent-tcr-registry)
-- [ADR-0021：安全扫描采用 Trivy + Dependabot](./trivy-dependabot)

@@ -75,14 +75,3 @@ CI/CD 流水线采用 **GitHub Actions**（仓库原生，公共仓库免费）�
 ### 风险
 - **GitHub 单点**：Actions 故障 = 部署通道中断；runbook 保留服务器端手工 `pull && up -d` 步骤（compose 文件即部署文档，ADR-0016 的优势）。
 - **fork PR 恶意触发的作业**：PR 校验作业不引用任何 environment secret、不推镜像不部署——即使被恶意触发，接触面为零（机密分界见 ADR-0022）。
-
-## 相关决策
-
-- [ADR-0012：单元测试 Vitest](./vitest)
-- [ADR-0015：对象存储 SeaweedFS](./seaweedfs)
-- [ADR-0016：部署编排 Docker Compose](./docker-compose)
-- [ADR-0017：E2E 测试 Playwright](./playwright-e2e)
-- [ADR-0020：镜像仓库采用腾讯云 TCR 个人版](./tencent-tcr-registry)
-- [ADR-0021：安全扫描采用 Trivy + Dependabot](./trivy-dependabot)
-- [ADR-0022：CI 机密管理分环境隔离与三层分界](./ci-secrets)
-- [ADR-0026：CI 按变更路径裁剪 dorny/paths-filter](./ci-path-filtering)
