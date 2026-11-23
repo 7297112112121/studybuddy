@@ -32,7 +32,7 @@ AI 能力服务采用 AgentScope 2.0：
 
 1. 推理循环：用 ReActAgent 承载 ReAct 循环与工具执行，不自行实现推理循环；
 2. 工具与技能：Toolkit 注册工具（Python 函数与 MCP），技能以运行时可加载能力包接入；
-3. 记忆：会话上下文与长期记忆由 Context 块承载，向量记忆对接仓库自有 PostgreSQL pgvector，不引入独立记忆服务；
+3. 记忆：会话上下文与长期记忆由 Context 块与内建记忆中间件承载，采用 Mem0Middleware（mem0 OSS，pgvector 向量库与 history 落自有 PostgreSQL），不引入独立记忆服务；
 4. 多用户隔离：启用框架的用户/会话级隔离，用户身份与 Better Auth 会话对接，AI 侧不另建身份体系；
 5. 模型接入：一律经 AgentScope Credential 配置（api_key/base_url），提供方与模型可配置切换，禁止在代码中硬编码提供方；
 6. 部署：python AI 服务与 Next.js 应用进同一 Docker Compose 编排，仅内网可达；
@@ -79,5 +79,5 @@ AI 能力服务采用 AgentScope 2.0：
 
 ### 风险
 
-- Context 记忆与 pgvector 对接的成熟度需在实现期以真实场景验证；若记忆能力不足，以新 ADR 重新评估独立记忆方案。
+- mem0 记忆抽取与检索的质量需在实现期以真实场景验证；若记忆能力不足，以新 ADR 重新评估记忆方案。
 - 若未来进入中规模（几十并发以上），框架多租户后端的分布式部署能力需重新验证。

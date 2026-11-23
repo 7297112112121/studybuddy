@@ -10,6 +10,7 @@ import EventCard from "../components/event-card/event-card";
 import CategoryFilterList from "../components/category-filter-list/category-filter-list";
 import SearchInput from "../components/search-input/search-input";
 import SearchInputWithButton from "../components/search-input-with-button/search-input-with-button";
+import ChatPanel from "../components/chat-panel/chat-panel";
 
 type DraftKey =
   | "week-view-calendar"
@@ -22,7 +23,8 @@ type DraftKey =
   | "event-card"
   | "category-filter-list"
   | "search-input"
-  | "search-input-with-button";
+  | "search-input-with-button"
+  | "chat-panel";
 
 const DRAFTS: { key: DraftKey; label: string; node: React.ReactNode }[] = [
   { key: "week-view-calendar", label: "周视图日程日历", node: <WeekViewCalendar /> },
@@ -36,6 +38,7 @@ const DRAFTS: { key: DraftKey; label: string; node: React.ReactNode }[] = [
   { key: "category-filter-list", label: "分类筛选列表", node: <CategoryFilterList /> },
   { key: "search-input", label: "搜索输入框", node: <SearchInput /> },
   { key: "search-input-with-button", label: "带按钮搜索输入框", node: <SearchInputWithButton /> },
+  { key: "chat-panel", label: "聊天伙伴面板", node: <ChatPanel /> },
 ];
 
 export default function App() {
