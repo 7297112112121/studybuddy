@@ -62,3 +62,6 @@ docs/dev/**/evidence/
 # 技能评测工作区(本地迭代基线,不入库)
 .agents/skills/dev-architecture-workspace/
 .agents/skills/dev-plan-impl-workspace/
+
+# 临时工作区（调研克隆/一次性产物），永不入库
+tmp/
