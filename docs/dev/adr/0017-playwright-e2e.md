@@ -16,7 +16,7 @@ description: Playwright（@playwright/test 1.65）承担关键用户旅程的端
 ## 背景
 
 - ADR-0012 定了 Vitest 单测，但留了明确盲区：**异步服务端组件与端到端链路不在单测范围**。Next.js 16 官方测试指南对这一盲区有直接表态："Since `async` Server Components are new to the React ecosystem, some tools do not fully support them... we recommend using **End-to-End Testing** over Unit Testing for `async` components"（仓库内 node_modules/next/dist/docs/01-app/02-guides/testing/index.md）。本 ADR 就是那篇里"后续以 Playwright E2E 的新 ADR 补位"承诺的兑现。
-- 待验证的用户旅程横跨多个已定决策，都是多服务协作链路，单测天然够不到：Better Auth 登录与会话（ADR-0013）、资料上传预签名直传（ADR-0015）、AI 对话流式输出（ADR-0014）、tRPC 业务流程（ADR-0008，后被 ADR-0025 改为 Server Actions + TanStack Query）。
+- 待验证的用户旅程横跨多个已定决策，都是多服务协作链路，单测天然够不到：Better Auth 登录与会话（ADR-0013）、资料上传预签名直传（ADR-0015）、AI 对话流式输出、业务突变与轮询流程（ADR-0025）。
 - 本项目 `next.config.ts` 已启用 `cacheComponents: true` 与 `partialPrefetching: true`，导航与缓存语义和旧版 Next.js 不同；Next.js 16 为此提供了配套测试工具 `@next/playwright`（`instant()` helper，标注 "Requires: Cache Components"），官方示例 `with-playwright` 随 create-next-app 分发。
 - 团队规模小：E2E 框架必须一条命令启动、CI 无需任何编排服务、失败可回放定位。
 
@@ -78,13 +78,3 @@ E2E 测试采用 Playwright：核心包 `@playwright/test`（v1.65，Apache-2.0�
 - **@next/playwright 标注 Experimental**（npm 自述 "This API is not yet stable"）：锁 `next` 同版本，随 Next.js 升级联动，不独立升级。
 - **cacheComponents 交互语义漂移**：partial prefetching 下的导航断言与旧习惯不同，测试编写须对照官方 instant-navigation 指南，避免误用普通断言测即时导航。
 - 测试环境保真度：E2E 对 `build && start` 产物跑，依赖 PG / Redis / SeaweedFS 的测试实例编排——本地用测试容器，CI 由 ADR-0018 以 runner 内临时 Compose 栈拉起（该挂账已由 ADR-0018 闭合），编排细节见其决策。
-
-## 相关决策
-
-- [ADR-0001：全栈框架 Next.js 16](./nextjs-fullstack-framework)
-- [ADR-0012：单元测试 Vitest](./vitest)
-- [ADR-0013：认证与会话 Better Auth](./better-auth)
-- [ADR-0014：LLM 接入层 Vercel AI SDK](./vercel-ai-sdk)
-- [ADR-0015：对象存储 SeaweedFS](./seaweedfs)
-- [ADR-0016：部署编排 Docker Compose](./docker-compose)
-- [ADR-0018：CI/CD GitHub Actions](./cicd-github-actions)

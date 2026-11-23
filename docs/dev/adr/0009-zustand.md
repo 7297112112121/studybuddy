@@ -16,7 +16,7 @@ description: zustand 管理会话内 UI 状态；服务端数据一律不进 zus
 ## 背景
 
 - 客户端存在跨组件的会话内状态：AI 对话输入态与草稿、学习计时器、面板开合等高频交互状态。
-- 服务端数据的来源已定（RSC 直取或 Server Actions + TanStack Query，见 ADR-0025；原为 tRPC + TanStack Query，随 ADR-0008 被取代而修订），客户端状态库不再承担服务端缓存职责——这决定了状态库只需管「UI 态」，规模有限。
+- 服务端数据的来源已定（RSC 直取、Server Actions 或 Route Handler，见 ADR-0025），客户端状态库不再承担服务端缓存职责——这决定了状态库只需管「UI 态」，规模有限。
 
 ## 决策
 
@@ -51,7 +51,3 @@ description: zustand 管理会话内 UI 状态；服务端数据一律不进 zus
 
 ### 风险
 - 「什么都能塞进 store」的蔓延：评审清单加入两条——服务端数据禁止入 zustand；持久偏好不入 store。
-
-## 相关决策
-
-- [ADR-0025：客户端数据层 TanStack Query + Server Actions](./client-data-layer)

@@ -49,7 +49,3 @@ description: 全部路由使用 App Router，不混用 Pages Router；请求级�
 ### 风险
 - `proxy` 仅支持 Node.js runtime，迁移社区 middleware 生态方案时需确认其 runtime 假设。
 
-## 相关决策
-
-- [ADR-0001：Next.js 16 全栈框架](./nextjs-fullstack-framework)
-- [ADR-0010：国际化方案](./i18n)

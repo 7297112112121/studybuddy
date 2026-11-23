@@ -57,9 +57,3 @@ description: Redis 承担限流、AI 会话上下文缓存与轻量队列，只�
 ### 风险
 - 最大风险是被当作持久存储误用（纪律见决策）；BullMQ 任务需要失败重试与死信处理的约定。
 - AI 会话上下文缓存需设计 key 过期与容量上限，防止长会话撑爆内存。
-
-## 相关决策
-
-- [ADR-0001：Next.js 16 全栈框架](./nextjs-fullstack-framework)
-- [ADR-0005：PostgreSQL 17 + pgvector](./postgresql-pgvector)
-- [ADR-0008：tRPC API 层](./trpc)

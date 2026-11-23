@@ -57,8 +57,3 @@ description: Vitest + Testing Library 承担单元与组件测试；异步服务
 ### 风险
 - mock `next/*` 模块（navigation、cache 等）的样板会随 Next 升级需要维护：集中在 `tests/mocks` 管理，升级时只改一处。
 
-## 相关决策
-
-- [ADR-0011：ESLint + Prettier](./eslint-prettier)
-- [ADR-0025：客户端数据层 TanStack Query + Server Actions](./client-data-layer)
-- [ADR-0017：E2E 测试 Playwright](./playwright-e2e)

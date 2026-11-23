@@ -57,9 +57,3 @@ description: 为什么选择 Next.js 16（App Router + Turbopack + cacheComponen
 ### 风险
 - `cacheComponents` 属于较新的稳定特性，minor 版本升级可能出现行为修正，升级需读 release note 并回归核心页面。
 - 自托管需自行承担运维，Postgres（ADR-0005）与 Redis（ADR-0007）一并纳入 compose 编排。
-
-## 相关决策
-
-- [ADR-0002：路由采用 App Router](./app-router)
-- [ADR-0005：PostgreSQL 17 + pgvector](./postgresql-pgvector)
-- [ADR-0008：tRPC API 层](./trpc)

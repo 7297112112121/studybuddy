@@ -52,7 +52,3 @@ ESLint 9 flat config（`eslint-config-next` + typescript-eslint）负责代码�
 ### 风险
 - 未装编辑器插件的贡献者产生格式噪音：以 lint-staged 或 CI 检查兜底（工程化细节后续补充 ADR）。
 
-## 相关决策
-
-- [ADR-0003：Tailwind CSS 4](./tailwindcss-4)
-- [ADR-0012：Vitest](./vitest)

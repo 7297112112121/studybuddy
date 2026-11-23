@@ -54,9 +54,3 @@ PostgreSQL 17 作为唯一持久化主库；启用 pgvector 扩展承担向量�
 
 ### 风险
 - 团队 PG 调优经验有限：上线前建立慢查询日志与连接池基线（框架层池化起步），避免连接数事故。
-
-## 相关决策
-
-- [ADR-0006：Drizzle ORM](./drizzle-orm)
-- [ADR-0007：Redis 缓存](./redis)
-- [ADR-0008：tRPC API 层](./trpc)
