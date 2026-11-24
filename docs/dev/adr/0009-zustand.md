@@ -1,6 +1,6 @@
 ---
 title: ADR-0009：客户端状态管理采用 zustand
-description: zustand 管理会话内 UI 状态；服务端数据一律不进 zustand
+description: zustand 承载会话内 UI 状态与服务端数据客户端持有层；写入经统一接口，组件不绕过 store 直连
 ---
 
 # ADR-0009：客户端状态管理采用 zustand
@@ -16,11 +16,11 @@ description: zustand 管理会话内 UI 状态；服务端数据一律不进 zus
 ## 背景
 
 - 客户端存在跨组件的会话内状态：AI 对话输入态与草稿、学习计时器、面板开合等高频交互状态。
-- 服务端数据的来源已定（RSC 直取、Server Actions 或 Route Handler，见 ADR-0025），客户端状态库不再承担服务端缓存职责——这决定了状态库只需管「UI 态」，规模有限。
+- 服务端数据的客户端持有层已定：store 经统一 HTTP 接口读写服务端数据并承担失效编排，状态库同时承载 UI 态与服务端数据，失效纪律是 store 层的长期负担。
 
 ## 决策
 
-采用 zustand（v5）管理客户端会话内状态：按业务域拆分 store（切片模式）；选择器订阅 + shallow 比较作为性能纪律；跨页面持久偏好（主题等）用 URL 或 localStorage 而非 store。**服务端数据一律不写入 zustand。**
+采用 zustand（v5）管理客户端会话内状态：按业务域拆分 store（切片模式）；选择器订阅 + shallow 比较作为性能纪律；跨页面持久偏好（主题等）用 URL 或 localStorage 而非 store。**服务端数据由 zustand 承载客户端持有层：store 经统一接口读写服务端数据，组件不绕过 store 直连。**
 
 ## 备选方案
 
@@ -50,4 +50,4 @@ description: zustand 管理会话内 UI 状态；服务端数据一律不进 zus
 - devtools 时序调试需手动接入（redux-devtools 中间件）。
 
 ### 风险
-- 「什么都能塞进 store」的蔓延：评审清单加入两条——服务端数据禁止入 zustand；持久偏好不入 store。
+- 「什么都能塞进 store」的蔓延：评审清单加入两条——store 写入一律经统一接口读写动作，禁止组件直连服务端数据；持久偏好不入 store。

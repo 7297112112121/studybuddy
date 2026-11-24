@@ -29,12 +29,14 @@ sidebar_position: 1
 | [0020](tencent-tcr-registry) | 2026-11-12 | 镜像仓库：腾讯云 TCR 个人版（tag = 短 SHA + semver） | 已接受 |
 | [0021](trivy-dependabot) | 2026-11-12 | 安全扫描：Trivy 镜像门禁 + Dependabot 依赖监听（每周 scheduled 复扫） | 已接受 |
 | [0022](ci-secrets) | 2026-11-12 | CI 机密管理：分环境隔离与三层分界（应用机密零过 CI） | 已接受 |
-| [0025](client-data-layer) | 2026-11-23 | 客户端数据层：Route Handler + Server Actions | 已接受 |
+| [0025](client-data-layer) | 2026-11-23 | 客户端数据层：Route Handler + Server Actions | 已取代（2026） |
 | [0026](ci-path-filtering) | 2026-11-19 | CI 按变更路径裁剪：dorny/paths-filter（PR 层 + push master 层 job 级裁剪，兜底式全跑；修订 0022 白名单条款） | 已接受 |
 | [0029](agentscope) | 2026-11-23 | AI 服务框架：AgentScope 2.0（ReAct 循环/工具技能/长期记忆/多用户隔离内建，DeepSeek 一等支持） | 已接受 |
 | [0030](sse-streaming) | 2026-11-23 | AI 流式链路：SSE 全链（Agent Service 会话流 → Next Route Handler 加工 → 前端打字机；不引入 WebSocket/gRPC） | 已接受 |
 | [0031](ai-sdk-ui) | 2026-11-23 | AI UI 流式渲染：AI SDK（useChat + message parts 生成式 UI，transport 指向自有 Route Handler；不引入第二套聊天组件库） | 已接受 |
 | [0032](agent-memory-mem0-pgvector) | 2026-11-23 | AI 长期记忆：Mem0 OSS + pgvector 落自有 PostgreSQL（条款级修订：修订记忆方案条款——mem0 后端替代向量记忆自对接预期） | 已接受 |
+| [0033](store-centric-data-layer) | 2026-11-24 | 客户端数据层：store 居中 + 统一 HTTP 接口（取代 0025；修订 0009 条款——服务端数据入 store） | 已接受 |
+| [0034](ai-persistence-boundary) | 2026-11-24 | AI 服务持久化边界：python 服务无持久层，持久化归 Next 业务逻辑层（修订 0029/0032 条款） | 已接受 |
 
 ## 现行技术栈速查
 
@@ -47,7 +49,7 @@ sidebar_position: 1
 | [0005](postgresql-pgvector) | PostgreSQL 17 + pgvector | 不引入独立向量库，向量与业务数据同库同事务 | 检索规模逼近百万级时 |
 | [0006](drizzle-orm) | Drizzle ORM | 迁移经 drizzle-kit 生成 SQL 入库评审，禁手改 | rename 等破坏性变更需核对 SQL 时 |
 | [0007](redis) | Redis 7 | 只存可重建 / 可过期数据，持久化事实以 PG 为准 | 涉队列、过期或可否丢失的判断时 |
-| [0009](zustand) | zustand v5 | 服务端数据不进 store，持久偏好走 URL / localStorage | 拆分 store 切片或高频状态时 |
+| [0009](zustand) | zustand v5 | store 承载 UI 态与服务端数据客户端持有层，写入经统一接口；持久偏好走 URL / localStorage | 拆分 store 切片或处理失效编排时 |
 | [0010](i18n) | next-intl | 单语言无路由前缀，缓存键必须含语言维度防串语言 | 需迁 `[lang]` 前缀或升级 Next 时 |
 | [0011](eslint-prettier) | ESLint + Prettier | 格式全归 Prettier，ESLint 关格式类规则，CI 分步检查 | 引新 lint 工具或规则冲突时 |
 | [0012](vitest) | Vitest | 异步 Server Components 不做单测，留 E2E 补位 | mock next/* 或测 RSC 时 |
@@ -60,8 +62,8 @@ sidebar_position: 1
 | [0021](trivy-dependabot) | Trivy + Dependabot | 推送前 Trivy 阻断 HIGH/CRITICAL，豁免须注明原因 | 需豁免漏洞或改扫描面时 |
 | [0022](ci-secrets) | CI 机密管理 | 应用运行时机密零过 CI 只存服务器；action 钉完整 SHA；个人组织 action 例外须显式 ADR 评审 | 新增 CI 机密或引第三方 action 时 |
 | [0026](ci-path-filtering) | dorny/paths-filter | PR 层与 push master 层裁剪；未命中显式跳过清单一律全跑（deploy 层跳过仅限镜像产物无差异清单），filter 与 .github/** 变更强制全跑 | 改 CI 触发面、新增顶层目录或升级该 action 时 |
-| [0025](client-data-layer) | Route Handler + Server Actions | 错误经判别联合返回不抛裸异常；首屏数据走 RSC 直读；客户端查询与轮询走 Route Handler | 需乐观更新编排、客户端缓存/去重或对 Server Actions 串行分发有疑虑时 |
+| [0033](store-centric-data-layer) | store 居中数据层 | 业务组件只订阅 store，全部读写经统一接口（自写 Route Handler）进出，RSC 不直读服务层；错误经判别联合返回不抛裸异常；不引入 TanStack Query/SWR | 对接新业务域读写、处理 store 失效编排或评估客户端缓存库时 |
 | [0029](agentscope) | AgentScope 2.0 | 模型接入一律经 Credential 配置切换，禁止代码硬编码提供方；版本钉 2.x minor，跨 minor 升级先核对 breaking change；用户隔离对接 Better Auth 会话，AI 侧不另建身份体系 | 启用新 Toolkit/Context 能力、更换记忆中间件或跨 minor 升级时 |
 | [0030](sse-streaming) | SSE 全链 | python 侧用 Agent Service 会话事件流不自建协议；Next Route Handler 关闭代理缓冲；用户输入走普通 POST 不经流通道；双向实时需求出现时另立 ADR 不改造本通道 | 调通中转层缓冲/背压、前端重连续流或评估实时通道时 |
 | [0031](ai-sdk-ui) | AI SDK | AI SDK 代码以随包安装、版本完全匹配的文档与源码为真源，禁止凭训练记忆书写；transport 指向自有 Route Handler，不用自带服务端实现；版本钉 minor，major 升级逐次评估；不引入第二套聊天组件库 | 写 AI SDK 代码、升级 major 或新增消息部件类型时 |
-| [0032](agent-memory-mem0-pgvector) | AgentScope 记忆：Mem0 OSS + pgvector | 记忆经内建 Mem0Middleware 承载 mem0 OSS AsyncMemory，vector store 与 history 落自有 PostgreSQL pgvector；不用托管平台，不引 ReMe/文件式与独立向量库；embedding 用智谱 Embedding-3（经 OpenAI 兼容端点，凭据走环境变量）；mem0 表结构自管不进业务迁移体系 | 记忆抽取/检索质量不足或 mem0 依赖升级时 |
+| [0032](agent-memory-mem0-pgvector) | AgentScope 记忆：Mem0 OSS | 记忆经内建 Mem0Middleware 承载 mem0 OSS 计算引擎，向量与历史存取经 Next 内网 API 落自有 PostgreSQL（python 无持久层）；不用托管平台，不引 ReMe/文件式与独立向量库；embedding 用智谱 Embedding-3（经 OpenAI 兼容端点，凭据走环境变量） | 记忆抽取/检索质量不足、存储适配层覆盖面存疑或 mem0 依赖升级时 |

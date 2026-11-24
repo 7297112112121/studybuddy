@@ -26,10 +26,10 @@ description: AI 长期记忆用 AgentScope 内建 Mem0Middleware 承载 mem0 OSS
 AI 长期记忆采用内建 Mem0Middleware 承载 mem0 OSS（AsyncMemory），向量与历史落自有 PostgreSQL：
 
 1. 记忆中间件经服务工厂的 extra_agent_middlewares 挂载，后端用 mem0 OSS 内嵌库 AsyncMemory，不使用 mem0 托管平台客户端；
-2. mem0_config 中 vector_store 用 pgvector provider 落自有 PostgreSQL，history DB 落同实例 PostgreSQL；llm 槽位绑定 DeepSeek 会话模型适配器，embedder 槽位绑定智谱 Embedding-3——经框架 OpenAI 兼容 embedding 模型类承载（凭据 base_url 指向智谱端点，模型名 embedding-3），不为此自写模型适配器；
+2. mem0_config 的 vector store 与 history 后端以 Next 内网 API 为存取通道（存储适配层由 Next 侧实现），记忆数据最终落自有 PostgreSQL pgvector；llm 槽位绑定 DeepSeek 会话模型适配器，embedder 槽位绑定智谱 Embedding-3——经框架 OpenAI 兼容 embedding 模型类承载（凭据 base_url 指向智谱端点，模型名 embedding-3），不为此自写模型适配器；
 3. 不使用 AgenticMemory 与 ReMe 中间件，不自建记忆中间件，不引入 mem0 之外的独立向量库与向量服务；
 4. embedding 凭据经环境变量注入 python 服务，不在代码中硬编码；
-5. mem0 自管其记忆表结构（不进业务 schema 迁移体系），记忆数据可 SQL 查询、随 PostgreSQL 备份体系覆盖；
+5. 记忆数据可 SQL 查询、随 PostgreSQL 备份体系覆盖；记忆表结构归属（mem0 自管或进业务迁移体系）由承载 AI 会话能力的特性设计裁定；
 6. mem0 依赖钉住具体 minor 版本，升级前核对其 breaking change；当记忆抽取/检索质量不足以支撑「隔天主动续上」的产品验收时，以新 ADR 重新评估记忆方案。
 
 ## 备选方案
@@ -57,12 +57,12 @@ AI 长期记忆采用内建 Mem0Middleware 承载 mem0 OSS（AsyncMemory），�
 ### 正面
 
 - 记忆向量与历史落自有 PostgreSQL：多副本部署天然一致，可 SQL 查询，备份随数据库体系覆盖，与「向量与业务数据同库」的数据库纪律同向。
-- AgentScope 一等内建中间件 + mem0 官方 pgvector 后端，零自建记忆代码。
+- AgentScope 一等内建中间件承载 mem0 记忆计算，计算侧零自建；存取适配层单点归口 Next。
 
 ### 负面
 
 - 新增 mem0 python 依赖与智谱 embedding 密钥两个供给面。
-- mem0 记忆表结构由其自管，升级随 mem0 版本演进，不进自有迁移评审体系。
+- 记忆存取经 Next 内网 API 适配层，属自维护代码；表结构演进随 mem0 版本与适配层共同演进。
 - 记忆抽取/检索质量取决于 LLM 与 embedding 模型效果，调优面在 mem0 配置层。
 
 ### 风险
