@@ -7,7 +7,7 @@ description: 服务端组件直读服务层；突变走 Server Actions，客户�
 
 ## 状态
 
-已接受（Accepted）
+已取代（Superseded）
 
 ## 日期
 
