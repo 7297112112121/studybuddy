@@ -1,8 +1,7 @@
 /** 单条日历条目端点:改(PUT)与删(DELETE)共用同一契约切面。 */
 import { z } from "zod";
 
-import { getCurrentSession } from "@/auth";
-import { respondWith, withApiContract } from "@/common/api";
+import { respondWith, withApiContract } from "@/app/api/contract";
 import { deleteEntry, updateEntry } from "@/modules/calendar/service";
 import { calendarEntryInputSchema } from "@/modules/calendar/validators";
 
@@ -14,7 +13,6 @@ export async function PUT(
   context: RouteContext,
 ): Promise<Response> {
   const { id } = await context.params;
-  const session = await getCurrentSession();
   let body: unknown = null;
   try {
     body = await request.json();
@@ -22,7 +20,6 @@ export async function PUT(
     body = null;
   }
   const result = await withApiContract(
-    session,
     body,
     calendarEntryInputSchema,
     (userId, input) => updateEntry(userId, id, input),
@@ -36,8 +33,7 @@ export async function DELETE(
   context: RouteContext,
 ): Promise<Response> {
   const { id } = await context.params;
-  const session = await getCurrentSession();
-  const result = await withApiContract(session, undefined, z.any(), (userId) =>
+  const result = await withApiContract(undefined, z.any(), (userId) =>
     deleteEntry(userId, id),
   );
   return respondWith(result);
