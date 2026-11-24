@@ -1,15 +1,14 @@
 /**
- * calendar 读写链路集成测试（AXY-22 Task 3，真实 Postgres）。
- *
- * 覆盖 design「契约」表 queries/service 行的错误情形与 proposal R4/R5/R6/R7：
- * 造号直插 user 行（不经 auth service，Zod/密码哈希与日历域无关）。
- * 断言值逐字取自 tasks.md Task 3「失败测试」行。
+ * calendar 读写链路集成测试(真实 Postgres):覆盖写路径正向/越权/历史日期
+ * 与读路径区间、隔离、排序。造号直插 user 行(不经 auth service,
+ * Zod/密码哈希与日历域无关)。
  */
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db/client";
 import { user } from "@/db/schema";
+import { API_ERROR } from "@/common/error";
 import {
   createEntry,
   deleteEntry,
@@ -76,7 +75,7 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
     expect(rowsB.map((r) => r.title)).toEqual(["乙的条目"]);
   });
 
-  it("R7 越权写：以乙 userId 调 updateEntry/deleteEntry（甲的 entryId）→ false 且甲条目原样", async () => {
+  it("越权写：以乙 userId 调 updateEntry/deleteEntry（甲的 entryId）→ 抛未找到(NOT_FOUND) 且甲条目原样", async () => {
     const [userA, userB] = await Promise.all([
       makeUser("xw-a"),
       makeUser("xw-b"),
@@ -84,14 +83,12 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
     await createEntry(userA, input("2026-11-17", "甲的条目", "14:00", "15:30"));
     const entryId = (await listMonthEntries(userA, 2026, 11))[0].id;
 
-    expect(
-      await updateEntry(
-        userB,
-        entryId,
-        input("2026-11-17", "乙的篡改", null, null),
-      ),
-    ).toBe(false);
-    expect(await deleteEntry(userB, entryId)).toBe(false);
+    await expect(
+      updateEntry(userB, entryId, input("2026-11-17", "乙的篡改", null, null)),
+    ).rejects.toMatchObject({ code: API_ERROR.NOT_FOUND });
+    await expect(deleteEntry(userB, entryId)).rejects.toMatchObject({
+      code: API_ERROR.NOT_FOUND,
+    });
 
     const rowsA = await listMonthEntries(userA, 2026, 11);
     expect(rowsA).toHaveLength(1);
@@ -103,7 +100,7 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
     });
   });
 
-  it("R5 过去日期：entryDate '2026-01-01' 可写可查", async () => {
+  it("过去日期：entryDate '2026-01-01' 可写可查", async () => {
     const userId = await makeUser("past");
     await createEntry(userId, input("2026-01-01", "元旦补记", null, null));
 
@@ -144,7 +141,7 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
     expect(dec.map((r) => r.title)).toEqual(["次月初"]);
   });
 
-  it("updateEntry 正向路径：命中本人条目 → true 且库行变更", async () => {
+  it("updateEntry 正向路径：命中本人条目 → 正常完成且库行变更", async () => {
     const userId = await makeUser("upd");
     await createEntry(
       userId,
@@ -152,13 +149,11 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
     );
     const entryId = (await listMonthEntries(userId, 2026, 11))[0].id;
 
-    expect(
-      await updateEntry(
-        userId,
-        entryId,
-        input("2026-11-18", "新标题", "09:00", "10:00", "新内容"),
-      ),
-    ).toBe(true);
+    await updateEntry(
+      userId,
+      entryId,
+      input("2026-11-18", "新标题", "09:00", "10:00", "新内容"),
+    );
 
     const rows = await listMonthEntries(userId, 2026, 11);
     expect(rows).toHaveLength(1);
@@ -172,12 +167,12 @@ describe("calendar 读写链路（tests/integration/calendar/service）", () => 
     });
   });
 
-  it("deleteEntry 正向路径：命中本人条目 → true 且行消失", async () => {
+  it("deleteEntry 正向路径：命中本人条目 → 正常完成且行消失", async () => {
     const userId = await makeUser("del");
     await createEntry(userId, input("2026-11-17", "待删条目", null, null));
     const entryId = (await listMonthEntries(userId, 2026, 11))[0].id;
 
-    expect(await deleteEntry(userId, entryId)).toBe(true);
+    await deleteEntry(userId, entryId);
     expect(await listMonthEntries(userId, 2026, 11)).toHaveLength(0);
     const left = await db
       .select({ id: user.id })

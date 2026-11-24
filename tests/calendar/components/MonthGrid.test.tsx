@@ -8,7 +8,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import MonthGrid from "@/modules/calendar/components/MonthGrid";
+import MonthGrid from "@/features/calendar/components/MonthGrid";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 
 const entries = [

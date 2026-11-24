@@ -2,10 +2,10 @@
  * 文件作用:日历客户端组件的展示推导纯函数与客户端消费类型(仅客户端消费)。
  *
  */
-import { formatUtcDate, MS_PER_DAY } from "@/lib/date";
+import { formatUtcDate, MS_PER_DAY } from "@/common/date";
 
-import { TIME_HHMM_RE } from "./validators";
-import type { CalendarEntryView } from "./queries";
+import { TIME_HHMM_RE } from "@/modules/calendar/validators";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 /** 作用:构建 6 行 × 7 列月网格,周一为每周首日,含邻月补位格(inMonth 为 false)。 */
 export function buildMonthGrid(
@@ -32,14 +32,6 @@ export function buildMonthGrid(
 }
 
 export type MonthCell = { date: string; inMonth: boolean; isToday: boolean };
-
-export type WeekdayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-
-export type WeekDay = {
-  date: string;
-  weekdayKey: WeekdayKey;
-  isToday: boolean;
-};
 
 /** 作用:"HH:MM" 换算为当日分钟数 0–1439(非法输入抛 RangeError,仅内部可信输入)。 */
 export function timeToMinutes(time: string): number {

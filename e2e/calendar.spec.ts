@@ -22,13 +22,14 @@ function fmt(d: Date): string {
 }
 
 /** 拦截 Server Action POST（带 Next-Action 头的 POST 才算 action 调用）。 */
+/** 拦截写端点 POST（统一接口 /api/calendar/entries；actions 已废除）。 */
 async function interceptActions(
   page: Page,
   handle: (route: import("@playwright/test").Route) => Promise<unknown>,
 ): Promise<void> {
-  await page.route("**/calendar*", (route) => {
+  await page.route("**/api/calendar/entries**", (route) => {
     const req = route.request();
-    if (req.method() === "POST" && req.headers()["next-action"] !== undefined) {
+    if (req.method() === "POST") {
       return handle(route);
     }
     return route.continue();

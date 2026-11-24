@@ -11,7 +11,6 @@
  * (E-01/E-03 字段下方、E-02 提示区)由 EntryForm 既有逻辑承载。
  */
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import {
@@ -30,8 +29,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { deleteEntryAction } from "../actions";
-import type { CalendarEntryView } from "../queries";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
+import { useCalendarStore } from "@/stores/calendar";
 import EntryForm from "./EntryForm";
 
 export type WeekEntryDialogState =
@@ -48,7 +47,8 @@ export default function WeekEntryDialog({
   onClose,
 }: WeekEntryDialogProps) {
   const t = useTranslations("calendar");
-  const router = useRouter();
+  const deleteEntry = useCalendarStore((s) => s.deleteEntry);
+  const resync = useCalendarStore((s) => s.resync);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (state === null) {
@@ -59,10 +59,11 @@ export default function WeekEntryDialog({
 
   async function handleConfirmDelete(): Promise<void> {
     if (state === null || state.mode !== "edit") return;
-    const result = await deleteEntryAction(state.entry.id);
+    const result = await deleteEntry(state.entry.id);
     setConfirmOpen(false);
     if (!result.ok && result.error === "NOT_FOUND") {
-      router.refresh();
+      // 条目已被他端删除:按当前读域静默重取
+      await resync();
     }
     onClose();
   }

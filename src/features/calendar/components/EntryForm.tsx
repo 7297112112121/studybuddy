@@ -13,19 +13,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/common/routes";
 
-import type { CalendarEntryView } from "../queries";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
 import {
   calendarEntryInputSchema,
   type CalendarEntryInput,
   type CalendarFieldErrors,
-} from "../validators";
-import {
-  createEntryAction,
-  updateEntryAction,
-  type CalendarEntryActionResult,
-} from "../actions";
+} from "@/modules/calendar/validators";
+import { API_ERROR, type ApiResult } from "@/common/error";
+import { useCalendarStore } from "@/stores/calendar";
 
 type EntryFormProps = {
   /** 所选日期（新建模式提交日期；编辑模式被日期控件初值覆盖）。 */
@@ -50,6 +47,9 @@ export default function EntryForm({
   const t = useTranslations("calendar");
   const tRoot = useTranslations();
   const router = useRouter();
+  const createEntry = useCalendarStore((s) => s.createEntry);
+  const updateEntry = useCalendarStore((s) => s.updateEntry);
+  const resync = useCalendarStore((s) => s.resync);
 
   const [title, setTitle] = useState(entry?.title ?? "");
   const [content, setContent] = useState(entry?.content ?? "");
@@ -127,13 +127,13 @@ export default function EntryForm({
     setFieldErrors({});
     setFormError(false);
     setIsPending(true);
-    // E-02（网络/服务异常）：action 传输层失败（fetch reject）与服务端
-    // SAVE_FAILED 同归一为表单提示区文案，不向 React 边界抛未捕获异常
-    let result: CalendarEntryActionResult;
+    // 网络/服务异常：fetch reject 与服务端保存失败（SAVE_FAILED）同归一为
+    // 表单提示区文案，不向 React 边界抛未捕获异常
+    let result: ApiResult;
     try {
       result = editing
-        ? await updateEntryAction(entry.id, parsed.data)
-        : await createEntryAction(parsed.data);
+        ? await updateEntry(entry.id, parsed.data)
+        : await createEntry(parsed.data);
     } catch {
       setIsPending(false);
       setFormError(true);
@@ -150,16 +150,17 @@ export default function EntryForm({
       return;
     }
     switch (result.error) {
-      case "INVALID_INPUT":
+      case API_ERROR.INVALID_INPUT:
         setFieldErrors(result.fieldErrors);
         return;
-      case "UNAUTHORIZED":
+      case API_ERROR.UNAUTHORIZED:
         router.replace(ROUTES.login);
         return;
-      case "NOT_FOUND":
-        router.refresh();
+      case API_ERROR.NOT_FOUND:
+        // 条目已被他端删除等场景：按当前读域静默重取(写后失效编排)
+        void resync();
         return;
-      case "SAVE_FAILED":
+      case API_ERROR.SAVE_FAILED:
         setFormError(true);
         return;
     }

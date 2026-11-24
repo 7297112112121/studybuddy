@@ -1,20 +1,11 @@
 /**
- * 文件作用:日历域的校验规则单一真源(auth 先例,消费方引用不复写)。
- *
- * 成员:
- * 1. 时刻格式正则(TIME_HHMM_RE):"HH:MM" 分钟粒度契约;
- * 2. 日期严格校验(isValidDateString):格式合法且为真实存在的日历日;
- * 3. 周一校验(isValidWeekStart):校验入参为合法日期且确为周一;
- * 4. 条目入参 schema(calendarEntryInputSchema):新增/编辑入参的结构与字段规则;
- * 5. 条目入参类型(CalendarEntryInput);
- * 6. 字段级错误类型(CalendarFieldErrors):前端渲染错误文案的唯一来源;
- * 7. 读入参校验(isValidYearMonth / isValidEntryId):月度查询年月与条目 id 的读路径入参约束。
- *
- * 其他:
- * 1. 日期语义是字面日期 "YYYY-MM-DD"(单时区假设),时刻一律 "HH:MM";
- * 2. month 入参为 1~12(产品口径),不是 JS Date 的 0~11。
+ * 日历域的校验规则单一真源(auth 先例,消费方引用不复写):
+ * 覆盖时刻格式、日期/周一/年月/条目 id 严格校验、条目写端点入参
+ * schema(calendarEntryInputSchema)与条目集合读端点查询参数 schema。
+ * 日期语义是字面日期 "YYYY-MM-DD"(单时区假设),时刻一律 "HH:MM";
+ * month 入参为 1~12(产品口径),不是 JS Date 的 0~11。
  */
-import { daysInMonth } from "@/lib/date";
+import { daysInMonth } from "@/common/date";
 import { z } from "zod";
 
 /** "HH:MM" 分钟粒度格式(时刻契约单一来源:schema 校验与 timeToMinutes 共用)。 */
@@ -98,6 +89,23 @@ export const calendarEntryInputSchema = z
   );
 
 export type CalendarEntryInput = z.infer<typeof calendarEntryInputSchema>;
+
+/** 条目集合查询参数契约:周锚点(week)或月度(view=month&month),读端点入参单一来源。 */
+export const calendarEntriesQuerySchema = z.union([
+  z.object({ week: z.string().refine(isValidWeekStart) }),
+  z.object({
+    view: z.literal("month"),
+    month: z
+      .string()
+      .regex(/^\d{4}-\d{2}$/)
+      .refine((value) => {
+        const [year, month] = value.split("-").map(Number);
+        return isValidYearMonth(year, month);
+      }),
+  }),
+]);
+
+export type CalendarEntriesQuery = z.infer<typeof calendarEntriesQuerySchema>;
 
 /** 字段级错误:键为字段,值为 i18n messageKey(前端渲染错误文案的唯一来源)。 */
 export type CalendarFieldErrors = Partial<

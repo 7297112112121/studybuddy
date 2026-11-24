@@ -8,15 +8,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import WeekView from "@/modules/calendar/components/WeekView";
-import { buildWeekDays } from "@/modules/calendar/service";
+import WeekView from "@/features/calendar/components/WeekView";
+import { buildWeekDays } from "@/features/calendar/date-nav";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-vi.mock("@/modules/calendar/actions", () => ({
-  createEntryAction: vi.fn(),
-  updateEntryAction: vi.fn(),
-  deleteEntryAction: vi.fn(),
+vi.mock("@/stores/calendar", () => ({
+  useCalendarStore: (selector: (state: Record<string, unknown>) => unknown) =>
+    selector({
+      createEntry: vi.fn(),
+      updateEntry: vi.fn(),
+      deleteEntry: vi.fn(),
+      resync: vi.fn(),
+    }),
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),

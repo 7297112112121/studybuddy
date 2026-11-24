@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "cn";
 
 import { buildMonthGrid } from "../useClientScreen";
-import type { CalendarEntryView } from "../queries";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 type MonthGridProps = {
   year: number;

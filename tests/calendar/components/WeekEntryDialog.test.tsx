@@ -14,21 +14,26 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import WeekEntryDialog from "@/modules/calendar/components/WeekEntryDialog";
+import WeekEntryDialog from "@/features/calendar/components/WeekEntryDialog";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
-import type { WeekEntryDialogProps } from "@/modules/calendar/components/WeekEntryDialog";
+import type { WeekEntryDialogProps } from "@/features/calendar/components/WeekEntryDialog";
 
 const createEntryActionMock = vi.hoisted(() => vi.fn());
 const updateEntryActionMock = vi.hoisted(() => vi.fn());
 const deleteEntryActionMock = vi.hoisted(() => vi.fn());
+const resyncMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
 }));
-vi.mock("@/modules/calendar/actions", () => ({
-  createEntryAction: createEntryActionMock,
-  updateEntryAction: updateEntryActionMock,
-  deleteEntryAction: deleteEntryActionMock,
+vi.mock("@/stores/calendar", () => ({
+  useCalendarStore: (selector: (state: Record<string, unknown>) => unknown) =>
+    selector({
+      createEntry: createEntryActionMock,
+      updateEntry: updateEntryActionMock,
+      deleteEntry: deleteEntryActionMock,
+      resync: resyncMock,
+    }),
 }));
 
 afterEach(cleanup);

@@ -14,16 +14,21 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import DayPanel from "@/modules/calendar/components/DayPanel";
+import DayPanel from "@/features/calendar/components/DayPanel";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 
 const deleteEntryActionMock = vi.hoisted(() => vi.fn());
+const resyncMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
 }));
-vi.mock("@/modules/calendar/actions", () => ({
-  deleteEntryAction: deleteEntryActionMock,
+vi.mock("@/stores/calendar", () => ({
+  useCalendarStore: (selector: (state: Record<string, unknown>) => unknown) =>
+    selector({
+      deleteEntry: deleteEntryActionMock,
+      resync: resyncMock,
+    }),
 }));
 
 afterEach(cleanup);

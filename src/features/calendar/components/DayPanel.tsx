@@ -11,7 +11,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import type { CalendarEntryView } from "../queries";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
 import EntryForm from "./EntryForm";
 import EntryRow from "./EntryRow";
 

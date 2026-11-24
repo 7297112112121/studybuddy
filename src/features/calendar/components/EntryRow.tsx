@@ -6,11 +6,10 @@
  * 行文案：「HH:MM–HH:MM title」（时间段）/「HH:MM title」（时间点）/
  * 「title」（不带时间），值经 queries 层 formatHhmm 归一（秒位不泄漏）。
  * 「编辑」→ onEdit 回调（DayPanel 切编辑模式）；「删除」→ shadcn
- * AlertDialog 二次确认（D-08：确认层无额外输入），确认后调
- * deleteEntryAction；NOT_FOUND → router.refresh() 静默刷新。
+ * AlertDialog 二次确认（D-08：确认层无额外输入），确认后经日历 store
+ * deleteEntry 走统一接口；NOT_FOUND → store 按当前读域静默重取。
  */
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import {
@@ -24,8 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-import type { CalendarEntryView } from "../queries";
-import { deleteEntryAction } from "../actions";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
+import { useCalendarStore } from "@/stores/calendar";
 
 type EntryRowProps = {
   entry: CalendarEntryView;
@@ -42,17 +41,19 @@ function timePrefix(entry: CalendarEntryView): string | null {
 
 export default function EntryRow({ entry, onEdit }: EntryRowProps) {
   const t = useTranslations("calendar");
-  const router = useRouter();
+  const deleteEntry = useCalendarStore((s) => s.deleteEntry);
+  const resync = useCalendarStore((s) => s.resync);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleConfirmDelete(): Promise<void> {
     setIsDeleting(true);
-    const result = await deleteEntryAction(entry.id);
+    const result = await deleteEntry(entry.id);
     setIsDeleting(false);
     setConfirmOpen(false);
     if (!result.ok && result.error === "NOT_FOUND") {
-      router.refresh();
+      // 条目已被他端删除:按当前读域静默重取
+      await resync();
     }
   }
 

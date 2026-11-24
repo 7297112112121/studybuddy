@@ -5,20 +5,14 @@
 import { and, eq, gte, lte } from "drizzle-orm";
 
 import { db } from "@/db/client";
-import { daysInMonth, formatUtcDate, MS_PER_DAY } from "@/lib/date";
-
-import { calendarEntry } from "./schema";
+import { calendarEntry } from "@/db/schema";
+import { daysInMonth, formatUtcDate, MS_PER_DAY } from "@/common/date";
+import { API_ERROR, ApiError } from "@/common/error";
 import {
   isValidEntryId,
   isValidWeekStart,
   isValidYearMonth,
 } from "./validators";
-
-/** 业务错误名:条目不存在或不属于该用户;调用方按 name 判别归一为未找到(NOT_FOUND)。 */
-export const ENTRY_NOT_FOUND = "EntryNotFoundError";
-
-/** 业务错误名:读入参未过服务端校验;调用方按 name 判别,属编程错误而非 UI 文案来源。 */
-export const ENTRY_INVALID_INPUT = "EntryInvalidInputError";
 
 /** 作用:给出该月的日期闭区间("YYYY-MM-DD"),作为月度条目查询的入参来源。 */
 export function monthRange(
@@ -46,7 +40,7 @@ export async function listMonthEntries(
   year: number,
   month: number,
 ): Promise<CalendarEntryView[]> {
-  assertValidInput(isValidYearMonth(year, month), "year/month");
+  assertValidInput(isValidYearMonth(year, month));
   const { start, end } = monthRange(year, month);
   return listEntriesInRange(userId, start, end);
 }
@@ -56,7 +50,7 @@ export async function listWeekEntries(
   userId: string,
   weekStart: string,
 ): Promise<CalendarEntryView[]> {
-  assertValidInput(isValidWeekStart(weekStart), "weekStart");
+  assertValidInput(isValidWeekStart(weekStart));
   const { start, end } = weekRange(weekStart);
   return listEntriesInRange(userId, start, end);
 }
@@ -71,25 +65,22 @@ export type CalendarEntryView = {
 };
 
 /**
- * 作用:读取指定条目的 id 与标题,查询必须带 userId 条件;
- * 入参先过服务端校验(条目 id 须为 uuid 形状);条目不存在或不属于
- * 该用户时,抛条目不存在错误(EntryNotFoundError)。
+ * 读取指定条目的 id 与标题,查询必须带 userId 条件;入参先过服务端校验
+ * (条目 id 须为 uuid 形状);条目不存在或不属于该用户时抛未找到(NOT_FOUND)。
  */
 export async function readEntry(
   userId: string,
   entryId: string,
 ): Promise<{ id: string; title: string }> {
-  assertValidInput(isValidEntryId(entryId), "entryId");
+  assertValidInput(isValidEntryId(entryId));
   const rows = await db
     .select({ id: calendarEntry.id, title: calendarEntry.title })
     .from(calendarEntry)
     .where(and(eq(calendarEntry.id, entryId), eq(calendarEntry.userId, userId)))
     .limit(1);
   if (rows.length === 0) {
-    // 业务错误零 class:name 标识供调用方判别,不泄漏条目存在性
-    throw Object.assign(new Error("entry not found for user"), {
-      name: ENTRY_NOT_FOUND,
-    });
+    // 不泄漏条目存在性:未命中按未找到(NOT_FOUND)归一
+    throw new ApiError(API_ERROR.NOT_FOUND);
   }
   return rows[0];
 }
@@ -139,15 +130,10 @@ function compareEntries(a: CalendarEntryView, b: CalendarEntryView): number {
   return a.startTime < b.startTime ? -1 : a.startTime > b.startTime ? 1 : 0;
 }
 
-/**
- * 作用:读路径入参守卫,单一收拢点(与 actions 的会话守卫同风格);
- * 规则来自 validators.ts,非法入参抛入参无效错误(EntryInvalidInputError)。
- */
-function assertValidInput(valid: boolean, param: string): void {
+/** 读路径入参守卫:规则来自 validators.ts,非法入参抛输入无效(INVALID_INPUT)。 */
+function assertValidInput(valid: boolean): void {
   if (!valid) {
-    throw Object.assign(new Error(`invalid query input: ${param}`), {
-      name: ENTRY_INVALID_INPUT,
-    });
+    throw new ApiError(API_ERROR.INVALID_INPUT);
   }
 }
 

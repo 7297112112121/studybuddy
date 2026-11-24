@@ -9,7 +9,7 @@
  */
 import { useState } from "react";
 
-import type { CalendarEntryView } from "../queries";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
 import DayPanel from "./DayPanel";
 import MonthGrid from "./MonthGrid";
 

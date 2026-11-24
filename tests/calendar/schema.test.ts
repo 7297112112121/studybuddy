@@ -1,7 +1,7 @@
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 
-import { calendarEntry } from "@/modules/calendar/schema";
+import { calendarEntry } from "@/db/schema";
 import {
   TIME_HHMM_RE,
   calendarEntryInputSchema,

@@ -16,7 +16,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import EntryForm from "@/modules/calendar/components/EntryForm";
+import EntryForm from "@/features/calendar/components/EntryForm";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 
 const routerMock = vi.hoisted(() => ({
@@ -27,14 +27,19 @@ const { createEntryActionMock, updateEntryActionMock } = vi.hoisted(() => ({
   createEntryActionMock: vi.fn(),
   updateEntryActionMock: vi.fn(),
 }));
+const resyncMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
 }));
-vi.mock("@/modules/calendar/actions", () => ({
-  createEntryAction: createEntryActionMock,
-  updateEntryAction: updateEntryActionMock,
-  deleteEntryAction: vi.fn(),
+vi.mock("@/stores/calendar", () => ({
+  useCalendarStore: (selector: (state: Record<string, unknown>) => unknown) =>
+    selector({
+      createEntry: createEntryActionMock,
+      updateEntry: updateEntryActionMock,
+      deleteEntry: vi.fn(),
+      resync: resyncMock,
+    }),
 }));
 
 afterEach(cleanup);
@@ -237,13 +242,13 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     );
   });
 
-  it("⑨ NOT_FOUND → router.refresh() 静默刷新", async () => {
+  it("⑨ NOT_FOUND → store 按当前读域静默重取(resync)", async () => {
     createEntryActionMock.mockResolvedValue({ ok: false, error: "NOT_FOUND" });
     renderForm();
     fillTitle("高数复习");
     submit();
 
-    await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
+    await waitFor(() => expect(resyncMock).toHaveBeenCalledOnce());
   });
 
   it("⑩ 成功 → onSaved 回调一次且表单复位", async () => {

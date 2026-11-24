@@ -3,7 +3,7 @@ import {
   addWeeks,
   buildWeekDays,
   weekStartFor,
-} from "@/modules/calendar/service";
+} from "@/features/calendar/date-nav";
 import { isValidWeekStart } from "@/modules/calendar/validators";
 import { weekRange } from "@/modules/calendar/queries";
 
@@ -127,7 +127,7 @@ import {
   slotPrefillStart,
   timeToMinutes,
   type WeekBlock,
-} from "@/modules/calendar/useClientScreen";
+} from "@/features/calendar/useClientScreen";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 /** 构造带时间条目视图(startTime 恒非 null,全天条目不进 layoutDayBlocks)。 */
