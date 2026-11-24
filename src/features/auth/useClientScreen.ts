@@ -9,9 +9,9 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { ROUTES } from "@/lib/routes";
-import { authClient } from "@/lib/better-auth.client";
-import { registerAction } from "./actions";
+import { ROUTES } from "@/common/routes";
+import { authClient } from "@/stores/auth-client";
+import type { RegisterApiResult } from "@/app/api/auth/register/route";
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -22,8 +22,7 @@ import {
   validateRegisterForm,
   type AuthFormErrors,
   type AuthMessageKey,
-  type RegisterInput,
-} from "./validators";
+} from "@/auth/validators";
 import type { AuthView } from "./components/AuthTabs";
 
 /** 表单值（login/register 共用一份，切换视图保留）。注册账户名复用 account。 */
@@ -137,7 +136,7 @@ export function useClientScreen(initialView: AuthView) {
     }
   }
 
-  /** 注册提交：服务端复验注册，成功自动登录进工作台。 */
+  /** 注册提交：POST 统一接口注册端点（评审裁决 5b），成功自动登录进工作台。 */
   async function submitRegister(): Promise<void> {
     if (submitting) {
       return;
@@ -145,12 +144,17 @@ export function useClientScreen(initialView: AuthView) {
     setSubmitting(true);
     setTopError(null);
     try {
-      const result = await registerAction({
-        username: values.account,
-        password: values.password,
-        confirmPassword: values.confirmPassword,
-        agreementAccepted: values.agreementAccepted,
-      } satisfies RegisterInput);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: values.account,
+          password: values.password,
+          confirmPassword: values.confirmPassword,
+          agreementAccepted: values.agreementAccepted,
+        }),
+      });
+      const result = (await response.json()) as RegisterApiResult;
       if (!result.ok) {
         if (result.error === "USERNAME_ALREADY_REGISTERED") {
           setTopError("auth.error.usernameRegistered");

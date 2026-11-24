@@ -12,7 +12,7 @@ import {
   passwordRuleStates,
   validateAccount,
   validatePassword,
-} from "../../src/modules/auth/validators";
+} from "../../src/auth/validators";
 
 /** 全部规则通过 ⇔ 校验函数通过（同真同假不变量）。 */
 function expectConsistency(

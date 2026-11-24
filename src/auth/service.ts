@@ -1,10 +1,13 @@
 /**
- * 认证域写路径 service（design「modules/auth/service.ts」
+ * 认证技术层写路径 service（design「modules/auth/service.ts」契约，目录已
+ * 归位至 src/auth/）。
  */
 import { hashPassword } from "better-auth/crypto";
 
 import { db } from "@/db/client";
-import { account, user } from "./schema";
+import { account, user } from "@/db/schema";
+
+import { USERNAME_ALREADY_REGISTERED } from "./error";
 
 export function usernameToPlaceholderEmail(username: string): string {
   return `${username}@user.styb.invalid`;
@@ -12,7 +15,7 @@ export function usernameToPlaceholderEmail(username: string): string {
 
 export type RegisterOutcome =
   | { ok: true; userId: string }
-  | { ok: false; error: "USERNAME_ALREADY_REGISTERED" };
+  | { ok: false; error: typeof USERNAME_ALREADY_REGISTERED };
 
 export async function registerWithUsername(input: {
   username: string;
@@ -40,7 +43,7 @@ export async function registerWithUsername(input: {
     });
   } catch (err) {
     if (isUsernameUniqueViolation(err)) {
-      return { ok: false, error: "USERNAME_ALREADY_REGISTERED" };
+      return { ok: false, error: USERNAME_ALREADY_REGISTERED };
     }
     throw err;
   }

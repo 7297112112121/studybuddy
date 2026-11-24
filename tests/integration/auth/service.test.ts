@@ -18,7 +18,7 @@ import { uniqueUsername } from "../helpers";
 import {
   registerWithUsername,
   usernameToPlaceholderEmail,
-} from "../../../src/modules/auth/service";
+} from "../../../src/auth/service";
 
 afterAll(async () => {
   await db.$client.end();

@@ -14,7 +14,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { FieldRuleState } from "../validators";
+import type { FieldRuleState } from "@/auth/validators";
 import FieldRulesPopover from "./FieldRulesPopover";
 
 type PasswordFieldProps = {

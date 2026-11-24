@@ -14,7 +14,7 @@ import {
   accountRuleStates,
   confirmPasswordRuleStates,
   passwordRuleStates,
-} from "../validators";
+} from "@/auth/validators";
 import type { AuthView } from "./AuthTabs";
 
 type RegisterFormProps = {

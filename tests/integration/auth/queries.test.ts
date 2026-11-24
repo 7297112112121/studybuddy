@@ -12,7 +12,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { db } from "@/db/client";
-import { redis } from "@/lib/redis";
+import { redis } from "@/common/redis";
 
 const headerStore = vi.hoisted(() => ({ current: new Headers() }));
 
@@ -22,8 +22,8 @@ vi.mock("next/headers", () => ({
 }));
 
 import { signInAndGetCookie, uniqueUsername } from "../helpers";
-import { registerWithUsername } from "../../../src/modules/auth/service";
-import { getCurrentSession } from "../../../src/modules/auth/queries";
+import { registerWithUsername } from "../../../src/auth/service";
+import { getCurrentSession } from "../../../src/auth/queries";
 
 const PASSWORD = "abcdefg1"; // 与 service.test.ts 一致（PASSWORD_RE：字母+数字，8..20）
 

@@ -1,10 +1,6 @@
 /**
  * 协议勾选框（R4）。协议名为纯文本提及，无链接（非目标 #5）。
  * 错误态：勾选框 aria-invalid 红框，文案不再渲染。纯受控。
- *
- * 刻意保留原生 input[type=checkbox]（组件测试按 HTMLInputElement 断言
- * aria-invalid），仅以 token 类替换裸灰阶/红色；Radix Checkbox 渲染
- * button[role=checkbox]，语义不兼容。
  */
 type AgreementCheckboxProps = {
   id: string;

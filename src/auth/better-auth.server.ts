@@ -1,12 +1,12 @@
 /**
- * Better Auth 服务端实例（design「src/lib/auth.ts」契约，服务端 only）。
+ * Better Auth 服务端实例（design「src/auth/better-auth.server.ts」契约，服务端 only）。
  *
  * 会话策略（ADR-0013）：Redis（secondaryStorage）为首要查询层，
  * `storeSessionInDatabase: true` 双写 PG 兜底；退出登录时 Better Auth
  * 同步删除 Redis 键与 PG 行（R11）。
  *
  * 注册不走 username 插件的邮箱注册路径（边界 #2：本期无邮箱凭据形态），
- * 由 modules/auth/service.ts 在单事务内直接插 user + credential account
+ * 由 ./service.ts 在单事务内直接插 user + credential account
  * （密码经 better-auth/crypto hashPassword，与核心同参数 scrypt）。
  * account 表存在 providerId = "credential" 记录即可用 /sign-in/username 登录。
  */
@@ -18,14 +18,14 @@ import { username } from "better-auth/plugins";
 
 import { db } from "@/db/client";
 import { account, session, user, verification } from "@/db/schema";
-import { redis } from "@/lib/redis";
+import { redis } from "@/common/redis";
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_RE,
-} from "@/modules/auth/validators";
+} from "./validators";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {

@@ -1,19 +1,16 @@
 /**
- * Task 11 Step 1：路由组守卫与退出按钮测试（R12 / B6 / R11）。
+ * 路由组守卫与退出按钮测试（R12 / B6 / R11；数据流向评审裁决 5a 换装——
+ * 守卫已客户端化，服务端 redirect 语义废除）。
  *
- * 布局是 async 服务端组件——测试直接调用组件函数取回 JSX 元素再渲染：
- * `const ui = await AuthLayout({ children }); render(ui)`。
- *
- * mock 策略：
- * - `@/modules/auth` 顶入口整体替换：getCurrentSession 注入会话桩，
- *   AuthRedirect 经工厂内动态 import 换入真实组件（布局渲染行为真实走通）；
- * - `next/navigation`：redirect 按 Next 语义 throw（NEXT_REDIRECT），
- *   useRouter 给 AuthRedirect / SignOutButton 桩接；
- * - `@/lib/better-auth.client`：signOut 注入（Task 10 裁决：失败 resolve
+ * 布局是客户端组件——直接 render：
+ * - `better-auth/react` 的 useStore 桩接：注入会话态（data/isPending），
+ *   authClient（nanostores 会话 store）即会话真源；
+ * - `next/navigation`：useRouter.replace 桩接（客户端守卫的承接动作）；
+ * - `@/stores/auth-client`：signOut 注入（Task 10 裁决：失败 resolve
  *   `{ data: null, error }` 而非 reject——两种形态都覆盖）。
  *
- * B6 断言形态：(app) 布局未登录时 redirect 以 '/login' 抛出、布局函数
- * reject——children 元素从未被产出，受保护内容不可能进入响应/文档。
+ * 断言形态：未登录时受保护内容不进文档（AppLayout 渲染 null）且
+ * replace('/login') 被调；(auth) 布局已登录时 children 不在、AuthRedirect 在。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -24,43 +21,27 @@ import {
   waitFor,
 } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
-import type { AuthSession } from "@/modules/auth";
+import type { AuthSession } from "@/auth";
 import AuthLayout from "@/app/(auth)/layout";
 import AppLayout from "@/app/(app)/layout";
-import SignOutButton from "@/modules/auth/components/SignOutButton";
+import SignOutButton from "@/features/auth/components/SignOutButton";
 
-const getCurrentSession = vi.hoisted(() =>
-  vi.fn<() => Promise<AuthSession | null>>(),
-);
-const redirectMock = vi.hoisted(() =>
-  vi.fn<(path: string, type?: string) => never>((path) => {
-    // 模拟 next/navigation redirect 的真实语义：抛 NEXT_REDIRECT 终止渲染
-    throw new Error(`NEXT_REDIRECT:${path}`);
-  }),
-);
+// 会话 store 桩态：用例按需改写 data/isPending
+const sessionState = vi.hoisted(() => ({
+  data: null as AuthSession | null,
+  isPending: true,
+}));
 const routerBack = vi.hoisted(() => vi.fn<() => void>());
 const routerReplace = vi.hoisted(() => vi.fn<(path: string) => void>());
 const signOut = vi.hoisted(() => vi.fn());
 
-vi.mock("@/modules/auth", async () => {
-  const { default: RealAuthRedirect } =
-    await import("@/modules/auth/components/AuthRedirect");
-  const { default: RealAuroraBackground } =
-    await import("@/modules/auth/components/AuroraBackground");
-  const { default: RealPromoColumn } =
-    await import("@/modules/auth/components/PromoColumn");
-  return {
-    getCurrentSession,
-    AuthRedirect: RealAuthRedirect,
-    AuroraBackground: RealAuroraBackground,
-    PromoColumn: RealPromoColumn,
-  };
-});
+vi.mock("better-auth/react", () => ({
+  useStore: () => sessionState,
+}));
 vi.mock("next/navigation", () => ({
-  redirect: redirectMock,
   useRouter: () => ({ back: routerBack, replace: routerReplace }),
 }));
-vi.mock("@/lib/better-auth.client", () => ({
+vi.mock("@/stores/auth-client", () => ({
   authClient: { signOut },
 }));
 
@@ -79,8 +60,7 @@ function Children(): ReactElement {
 
 const children: ReactNode = <Children />;
 
-// Next 16 typegen 的 LayoutProps 对静态路由也要求 params（Promise<{}>）：
-// 布局是 async 组件，测试直接调用组件函数并按其真实 Props 传参。
+// Next 16 typegen 的 LayoutProps 对静态路由也要求 params（Promise<{}>）
 const layoutProps = { children, params: Promise.resolve({}) } as const;
 
 afterEach(() => {
@@ -88,54 +68,64 @@ afterEach(() => {
 });
 
 beforeEach(() => {
-  getCurrentSession.mockReset();
-  redirectMock.mockClear();
+  sessionState.data = null;
+  sessionState.isPending = false;
   routerBack.mockClear();
   routerReplace.mockClear();
   signOut.mockReset();
 });
 
-describe("R12：(auth) 布局守卫", () => {
-  it("未登录（session null）→ children 渲染，不出现 AuthRedirect", async () => {
-    getCurrentSession.mockResolvedValue(null);
-
-    const ui = await AuthLayout(layoutProps);
-    render(ui);
+describe("R12：(auth) 布局守卫（客户端化）", () => {
+  it("未登录 → children 渲染，不出现 AuthRedirect", () => {
+    sessionState.data = null;
+    render(<AuthLayout {...layoutProps} />);
 
     expect(screen.getByTestId("guarded-children")).toBeDefined();
     expect(screen.queryByRole("status")).toBeNull();
-    expect(redirectMock).not.toHaveBeenCalled();
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 
-  it("已登录（session 存在）→ children（表单位置）不在文档中，AuthRedirect 在", async () => {
-    getCurrentSession.mockResolvedValue(session);
-
-    const ui = await AuthLayout(layoutProps);
-    render(ui);
+  it("已登录 → children（表单位置）不在文档中，AuthRedirect 在", () => {
+    sessionState.data = session;
+    render(<AuthLayout {...layoutProps} />);
 
     expect(screen.queryByTestId("guarded-children")).toBeNull();
     expect(screen.getByRole("status")).toBeDefined();
   });
+
+  it("会话判定中（isPending）→ 不渲染任何内容", () => {
+    sessionState.isPending = true;
+    render(<AuthLayout {...layoutProps} />);
+
+    expect(screen.queryByTestId("guarded-children")).toBeNull();
+  });
 });
 
-describe("B6：(app) 布局守卫（服务端未登录拦截）", () => {
-  it("未登录 → redirect 以 '/login' 抛出，children 不被产出（受保护内容不进文档）", async () => {
-    getCurrentSession.mockResolvedValue(null);
+describe("B6：(app) 布局守卫（客户端拦截）", () => {
+  it("未登录 → replace('/login') 被调，children 不进文档", async () => {
+    sessionState.data = null;
+    render(<AppLayout {...layoutProps} />);
 
-    await expect(AppLayout(layoutProps)).rejects.toThrow(
-      "NEXT_REDIRECT:/login",
-    );
-    expect(redirectMock).toHaveBeenCalledTimes(1);
-    expect(redirectMock).toHaveBeenCalledWith("/login");
+    await waitFor(() => {
+      expect(routerReplace).toHaveBeenCalledWith("/login");
+    });
+    expect(screen.queryByTestId("guarded-children")).toBeNull();
   });
 
-  it("已登录 → children 渲染", async () => {
-    getCurrentSession.mockResolvedValue(session);
-
-    const ui = await AppLayout(layoutProps);
-    render(ui);
+  it("已登录 → children 渲染，不触发 replace", () => {
+    sessionState.data = session;
+    render(<AppLayout {...layoutProps} />);
 
     expect(screen.getByTestId("guarded-children")).toBeDefined();
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
+
+  it("会话判定中（isPending）→ 不渲染受保护内容、不提前跳转", () => {
+    sessionState.isPending = true;
+    render(<AppLayout {...layoutProps} />);
+
+    expect(screen.queryByTestId("guarded-children")).toBeNull();
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 });
 

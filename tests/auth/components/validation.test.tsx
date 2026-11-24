@@ -14,9 +14,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import AuthScreen from "../../../src/modules/auth/components/AuthScreen";
+import AuthScreen from "../../../src/features/auth/components/AuthScreen";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
-import { registerAction } from "../../../src/modules/auth/actions";
 
 const routerReplace = vi.hoisted(() => vi.fn());
 // authClient.signIn.username 经 hoisted 桩注入拦截，默认 resolve
@@ -26,26 +25,26 @@ const routerReplace = vi.hoisted(() => vi.fn());
 const signInMock = vi.hoisted(() =>
   vi.fn(async () => ({ data: null, error: null })),
 );
+const fetchMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: routerReplace }),
 }));
-vi.mock("../../../src/modules/auth/actions", () => ({
-  registerAction: vi.fn(),
-}));
-vi.mock("../../../src/lib/better-auth.client", () => ({
+vi.mock("../../../src/stores/auth-client", () => ({
   authClient: {
     signIn: { username: signInMock },
     signOut: vi.fn(),
   },
 }));
 
-const registerMock = vi.mocked(registerAction);
-
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubGlobal("fetch", fetchMock);
 });
 
 function renderAuthScreen(props: { initialView?: "login" | "register" } = {}) {
@@ -168,7 +167,7 @@ describe("注册校验链（R8）", () => {
     expect(
       screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
     ).toBeNull();
-    expect(registerMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("确认密码为空或不一致 → 确认密码红框无文案", () => {

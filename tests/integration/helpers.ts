@@ -3,7 +3,7 @@
  * 造号 helper——手机号换装账户名后最后一个消费者消失）。
  */
 
-import { auth } from "@/lib/better-auth.server";
+import { auth } from "@/auth/better-auth.server";
 
 /**
  * 直调 auth.handler 的 POST 基座（Task 6，design「Produces」directPost）。

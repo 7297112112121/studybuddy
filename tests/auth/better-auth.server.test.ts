@@ -1,5 +1,5 @@
 /**
- * src/lib/better-auth.server.ts 单元测试（Task 4，design「src/lib/auth.ts」契约）。
+ * src/common/better-auth.server.ts 单元测试（Task 4，design「src/auth/better-auth.server.ts」契约）。
  *
  * 守护 betterAuth 实例可用性——无 .env 上下文（build/docker）模块作用域
  * 不抛错，注入测试 env 后动态 import，断言 handler 为可调用函数。
@@ -14,7 +14,7 @@ import {
   PASSWORD_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
-} from "../../src/modules/auth/validators";
+} from "../../src/auth/validators";
 
 beforeEach(() => {
   vi.resetModules();
@@ -22,16 +22,16 @@ beforeEach(() => {
   vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
 });
 
-describe("auth 实例（src/lib/better-auth.server.ts）", () => {
+describe("auth 实例（src/common/better-auth.server.ts）", () => {
   it("注入 env 后 betterAuth 初始化成功,auth.handler 为可调用函数", async () => {
-    const { auth } = await import("@/lib/better-auth.server");
+    const { auth } = await import("@/auth/better-auth.server");
     expect(typeof auth.handler).toBe("function");
   });
 });
 
 describe("服务端规则配置收敛", () => {
   it("密码与账户名长度界限引用 validators 常量，禁止复写字面值", async () => {
-    const { auth } = await import("@/lib/better-auth.server");
+    const { auth } = await import("@/auth/better-auth.server");
     expect(auth.options.emailAndPassword.minPasswordLength).toBe(
       PASSWORD_MIN_LENGTH,
     );

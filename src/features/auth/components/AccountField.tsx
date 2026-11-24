@@ -12,7 +12,7 @@ import { useState } from "react";
 import type { FocusEvent } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import type { FieldRuleState } from "../validators";
+import type { FieldRuleState } from "@/auth/validators";
 import FieldRulesPopover from "./FieldRulesPopover";
 
 type AccountFieldProps = {

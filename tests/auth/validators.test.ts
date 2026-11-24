@@ -11,7 +11,7 @@ import {
   validateAccount,
   validatePassword,
   validateRegisterForm,
-} from "../../src/modules/auth/validators";
+} from "../../src/auth/validators";
 
 describe("规则长度常量", () => {
   it("长度界限与产品规则字面值一致，改动常量即有意变更规则，须同步本测试", () => {

@@ -1,14 +1,20 @@
-import {
-  AuroraBackground,
-  AuthRedirect,
-  PromoColumn,
-  getCurrentSession,
-} from "@/modules/auth";
+"use client";
 
-export const instant = false;
+/**
+ * (auth) 路由组布局（数据流向评审裁决 5a：守卫客户端化）——已登录访问经
+ * AuthRedirect 回 (app)；未登录渲染认证页布局（星极光 + 促销列 + 表单位）。
+ */
+import { AuthRedirect, AuroraBackground, PromoColumn } from "@/features/auth";
+import { useStore } from "better-auth/react";
 
-export default async function AuthLayout(props: LayoutProps<"/">) {
-  const session = await getCurrentSession();
+import { authClient } from "@/stores/auth-client";
+
+export default function AuthLayout(props: LayoutProps<"/">) {
+  const { data: session, isPending } = useStore(authClient.useSession);
+
+  if (isPending) {
+    return null;
+  }
   if (session) {
     return <AuthRedirect />;
   }

@@ -1,5 +1,6 @@
 /**
- * 认证域读路径（design「modules/auth/queries.ts」契约，Task 7）。
+ * 认证技术层读路径（design「modules/auth/queries.ts」契约，Task 7；目录已
+ * 归位至 src/auth/）。
  *
  * getCurrentSession 是 auth.api.getSession 的 RSC 调用封装：headers() 取
  * 当前请求头（Next 16 为 async，见 node_modules/next/dist/docs/.../headers.md），
@@ -10,7 +11,7 @@
  */
 import { headers } from "next/headers";
 
-import { auth } from "@/lib/better-auth.server";
+import { auth } from "./better-auth.server";
 
 export type AuthSession = {
   user: { id: string; name: string; username: string };

@@ -15,7 +15,7 @@
  * 回归）；jsdom 不做命中测试，该约束由单测断言类名 + E2E 双通道守卫。
  */
 import { CheckIcon, XIcon } from "lucide-react";
-import type { FieldRuleState } from "../validators";
+import type { FieldRuleState } from "@/auth/validators";
 
 type FieldRulesPopoverProps = {
   rules: FieldRuleState[];

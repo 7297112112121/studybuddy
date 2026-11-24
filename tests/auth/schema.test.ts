@@ -6,7 +6,7 @@ import {
   session,
   user,
   verification,
-} from "../../src/modules/auth/schema";
+} from "@/db/schema";
 
 /** 将列清单转成 name -> column 的映射，便于按列断言。 */
 function columnMap(table: Parameters<typeof getTableConfig>[0]) {

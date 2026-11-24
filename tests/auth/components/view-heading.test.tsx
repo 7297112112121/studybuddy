@@ -6,7 +6,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import AuthScreen from "../../../src/modules/auth/components/AuthScreen";
+import AuthScreen from "../../../src/features/auth/components/AuthScreen";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
 
 const routerReplace = vi.hoisted(() => vi.fn());

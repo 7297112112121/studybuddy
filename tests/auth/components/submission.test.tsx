@@ -2,8 +2,9 @@
  * Task 9：AuthScreen 登录/注册提交流程测试（CR-20261116-1 换装 username 端点）。
  *
  * 网络边界全部桩化（vi.mock 按被测组件导入说明符的 resolved id 命中）：
- * - `../actions`（组件相对路径）→ 测试侧以 ../../../src/modules/auth/actions mock；
- * - `@/lib/better-auth.client` → signIn.username 返回 better-auth 客户端真实形态
+ * - `@/auth`（组件跨树别名导入）→ 测试侧以同文件的
+ *   相对路径 mock（resolved id 相同，命中同一模块）；
+ * - `@/stores/auth-client` → signIn.username 返回 better-auth 客户端真实形态
  *   `{ data, error }`（@better-fetch 默认不 throw，错误在 error 字段）；
  *   桩沿用 T8 validation.test 的 vi.hoisted 注入形态；
  * - `next/navigation` 的 useRouter.replace。
@@ -21,35 +22,40 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import AuthScreen from "../../../src/modules/auth/components/AuthScreen";
+import AuthScreen from "../../../src/features/auth/components/AuthScreen";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
-import { registerAction } from "../../../src/modules/auth/actions";
-import type { RegisterActionResult } from "../../../src/modules/auth/actions";
+import type { RegisterApiResult } from "@/app/api/auth/register/route";
 
 const routerReplace = vi.hoisted(() => vi.fn());
 // signIn.username 经 hoisted 桩注入拦截（沿用 T8 validation.test 形态），
 // 不走 vi.mocked(authClient.signIn.username)——与真实 auth-client 类型面解耦。
 const signInMock = vi.hoisted(() => vi.fn());
 
+const fetchMock = vi.hoisted(() => vi.fn());
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: routerReplace }),
 }));
-vi.mock("../../../src/modules/auth/actions", () => ({
-  registerAction: vi.fn(),
-}));
-vi.mock("../../../src/lib/better-auth.client", () => ({
+vi.mock("../../../src/stores/auth-client", () => ({
   authClient: {
     signIn: { username: signInMock },
     signOut: vi.fn(),
   },
 }));
 
-const registerMock = vi.mocked(registerAction);
+/** 注册端点桩:fetch("/api/auth/register") 返回接口契约结果(ApiResult)形态 Response。 */
+function mockRegister(result: RegisterApiResult, status = 200): void {
+  fetchMock.mockResolvedValue(new Response(JSON.stringify(result), { status }));
+}
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubGlobal("fetch", fetchMock);
 });
 
 function renderAuthScreen(
@@ -97,8 +103,8 @@ function fillRegister(account: string, password: string): void {
 }
 
 describe("R9 注册成功链", () => {
-  it("registerAction ok → authClient.signIn.username 以 {username, password} 自动登录 → router.replace('/workbench')", async () => {
-    registerMock.mockResolvedValue({ ok: true });
+  it("注册端点 ok → authClient.signIn.username 以 {username, password} 自动登录 → router.replace('/workbench')", async () => {
+    mockRegister({ ok: true });
     signInMock.mockResolvedValue({ data: null, error: null });
     const { container } = renderAuthScreen({ initialView: "register" });
 
@@ -106,14 +112,20 @@ describe("R9 注册成功链", () => {
     submitActiveForm(container);
 
     await waitFor(() => {
-      expect(registerMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
     });
-    expect(registerMock).toHaveBeenCalledWith({
-      username: "zhang_san",
-      password: "study2026",
-      confirmPassword: "study2026",
-      agreementAccepted: true,
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/register",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          username: "zhang_san",
+          password: "study2026",
+          confirmPassword: "study2026",
+          agreementAccepted: true,
+        }),
+      }),
+    );
     await waitFor(() => {
       expect(signInMock).toHaveBeenCalledTimes(1);
     });
@@ -127,10 +139,8 @@ describe("R9 注册成功链", () => {
 });
 
 describe("R5 提交加载态", () => {
-  it("registerAction 挂起 → 按钮「注册中…」且 disabled", async () => {
-    registerMock.mockImplementation(
-      () => new Promise<RegisterActionResult>(() => {}),
-    );
+  it("注册端点挂起 → 按钮「注册中…」且 disabled", async () => {
+    fetchMock.mockImplementation(() => new Promise<Response>(() => {}));
     const { container } = renderAuthScreen({ initialView: "register" });
 
     fillRegister("zhang_san", "study2026");
@@ -140,7 +150,7 @@ describe("R5 提交加载态", () => {
       name: "注册中…",
     })) as HTMLButtonElement;
     expect(button.disabled).toBe(true);
-    expect(registerMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(routerReplace).not.toHaveBeenCalled();
   });
 
@@ -164,10 +174,7 @@ describe("R5 提交加载态", () => {
 
 describe("R10 已注册账户名", () => {
   it("USERNAME_ALREADY_REGISTERED → 顶部「该账户已注册，去登录」；点击切换登录视图且账户框带入该账户名", async () => {
-    registerMock.mockResolvedValue({
-      ok: false,
-      error: "USERNAME_ALREADY_REGISTERED",
-    });
+    mockRegister({ ok: false, error: "USERNAME_ALREADY_REGISTERED" }, 409);
     const { container } = renderAuthScreen({ initialView: "register" });
 
     fillRegister("zhang_san", "study2026");
@@ -244,18 +251,21 @@ describe("B2 邮箱形态走字段错误（新语义）", () => {
       screen.queryByText("格式不对：1—16 位中文、字母、数字或下划线"),
     ).toBeNull();
     expect(signInMock).not.toHaveBeenCalled();
-    expect(registerMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(routerReplace).not.toHaveBeenCalled();
   });
 });
 
 describe("INVALID_INPUT fieldErrors 归位（E-02）", () => {
-  it("registerAction INVALID_INPUT + fieldErrors:{username:'auth.account.invalid'} → 注册视图账户字段红框无文案，不自动登录", async () => {
-    registerMock.mockResolvedValue({
-      ok: false,
-      error: "INVALID_INPUT",
-      fieldErrors: { username: "auth.account.invalid" },
-    });
+  it("INVALID_INPUT + fieldErrors:{username:'auth.account.invalid'} → 注册视图账户字段红框无文案，不自动登录", async () => {
+    mockRegister(
+      {
+        ok: false,
+        error: "INVALID_INPUT",
+        fieldErrors: { username: "auth.account.invalid" },
+      },
+      400,
+    );
     const { container } = renderAuthScreen({ initialView: "register" });
 
     fillRegister("zhang_san", "study2026");
@@ -291,6 +301,6 @@ describe("R6 登录成功落点", () => {
       username: "zhang_san",
       password: "study2026",
     });
-    expect(registerMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

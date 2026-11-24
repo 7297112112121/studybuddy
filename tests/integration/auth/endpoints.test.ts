@@ -23,13 +23,13 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db/client";
 import { session, user } from "@/db/schema";
-import { auth } from "@/lib/better-auth.server";
-import { redis } from "@/lib/redis";
+import { auth } from "@/auth/better-auth.server";
+import { redis } from "@/common/redis";
 import { directPost, signInAndGetCookie, uniqueUsername } from "../helpers";
 import {
   registerWithUsername,
   type RegisterOutcome,
-} from "../../../src/modules/auth/service";
+} from "../../../src/auth/service";
 
 /** expect 断言不改类型，判别联合经 throw 收窄（与 service.test.ts 同法） */
 function expectRegisteredOk(
