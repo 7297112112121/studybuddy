@@ -8,13 +8,12 @@ import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/auth/validators";
 import {
-  PASSWORD_MAX_LENGTH,
-  PASSWORD_MIN_LENGTH,
   accountRuleStates,
   confirmPasswordRuleStates,
   passwordRuleStates,
-} from "@/auth/validators";
+} from "../useClientScreen";
 import type { AuthView } from "./AuthTabs";
 
 type RegisterFormProps = {

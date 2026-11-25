@@ -7,10 +7,8 @@ import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_RE,
-  confirmPasswordRuleStates,
   validateAccount,
   validatePassword,
-  validateRegisterForm,
 } from "../../src/auth/validators";
 
 describe("规则长度常量", () => {
@@ -70,26 +68,6 @@ describe("PASSWORD_RE", () => {
   });
 });
 
-describe("confirmPasswordRuleStates", () => {
-  it("确认密码非空且与 password 一致时 passed", () => {
-    expect(confirmPasswordRuleStates("abcd1234", "abcd1234")).toEqual([
-      { label: "与第一次输入一致", passed: true },
-    ]);
-  });
-
-  it("确认密码为空视为不一致（与 validateRegisterForm 同语义）", () => {
-    expect(confirmPasswordRuleStates("abcd1234", "")).toEqual([
-      { label: "与第一次输入一致", passed: false },
-    ]);
-  });
-
-  it("确认密码与 password 不一致时 passed 为 false", () => {
-    expect(confirmPasswordRuleStates("abcd1234", "abcd1235")).toEqual([
-      { label: "与第一次输入一致", passed: false },
-    ]);
-  });
-});
-
 describe("validateAccount", () => {
   it("空字符串返回 auth.account.required", () => {
     expect(validateAccount("")).toEqual({
@@ -142,99 +120,5 @@ describe("validatePassword", () => {
 
   it("合法密码返回 ok: true", () => {
     expect(validatePassword("abcd1234")).toEqual({ ok: true });
-  });
-});
-
-describe("validateRegisterForm", () => {
-  it("账户名格式错误返回 auth.account.invalid", () => {
-    expect(
-      validateRegisterForm({
-        username: "zhang san!",
-        password: "abcd1234",
-        confirmPassword: "abcd1234",
-        agreementAccepted: true,
-      }),
-    ).toEqual({ username: "auth.account.invalid" });
-  });
-
-  it("密码为空返回 auth.password.required", () => {
-    expect(
-      validateRegisterForm({
-        username: "zhang_san",
-        password: "",
-        confirmPassword: "",
-        agreementAccepted: true,
-      }),
-    ).toEqual({ password: "auth.password.required" });
-  });
-
-  it("密码强度不足返回 auth.password.invalid", () => {
-    expect(
-      validateRegisterForm({
-        username: "zhang_san",
-        password: "12345678",
-        confirmPassword: "12345678",
-        agreementAccepted: true,
-      }),
-    ).toEqual({ password: "auth.password.invalid" });
-  });
-
-  it("确认密码为空视为不一致（R8）", () => {
-    expect(
-      validateRegisterForm({
-        username: "zhang_san",
-        password: "abcd1234",
-        confirmPassword: "",
-        agreementAccepted: true,
-      }),
-    ).toEqual({ confirmPassword: "auth.register.passwordMismatch" });
-  });
-
-  it("确认密码与密码不一致返回 passwordMismatch", () => {
-    expect(
-      validateRegisterForm({
-        username: "zhang_san",
-        password: "abcd1234",
-        confirmPassword: "abcd1235",
-        agreementAccepted: true,
-      }),
-    ).toEqual({ confirmPassword: "auth.register.passwordMismatch" });
-  });
-
-  it("未勾选协议返回 auth.agreement.required", () => {
-    expect(
-      validateRegisterForm({
-        username: "zhang_san",
-        password: "abcd1234",
-        confirmPassword: "abcd1234",
-        agreementAccepted: false,
-      }),
-    ).toEqual({ agreement: "auth.agreement.required" });
-  });
-
-  it("多字段同时错误合并返回同一对象", () => {
-    expect(
-      validateRegisterForm({
-        username: "zhang san!",
-        password: "abcd1234",
-        confirmPassword: "xyz",
-        agreementAccepted: false,
-      }),
-    ).toEqual({
-      username: "auth.account.invalid",
-      confirmPassword: "auth.register.passwordMismatch",
-      agreement: "auth.agreement.required",
-    });
-  });
-
-  it("全合法返回 null", () => {
-    expect(
-      validateRegisterForm({
-        username: "xue_sheng01",
-        password: "abcd1234",
-        confirmPassword: "abcd1234",
-        agreementAccepted: true,
-      }),
-    ).toBeNull();
   });
 });

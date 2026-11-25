@@ -1,6 +1,9 @@
 /**
- * 登录/注册表单校验纯函数，账户名与密码业务规则的唯一来源。
- * 规则界限禁止在本文件之外复写字面值，消费方一律引用本文件导出的常量、正则与类型。
+ * 账户名与密码业务规则的唯一来源（长度常量、正则、字段级校验纯函数与
+ * 服务端复验 schema）。规则界限禁止在本文件之外复写字面值，消费方一律
+ * 引用本文件导出的常量、正则与类型。客户端页面层校验（注册表单提交前
+ * 校验、规则浮层实时拆解）居于 features/auth/useClientScreen.ts，经导入
+ * 同源衔接，勿回流本文件。
  */
 import { z } from "zod";
 
@@ -20,13 +23,6 @@ export const PASSWORD_MAX_LENGTH = 20;
 export const USERNAME_RE = new RegExp(
   `^[一-龥A-Za-z0-9_]{${USERNAME_MIN_LENGTH},${USERNAME_MAX_LENGTH}}$`,
 );
-
-/**
- * 账户名字符集（无长度量词）——仅供规则浮层做「字符集/长度」两条正交
- * 拆解；字符类括号表达式必须与 USERNAME_RE 逐字符一致（长度仅由
- * USERNAME_RE 的量词单一约束），改动任一处须同步。
- */
-const USERNAME_CHARSET_RE = /^[一-龥A-Za-z0-9_]+$/;
 
 /** 密码域：字母与数字同时存在，长度界限由上述常量注入。 */
 export const PASSWORD_RE = new RegExp(
@@ -86,105 +82,9 @@ export function validatePassword(raw: string):
 }
 
 /**
- * 字段规则清单项（AXY-8 UI 优化：聚焦浮层实时侦测）。label 为页面静态
- * 文案（与 AccountField 的 Label/hint 同约定，不入 auth.json）。
- */
-export type FieldRuleState = {
-  label: string;
-  passed: boolean;
-};
-
-/** 字母与数字同时存在（PASSWORD_RE 两段 look-ahead 的同源拆解）。 */
-const PASSWORD_MIX_RE = /^(?=.*[A-Za-z])(?=.*\d)/;
-
-/**
- * 账户名规则实时拆解。不变量：每条 passed 全真 ⇔ validateAccount.ok
- * （required 除外——空值时两条均为 false，由 required 文案兜底）。
- * 正则为全仓单一来源，勿在此处另写规则。
- */
-export function accountRuleStates(raw: string): FieldRuleState[] {
-  return [
-    {
-      label: `长度 ${USERNAME_MIN_LENGTH}—${USERNAME_MAX_LENGTH} 个字符`,
-      passed:
-        raw.length >= USERNAME_MIN_LENGTH && raw.length <= USERNAME_MAX_LENGTH,
-    },
-    {
-      label: "仅含中文、字母、数字或下划线",
-      passed: USERNAME_CHARSET_RE.test(raw),
-    },
-  ];
-}
-
-/** 密码规则实时拆解。不变量：每条 passed 全真 ⇔ validatePassword.ok（required 除外）。 */
-export function passwordRuleStates(raw: string): FieldRuleState[] {
-  return [
-    {
-      label: `长度 ${PASSWORD_MIN_LENGTH}—${PASSWORD_MAX_LENGTH} 位`,
-      passed:
-        raw.length >= PASSWORD_MIN_LENGTH && raw.length <= PASSWORD_MAX_LENGTH,
-    },
-    { label: "需同时含字母与数字", passed: PASSWORD_MIX_RE.test(raw) },
-  ];
-}
-
-/**
- * 确认密码规则实时拆解。不变量：passed 等价于「非空且与 password 一致」，
- * 与 validateRegisterForm 的确认密码判定同语义（空值视为不一致）。
- */
-export function confirmPasswordRuleStates(
-  password: string,
-  confirmPassword: string,
-): FieldRuleState[] {
-  return [
-    {
-      label: "与第一次输入一致",
-      passed: confirmPassword !== "" && confirmPassword === password,
-    },
-  ];
-}
-
-export type RegisterFormErrors = Partial<{
-  username: "auth.account.invalid";
-  password: "auth.password.required" | "auth.password.invalid";
-  confirmPassword: "auth.register.passwordMismatch";
-  agreement: "auth.agreement.required";
-}>;
-
-/** 注册入参类型契约（传输层形状），validateRegisterForm 与服务端 action 共用。 */
-export type RegisterInput = {
-  username: string;
-  password: string;
-  confirmPassword: string;
-  agreementAccepted: boolean;
-};
-
-export function validateRegisterForm(
-  v: RegisterInput,
-): RegisterFormErrors | null {
-  const errors: RegisterFormErrors = {};
-
-  if (!USERNAME_RE.test(v.username)) {
-    errors.username = "auth.account.invalid";
-  }
-
-  const passwordCheck = validatePassword(v.password);
-  if (!passwordCheck.ok) {
-    errors.password = passwordCheck.messageKey;
-  } else if (v.confirmPassword === "" || v.confirmPassword !== v.password) {
-    errors.confirmPassword = "auth.register.passwordMismatch";
-  }
-
-  if (!v.agreementAccepted) {
-    errors.agreement = "auth.agreement.required";
-  }
-
-  return Object.keys(errors).length > 0 ? errors : null;
-}
-
-/**
- * 注册端点入参 schema(统一接口切面复验用):规则与文案 key 与上方纯函数
- * 同源引用,勿复写字面值;密码为空报必填,格式不过报无效(与纯函数语义一致)。
+ * 注册端点入参 schema(统一接口切面复验用):规则与文案 key 与上方常量/
+ * 正则同源引用,勿复写字面值;密码为空报必填,格式不过报无效(与客户端
+ * 提交前校验语义一致)。
  */
 export const registerFormSchema = z
   .object({
@@ -200,7 +100,7 @@ export const registerFormSchema = z
     confirmPassword: z.string({ message: "auth.account.invalid" }),
     agreementAccepted: z.boolean({ message: "auth.agreement.required" }),
   })
-  // 密码本身非法时由 password 字段报错,确认字段不重复报(与纯函数判定一致)
+  // 密码本身非法时由 password 字段报错,确认字段不重复报(与客户端提交前校验判定一致)
   .refine(
     (value) =>
       !PASSWORD_RE.test(value.password) ||

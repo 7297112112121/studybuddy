@@ -7,7 +7,7 @@
  * 重渲染」的语义不符，确认 registry 无合适组件后手写。
  *
  * 纯展示组件：开合由父级字段的 focus-within 态驱动，规则由父级传入
- * （单一来源 validators 的 *RuleStates）；对读屏器隐藏——字段的
+ * （useClientScreen 的 *RuleStates）；对读屏器隐藏——字段的
  * aria-invalid / hint 已承载同等信息，浮层是 sighted 专属增强。
  *
  * 容器必须 pointer-events-none：浮层锚定输入框正下方，会盖住后续
@@ -15,7 +15,7 @@
  * 回归）；jsdom 不做命中测试，该约束由单测断言类名 + E2E 双通道守卫。
  */
 import { CheckIcon, XIcon } from "lucide-react";
-import type { FieldRuleState } from "@/auth/validators";
+import type { FieldRuleState } from "../useClientScreen";
 
 type FieldRulesPopoverProps = {
   rules: FieldRuleState[];
