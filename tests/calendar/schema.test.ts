@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 import { calendarEntry } from "@/db/schema";
 import {
   TIME_HHMM_RE,
+  calendarEntriesQuerySchema,
   calendarEntryInputSchema,
+  formatYearMonth,
+  parseYearMonth,
 } from "@/modules/calendar/validators";
 
 /**
@@ -186,4 +189,43 @@ describe("calendarEntryInputSchema：时间规则（F-02/F-03/E-03）", () => {
       ).toBe(true);
     },
   );
+});
+
+describe("parseYearMonth / formatYearMonth：年月 wire 格式", () => {
+  it("formatYearMonth 零填充月份", () => {
+    expect(formatYearMonth(2026, 3)).toBe("2026-03");
+  });
+
+  it("parseYearMonth 接受真实年月并解析为数字对，undefined 拒收", () => {
+    expect(parseYearMonth("2026-11")).toEqual({ year: 2026, month: 11 });
+    expect(parseYearMonth(undefined)).toBeNull();
+  });
+
+  it.each(["2026-13", "2026-00", "26-11", "2026-1", "2026-111", ""])(
+    "parseYearMonth 拒收 %s",
+    (raw) => {
+      expect(parseYearMonth(raw)).toBeNull();
+    },
+  );
+});
+
+describe("calendarEntriesQuerySchema：月度分支", () => {
+  it("合法 month 输出解析后的年月数字对", () => {
+    const result = calendarEntriesQuerySchema.parse({
+      view: "month",
+      month: "2026-11",
+    });
+    expect(result).toEqual({
+      view: "month",
+      month: { year: 2026, month: 11 },
+    });
+  });
+
+  it.each(["2026-13", "26-11", ""])("非法 month %s 拒收", (raw) => {
+    const result = calendarEntriesQuerySchema.safeParse({
+      view: "month",
+      month: raw,
+    });
+    expect(result.success).toBe(false);
+  });
 });

@@ -1,6 +1,6 @@
 /**
  * 日历域的校验规则单一真源(auth 先例,消费方引用不复写):
- * 覆盖时刻格式、日期/周一/年月严格校验、条目写端点入参
+ * 覆盖时刻格式、日期/周一/年月严格校验、年月 wire 解析与序列化、条目写端点入参
  * schema(calendarEntryInputSchema)与条目集合读端点查询参数 schema。
  * 日期语义是字面日期 "YYYY-MM-DD"(单时区假设),时刻一律 "HH:MM";
  * month 入参为 1~12(产品口径),不是 JS Date 的 0~11。
@@ -37,6 +37,21 @@ export function isValidYearMonth(year: number, month: number): boolean {
     month >= 1 &&
     month <= 12
   );
+}
+
+/** 解析 "YYYY-MM" wire 格式:格式合法且为真实年月才返回数字对,否则 null。 */
+export function parseYearMonth(
+  raw: string | undefined,
+): { year: number; month: number } | null {
+  if (raw === undefined || !/^\d{4}-\d{2}$/.test(raw)) return null;
+  const [year, month] = raw.split("-").map(Number);
+  if (!isValidYearMonth(year, month)) return null;
+  return { year, month };
+}
+
+/** year/month → "YYYY-MM"(wire 序列化,月份零填充)。 */
+export function formatYearMonth(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, "0")}`;
 }
 
 /** 作用:条目新增/编辑入参的结构与字段规则;message 直接承载 i18n key。 */
@@ -88,17 +103,14 @@ export const calendarEntriesQuerySchema = z.union([
     view: z.literal("month"),
     month: z
       .string()
-      .regex(/^\d{4}-\d{2}$/)
-      .refine((value) => {
-        const [year, month] = value.split("-").map(Number);
-        return isValidYearMonth(year, month);
-      }),
+      .refine((value) => parseYearMonth(value) !== null)
+      .transform((value) => parseYearMonth(value)!),
   }),
 ]);
 
 export type CalendarEntriesQuery = z.infer<typeof calendarEntriesQuerySchema>;
 
-/** 字段级错误:键为字段,值为 i18n messageKey(前端渲染错误文案的唯一来源)。 */
+/** 字段级错误:键随条目入参 schema 字段推导,值为 i18n messageKey(前端渲染错误文案的唯一来源)。 */
 export type CalendarFieldErrors = Partial<
-  Record<"date" | "title" | "content" | "startTime" | "endTime", string>
+  Record<keyof CalendarEntryInput, string>
 >;

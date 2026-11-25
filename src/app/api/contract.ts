@@ -12,6 +12,7 @@ import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
 import {
   API_ERROR,
   ApiError,
+  toFieldErrors,
   type ApiErrorCode,
   type ApiResult,
 } from "@/common/error";
@@ -98,15 +99,3 @@ const ERROR_STATUS: Record<ContractErrorCode, number> = {
   [API_ERROR.SAVE_FAILED]: 500,
   [USERNAME_ALREADY_REGISTERED]: 409,
 };
-
-/** 把 zod 校验错误折算成字段级错误;同字段只取首条,值为错误文案 key。 */
-function toFieldErrors(error: z.ZodError): Record<string, string> {
-  const fieldErrors: Record<string, string> = {};
-  for (const issue of error.issues) {
-    const field = issue.path[0];
-    if (typeof field === "string" && !(field in fieldErrors)) {
-      fieldErrors[field] = issue.message;
-    }
-  }
-  return fieldErrors;
-}

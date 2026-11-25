@@ -12,21 +12,20 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
-import { API_ERROR } from "@/common/error";
-import { ROUTES } from "@/common/routes";
-import { authClient } from "@/stores/auth-client";
-import type { RegisterApiResult } from "@/app/api/auth/register/route";
 import {
+  loginFormSchema,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
+  registerFormSchema,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
-  USERNAME_RE,
-  validateAccount,
-  validatePassword,
   type AuthFormErrors,
   type AuthMessageKey,
 } from "@/auth/validators";
+import { API_ERROR, toFieldErrors } from "@/common/error";
+import { ROUTES } from "@/common/routes";
+import { authClient } from "@/stores/auth-client";
+import type { RegisterApiResult } from "@/app/api/auth/register/route";
 import type { AuthView } from "./components/AuthTabs";
 
 /** 表单值（login/register 共用一份，切换视图保留）。注册账户名复用 account。 */
@@ -45,49 +44,6 @@ export type SignInErrorKey =
 
 /** 屏顶部错误键：登录失败经 mapSignInError 归一；注册账户名已存在固定为账户名已存在（usernameRegistered）。 */
 export type AuthTopError = SignInErrorKey | "auth.error.usernameRegistered";
-
-/** 注册入参类型契约：客户端提交统一接口注册端点的请求体形状（服务端复验走 validators.ts 的 registerFormSchema）。 */
-export type RegisterInput = {
-  username: string;
-  password: string;
-  confirmPassword: string;
-  agreementAccepted: boolean;
-};
-
-export type RegisterFormErrors = Partial<{
-  username: "auth.account.invalid";
-  password: "auth.password.required" | "auth.password.invalid";
-  confirmPassword: "auth.register.passwordMismatch";
-  agreement: "auth.agreement.required";
-}>;
-
-/**
- * 注册表单提交前校验：账户名/密码/确认密码（R8）/协议（R15）合并判定，
- * 全过返回 null。自 src/auth/validators.ts 迁入——客户端页面校验逻辑
- * 不入服务端技术层；规则界限仍以 validators.ts 导出的常量与正则为单一来源。
- */
-export function validateRegisterForm(
-  v: RegisterInput,
-): RegisterFormErrors | null {
-  const errors: RegisterFormErrors = {};
-
-  if (!USERNAME_RE.test(v.username)) {
-    errors.username = "auth.account.invalid";
-  }
-
-  const passwordCheck = validatePassword(v.password);
-  if (!passwordCheck.ok) {
-    errors.password = passwordCheck.messageKey;
-  } else if (v.confirmPassword === "" || v.confirmPassword !== v.password) {
-    errors.confirmPassword = "auth.register.passwordMismatch";
-  }
-
-  if (!v.agreementAccepted) {
-    errors.agreement = "auth.agreement.required";
-  }
-
-  return Object.keys(errors).length > 0 ? errors : null;
-}
 
 /**
  * 字段规则清单项（AXY-8 UI 优化：聚焦浮层实时侦测，自 validators.ts 迁入）。
@@ -109,8 +65,8 @@ const USERNAME_CHARSET_RE = /^[一-龥A-Za-z0-9_]+$/;
 const PASSWORD_MIX_RE = /^(?=.*[A-Za-z])(?=.*\d)/;
 
 /**
- * 账户名规则实时拆解。不变量：每条 passed 全真 ⇔ validateAccount.ok
- * （required 除外——空值时两条均为 false，由 required 文案兜底）。
+ * 账户名规则实时拆解。不变量：每条 passed 全真 ⇔ 登录表单 schema(loginFormSchema)
+ * 通过（required 除外——空值时两条均为 false，由必填(required)文案兜底）。
  * 正则为全仓单一来源，勿在此处另写规则。
  */
 export function accountRuleStates(raw: string): FieldRuleState[] {
@@ -127,7 +83,7 @@ export function accountRuleStates(raw: string): FieldRuleState[] {
   ];
 }
 
-/** 密码规则实时拆解。不变量：每条 passed 全真 ⇔ validatePassword.ok（required 除外）。 */
+/** 密码规则实时拆解。不变量：每条 passed 全真 ⇔ 登录表单 schema(loginFormSchema) 通过（必填(required)除外）。 */
 export function passwordRuleStates(raw: string): FieldRuleState[] {
   return [
     {
@@ -141,7 +97,7 @@ export function passwordRuleStates(raw: string): FieldRuleState[] {
 
 /**
  * 确认密码规则实时拆解。不变量：passed 等价于「非空且与 password 一致」，
- * 与 validateRegisterForm 的确认密码判定同语义（空值视为不一致）。
+ * 与注册表单 schema(registerFormSchema)的确认密码判定同语义（空值视为不一致）。
  */
 export function confirmPasswordRuleStates(
   password: string,
@@ -286,39 +242,36 @@ export function useClientScreen(initialView: AuthView) {
     }
   }
 
-  /** 登录校验链：任一项不过则呈现错误、不提交。 */
+  /** 登录提交前校验：登录表单 schema(loginFormSchema) 不过则呈现字段错误、不提交。 */
   function handleLoginSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    const accountCheck = validateAccount(values.account);
-    const passwordCheck = validatePassword(values.password);
-    const nextErrors: AuthFormErrors = {};
-    if (!accountCheck.ok) {
-      nextErrors.account = accountCheck.messageKey;
-    }
-    if (!passwordCheck.ok) {
-      nextErrors.password = passwordCheck.messageKey;
-    }
-    setErrors(nextErrors);
-    if (!accountCheck.ok || !passwordCheck.ok) {
+    const parsed = loginFormSchema.safeParse({
+      account: values.account,
+      password: values.password,
+    });
+    if (!parsed.success) {
+      setErrors(toFieldErrors(parsed.error) as AuthFormErrors);
       return;
     }
+    setErrors({});
     void submitSignIn();
   }
 
-  /** 注册校验链（validateRegisterForm 含协议勾选）。 */
+  /** 注册提交前校验：注册表单 schema(registerFormSchema,与服务端复验同一 schema) 不过则呈现字段错误、不提交。 */
   function handleRegisterSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    const registerErrors: AuthFormErrors =
-      validateRegisterForm({
-        username: values.account,
-        password: values.password,
-        confirmPassword: values.confirmPassword,
-        agreementAccepted: values.agreementAccepted,
-      }) ?? {};
-    setErrors(registerErrors);
-    if (Object.keys(registerErrors).length === 0) {
-      void submitRegister();
+    const parsed = registerFormSchema.safeParse({
+      username: values.account,
+      password: values.password,
+      confirmPassword: values.confirmPassword,
+      agreementAccepted: values.agreementAccepted,
+    });
+    if (!parsed.success) {
+      setErrors(toFieldErrors(parsed.error) as AuthFormErrors);
+      return;
     }
+    setErrors({});
+    void submitRegister();
   }
 
   /** 字段错误态：仅以红框呈现（aria-invalid），文案不再渲染。 */

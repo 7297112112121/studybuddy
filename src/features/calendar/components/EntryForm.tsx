@@ -7,7 +7,6 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,7 @@ import {
   type CalendarEntryInput,
   type CalendarFieldErrors,
 } from "@/modules/calendar/validators";
-import { API_ERROR, type ApiResult } from "@/common/error";
+import { API_ERROR, toFieldErrors, type ApiResult } from "@/common/error";
 import { useCalendarStore } from "@/stores/calendar";
 
 type EntryFormProps = {
@@ -105,21 +104,7 @@ export default function EntryForm({
     };
     const parsed = calendarEntryInputSchema.safeParse(payload);
     if (!parsed.success) {
-      const errors: CalendarFieldErrors = {};
-      for (const issue of parsed.error.issues as z.core.$ZodIssue[]) {
-        const field = issue.path[0];
-        if (
-          !errors[field as keyof CalendarFieldErrors] &&
-          (field === "date" ||
-            field === "title" ||
-            field === "content" ||
-            field === "startTime" ||
-            field === "endTime")
-        ) {
-          errors[field as keyof CalendarFieldErrors] = issue.message;
-        }
-      }
-      setFieldErrors(errors);
+      setFieldErrors(toFieldErrors(parsed.error));
       setFormError(false);
       return;
     }

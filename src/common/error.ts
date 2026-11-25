@@ -1,6 +1,8 @@
 /**
- * 统一接口契约:错误码、契约化业务错误与响应体判别联合。
+ * 统一接口契约:错误码、契约化业务错误、响应体判别联合,以及
+ * zod 校验错误的字段级折算(契约切面与客户端表单共用)。
  */
+import { z } from "zod";
 
 /** 统一接口错误码:类型与运行时值同源,判别处一律引用本常量而非裸字面量。 */
 export const API_ERROR = {
@@ -33,3 +35,15 @@ export type ApiResult<TData = undefined, TError extends string = ApiErrorCode> =
       fieldErrors: Record<string, string>;
     }
   | { ok: false; error: Exclude<TError, typeof API_ERROR.INVALID_INPUT> };
+
+/** 把 zod 校验错误折算成字段级错误;同字段只取首条,值为错误文案 key。 */
+export function toFieldErrors(error: z.ZodError): Record<string, string> {
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const field = issue.path[0];
+    if (typeof field === "string" && !(field in fieldErrors)) {
+      fieldErrors[field] = issue.message;
+    }
+  }
+  return fieldErrors;
+}

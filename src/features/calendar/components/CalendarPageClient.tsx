@@ -20,8 +20,9 @@ import {
   weekStartFor,
 } from "../useClientScreen";
 import {
+  formatYearMonth,
   isValidWeekStart,
-  isValidYearMonth,
+  parseYearMonth,
 } from "@/modules/calendar/validators";
 import { useCalendarStore } from "@/stores/calendar";
 
@@ -40,21 +41,6 @@ function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** year/month → "YYYY-MM"(searchParams wire 格式)。 */
-function monthParam(year: number, month: number): string {
-  return `${year}-${pad2(month)}`;
-}
-
-/** ?month= 解析:合法 "YYYY-MM"(真实月)才采纳,否则 null 回退当前月。 */
-function parseMonthParam(
-  raw: string | undefined,
-): { year: number; month: number } | null {
-  if (raw === undefined || !/^\d{4}-\d{2}$/.test(raw)) return null;
-  const [year, month] = raw.split("-").map(Number);
-  if (!isValidYearMonth(year, month)) return null;
-  return { year, month };
-}
-
 /** 视图态解析结果:周(周一锚点)或月(年月),即日历 store 读域。 */
 type CalendarViewParams =
   | { view: "week"; weekStart: string }
@@ -69,7 +55,7 @@ function parseViewParams(
   today: string,
 ): CalendarViewParams {
   if (params.view === "month") {
-    const shown = parseMonthParam(params.month) ?? {
+    const shown = parseYearMonth(params.month) ?? {
       year: Number(today.slice(0, 4)),
       month: Number(today.slice(5, 7)),
     };
@@ -116,7 +102,7 @@ export default function CalendarPageClient({
       ? params.week
       : currentWeekStart;
   const weekHref = `/calendar?week=${carriedWeek}`;
-  const monthHref = `/calendar?view=month&month=${monthParam(Number(today.slice(0, 4)), Number(today.slice(5, 7)))}&week=${carriedWeek}`;
+  const monthHref = `/calendar?view=month&month=${formatYearMonth(Number(today.slice(0, 4)), Number(today.slice(5, 7)))}&week=${carriedWeek}`;
 
   return (
     <main className="relative isolate mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 text-foreground md:p-6">
@@ -175,7 +161,7 @@ export default function CalendarPageClient({
           <>
             <Button variant="ghost" size="icon" asChild>
               <Link
-                href={`/calendar?view=month&month=${monthParam(addMonths(shown.year, shown.month, -1).year, addMonths(shown.year, shown.month, -1).month)}&week=${carriedWeek}`}
+                href={`/calendar?view=month&month=${formatYearMonth(addMonths(shown.year, shown.month, -1).year, addMonths(shown.year, shown.month, -1).month)}&week=${carriedWeek}`}
                 aria-label={t("page.prevMonth")}
               >
                 <ChevronLeft />
@@ -187,7 +173,7 @@ export default function CalendarPageClient({
             </span>
             <Button variant="ghost" size="icon" asChild>
               <Link
-                href={`/calendar?view=month&month=${monthParam(addMonths(shown.year, shown.month, 1).year, addMonths(shown.year, shown.month, 1).month)}&week=${carriedWeek}`}
+                href={`/calendar?view=month&month=${formatYearMonth(addMonths(shown.year, shown.month, 1).year, addMonths(shown.year, shown.month, 1).month)}&week=${carriedWeek}`}
                 aria-label={t("page.nextMonth")}
               >
                 <ChevronRight />

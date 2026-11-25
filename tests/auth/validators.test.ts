@@ -1,15 +1,31 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import {
+  loginFormSchema,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   PASSWORD_RE,
+  registerFormSchema,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_RE,
-  validateAccount,
-  validatePassword,
 } from "../../src/auth/validators";
+
+/** 取 safeParse 失败 issues 的快捷断言（zod message 即 i18n key）。 */
+function issuesOf(schema: z.ZodType, input: unknown) {
+  const result = schema.safeParse(input);
+  expect(result.success).toBe(false);
+  return result.error!.issues;
+}
+
+function hasIssue(
+  issues: { path: PropertyKey[]; message: string }[],
+  field: string,
+  message: string,
+): boolean {
+  return issues.some((i) => i.path.includes(field) && i.message === message);
+}
 
 describe("规则长度常量", () => {
   it("长度界限与产品规则字面值一致，改动常量即有意变更规则，须同步本测试", () => {
@@ -68,57 +84,117 @@ describe("PASSWORD_RE", () => {
   });
 });
 
-describe("validateAccount", () => {
-  it("空字符串返回 auth.account.required", () => {
-    expect(validateAccount("")).toEqual({
-      ok: false,
-      messageKey: "auth.account.required",
-    });
+describe("loginFormSchema（登录提交门）", () => {
+  const validBase = { account: "zhang_san", password: "abcd1234" } as const;
+
+  it("合法登录入参通过", () => {
+    expect(() => loginFormSchema.parse(validBase)).not.toThrow();
   });
 
-  it("含空格或特殊字符的账户名返回 auth.account.invalid", () => {
-    expect(validateAccount("zhang san!")).toEqual({
-      ok: false,
-      messageKey: "auth.account.invalid",
-    });
+  it("账户名为空 → auth.account.required", () => {
+    const issues = issuesOf(loginFormSchema, { ...validBase, account: "" });
+    expect(hasIssue(issues, "account", "auth.account.required")).toBe(true);
   });
 
-  it("超过 16 位的账户名返回 auth.account.invalid", () => {
-    expect(validateAccount("abcdefghijklmnopq")).toEqual({
-      ok: false,
-      messageKey: "auth.account.invalid",
+  it("账户名格式非法 → auth.account.invalid", () => {
+    const issues = issuesOf(loginFormSchema, {
+      ...validBase,
+      account: "zhang san!",
     });
+    expect(hasIssue(issues, "account", "auth.account.invalid")).toBe(true);
   });
 
-  it("含 @ 的账户名返回 auth.account.invalid", () => {
-    expect(validateAccount("name@mail.com")).toEqual({
-      ok: false,
-      messageKey: "auth.account.invalid",
-    });
+  it("密码为空 → auth.password.required", () => {
+    const issues = issuesOf(loginFormSchema, { ...validBase, password: "" });
+    expect(hasIssue(issues, "password", "auth.password.required")).toBe(true);
   });
 
-  it("合法账户名返回 ok: true 且无 kind 字段", () => {
-    const result = validateAccount("zhang_san");
-    expect(result).toEqual({ ok: true });
+  it("密码强度不足 → auth.password.invalid", () => {
+    const issues = issuesOf(loginFormSchema, {
+      ...validBase,
+      password: "12345678",
+    });
+    expect(hasIssue(issues, "password", "auth.password.invalid")).toBe(true);
   });
 });
 
-describe("validatePassword", () => {
-  it("空字符串返回 auth.password.required", () => {
-    expect(validatePassword("")).toEqual({
-      ok: false,
-      messageKey: "auth.password.required",
-    });
+describe("registerFormSchema（注册提交门与端点复验共用）", () => {
+  const validBase = {
+    username: "zhang_san",
+    password: "abcd1234",
+    confirmPassword: "abcd1234",
+    agreementAccepted: true,
+  } as const;
+
+  it("合法注册入参通过", () => {
+    expect(() => registerFormSchema.parse(validBase)).not.toThrow();
   });
 
-  it("不满足强度规则返回 auth.password.invalid", () => {
-    expect(validatePassword("12345678")).toEqual({
-      ok: false,
-      messageKey: "auth.password.invalid",
+  it("账户名格式非法 → auth.account.invalid", () => {
+    const issues = issuesOf(registerFormSchema, {
+      ...validBase,
+      username: "zhang san!",
     });
+    expect(hasIssue(issues, "username", "auth.account.invalid")).toBe(true);
   });
 
-  it("合法密码返回 ok: true", () => {
-    expect(validatePassword("abcd1234")).toEqual({ ok: true });
+  it("密码为空 → auth.password.required", () => {
+    const issues = issuesOf(registerFormSchema, {
+      ...validBase,
+      password: "",
+      confirmPassword: "",
+    });
+    expect(hasIssue(issues, "password", "auth.password.required")).toBe(true);
+  });
+
+  it("密码强度不足 → auth.password.invalid", () => {
+    const issues = issuesOf(registerFormSchema, {
+      ...validBase,
+      password: "12345678",
+      confirmPassword: "12345678",
+    });
+    expect(hasIssue(issues, "password", "auth.password.invalid")).toBe(true);
+  });
+
+  it("确认密码为空视为不一致 → auth.register.passwordMismatch", () => {
+    const issues = issuesOf(registerFormSchema, {
+      ...validBase,
+      confirmPassword: "",
+    });
+    expect(
+      hasIssue(issues, "confirmPassword", "auth.register.passwordMismatch"),
+    ).toBe(true);
+  });
+
+  it("确认密码与密码不一致 → auth.register.passwordMismatch", () => {
+    const issues = issuesOf(registerFormSchema, {
+      ...validBase,
+      confirmPassword: "abcd1235",
+    });
+    expect(
+      hasIssue(issues, "confirmPassword", "auth.register.passwordMismatch"),
+    ).toBe(true);
+  });
+
+  it("未勾选协议 → auth.agreement.required", () => {
+    const issues = issuesOf(registerFormSchema, {
+      ...validBase,
+      agreementAccepted: false,
+    });
+    expect(hasIssue(issues, "agreement", "auth.agreement.required")).toBe(true);
+  });
+
+  it("多字段同时错误逐一报告", () => {
+    const issues = issuesOf(registerFormSchema, {
+      username: "zhang san!",
+      password: "abcd1234",
+      confirmPassword: "xyz",
+      agreementAccepted: false,
+    });
+    expect(hasIssue(issues, "username", "auth.account.invalid")).toBe(true);
+    expect(
+      hasIssue(issues, "confirmPassword", "auth.register.passwordMismatch"),
+    ).toBe(true);
+    expect(hasIssue(issues, "agreement", "auth.agreement.required")).toBe(true);
   });
 });

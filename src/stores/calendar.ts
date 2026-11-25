@@ -5,7 +5,10 @@ import { create } from "zustand";
 
 import { API_ERROR, type ApiResult } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
-import type { CalendarEntryInput } from "@/modules/calendar/validators";
+import {
+  formatYearMonth,
+  type CalendarEntryInput,
+} from "@/modules/calendar/validators";
 
 /** 读域:当前加载的条目范围(周锚点或年月),写成功后按此重取失效。 */
 export type CalendarScope =
@@ -37,8 +40,7 @@ function scopeQuery(scope: CalendarScope): string {
   if (scope.view === "week") {
     return `week=${encodeURIComponent(scope.weekStart)}`;
   }
-  const month = `${String(scope.year).padStart(2, "0")}-${String(scope.month).padStart(2, "0")}`;
-  return `view=month&month=${month}`;
+  return `view=month&month=${formatYearMonth(scope.year, scope.month)}`;
 }
 
 /** 写端点调用归一:body 即契约结果(ApiResult),网络异常不由本层吞。 */

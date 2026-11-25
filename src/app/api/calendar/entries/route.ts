@@ -20,8 +20,7 @@ export async function GET(request: Request): Promise<Response> {
       if ("week" in q) {
         return listWeekEntries(userId, q.week);
       }
-      const [year, month] = q.month.split("-").map(Number);
-      return listMonthEntries(userId, year, month);
+      return listMonthEntries(userId, q.month.year, q.month.month);
     },
   );
   return respondWith(result);

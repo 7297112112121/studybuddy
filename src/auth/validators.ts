@@ -1,9 +1,8 @@
 /**
- * 账户名与密码业务规则的唯一来源（长度常量、正则、字段级校验纯函数与
+ * 账户名与密码业务规则的唯一来源（长度常量、正则、登录/注册提交门与
  * 服务端复验 schema）。规则界限禁止在本文件之外复写字面值，消费方一律
- * 引用本文件导出的常量、正则与类型。客户端页面层校验（注册表单提交前
- * 校验、规则浮层实时拆解）居于 features/auth/useClientScreen.ts，经导入
- * 同源衔接，勿回流本文件。
+ * 引用本文件导出的常量、正则与 schema。规则浮层实时拆解（纯 UI 呈现）
+ * 居于 features/auth/useClientScreen.ts，经导入同源衔接，勿回流本文件。
  */
 import { z } from "zod";
 
@@ -50,41 +49,26 @@ export type AuthFormErrors = Partial<
   >
 >;
 
-export type AccountCheck =
-  | { ok: true }
-  | { ok: false; messageKey: "auth.account.required" | "auth.account.invalid" };
-
-export function validateAccount(raw: string): AccountCheck {
-  if (raw === "") {
-    return { ok: false, messageKey: "auth.account.required" };
-  }
-  if (!USERNAME_RE.test(raw)) {
-    return { ok: false, messageKey: "auth.account.invalid" };
-  }
-  return { ok: true };
-}
-
-export function validatePassword(raw: string):
-  | {
-      ok: true;
-    }
-  | {
-      ok: false;
-      messageKey: "auth.password.required" | "auth.password.invalid";
-    } {
-  if (raw === "") {
-    return { ok: false, messageKey: "auth.password.required" };
-  }
-  if (!PASSWORD_RE.test(raw)) {
-    return { ok: false, messageKey: "auth.password.invalid" };
-  }
-  return { ok: true };
-}
+/**
+ * 登录表单提交门 schema（客户端提交前校验用；登录经 Better Auth，无
+ * 服务端复验端点）：空值报必填，格式不过报无效。
+ */
+export const loginFormSchema = z.object({
+  account: z
+    .string({ message: "auth.account.required" })
+    .min(1, { message: "auth.account.required" })
+    .regex(USERNAME_RE, { message: "auth.account.invalid" }),
+  password: z
+    .string({ message: "auth.password.required" })
+    .min(1, { message: "auth.password.required" })
+    .refine((value) => PASSWORD_RE.test(value), {
+      message: "auth.password.invalid",
+    }),
+});
 
 /**
- * 注册端点入参 schema(统一接口切面复验用):规则与文案 key 与上方常量/
- * 正则同源引用,勿复写字面值;密码为空报必填,格式不过报无效(与客户端
- * 提交前校验语义一致)。
+ * 注册表单 schema（客户端提交门与统一接口切面复验共用）：规则与文案 key
+ * 与上方常量/正则同源引用，勿复写字面值；密码为空报必填，格式不过报无效。
  */
 export const registerFormSchema = z
   .object({
