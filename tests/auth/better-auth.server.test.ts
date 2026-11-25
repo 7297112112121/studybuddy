@@ -14,7 +14,7 @@ import {
   PASSWORD_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
-} from "../../src/auth/validators";
+} from "../../src/validation/auth-validators";
 
 beforeEach(() => {
   vi.resetModules();

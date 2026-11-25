@@ -2,8 +2,8 @@
 
 /**
  * 登录/注册屏的表单状态机与登录错误文案映射。提交链携带凭据，日志与失败文案不得泄露凭据细节。
- * 注册表单提交前校验与规则浮层实时拆解同居本文件：客户端页面校验逻辑
- * 不入服务端技术层（src/auth/validators.ts 只留规则单一来源与复验 schema）。
+ * 提交门校验用校验契约层的 schema（src/validation/auth-validators.ts），
+ * 本文件只持规则浮层实时拆解与表单状态编排。
  */
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -21,7 +21,7 @@ import {
   USERNAME_MIN_LENGTH,
   type AuthFormErrors,
   type AuthMessageKey,
-} from "@/auth/validators";
+} from "@/validation/auth-validators";
 import { API_ERROR, toFieldErrors } from "@/common/error";
 import { ROUTES } from "@/common/routes";
 import { authClient } from "@/stores/auth-client";

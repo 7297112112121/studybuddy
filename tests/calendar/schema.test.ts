@@ -8,7 +8,7 @@ import {
   calendarEntryInputSchema,
   formatYearMonth,
   parseYearMonth,
-} from "@/modules/calendar/validators";
+} from "@/validation/calendar-validators";
 
 /**
  * calendar 表定义与条目入参契约单测（AXY-22 design「数据模型」「契约」节）。

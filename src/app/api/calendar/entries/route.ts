@@ -8,7 +8,7 @@ import { createEntry } from "@/modules/calendar/service";
 import {
   calendarEntriesQuerySchema,
   calendarEntryInputSchema,
-} from "@/modules/calendar/validators";
+} from "@/validation/calendar-validators";
 
 /** 条目集合读端点:?week=周一锚点读一周区间,?view=month&month=YYYY-MM 读月度区间。 */
 export async function GET(request: Request): Promise<Response> {

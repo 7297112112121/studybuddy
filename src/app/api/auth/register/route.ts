@@ -6,7 +6,7 @@
 import { respondWith, withSessionlessApiContract } from "@/app/api/contract";
 import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
 import { registerWithUsername } from "@/auth/service";
-import { registerFormSchema } from "@/auth/validators";
+import { registerFormSchema } from "@/validation/auth-validators";
 import { type ApiErrorCode, type ApiResult } from "@/common/error";
 
 export type RegisterApiResult = ApiResult<

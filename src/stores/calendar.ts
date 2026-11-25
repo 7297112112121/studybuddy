@@ -8,7 +8,7 @@ import type { CalendarEntryView } from "@/modules/calendar/queries";
 import {
   formatYearMonth,
   type CalendarEntryInput,
-} from "@/modules/calendar/validators";
+} from "@/validation/calendar-validators";
 
 /** 读域:当前加载的条目范围(周锚点或年月),写成功后按此重取失效。 */
 export type CalendarScope =

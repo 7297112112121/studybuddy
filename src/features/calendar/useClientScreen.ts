@@ -1,7 +1,9 @@
-
 import { formatUtcDate, MS_PER_DAY } from "@/common/date";
 
-import { TIME_HHMM_RE, isValidDateString } from "@/modules/calendar/validators";
+import {
+  TIME_HHMM_RE,
+  isValidDateString,
+} from "@/validation/calendar-validators";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 /** 作用:构建 6 行 × 7 列月网格,周一为每周首日,含邻月补位格(inMonth 为 false)。 */

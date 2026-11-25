@@ -23,7 +23,7 @@ import {
   formatYearMonth,
   isValidWeekStart,
   parseYearMonth,
-} from "@/modules/calendar/validators";
+} from "@/validation/calendar-validators";
 import { useCalendarStore } from "@/stores/calendar";
 
 import CalendarScreen from "./CalendarScreen";

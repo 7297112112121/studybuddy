@@ -10,7 +10,7 @@ import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_RE,
-} from "../../src/auth/validators";
+} from "../../src/validation/auth-validators";
 
 /** 取 safeParse 失败 issues 的快捷断言（zod message 即 i18n key）。 */
 function issuesOf(schema: z.ZodType, input: unknown) {

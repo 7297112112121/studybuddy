@@ -19,7 +19,7 @@ import {
   calendarEntryInputSchema,
   type CalendarEntryInput,
   type CalendarFieldErrors,
-} from "@/modules/calendar/validators";
+} from "@/validation/calendar-validators";
 import { API_ERROR, toFieldErrors, type ApiResult } from "@/common/error";
 import { useCalendarStore } from "@/stores/calendar";
 

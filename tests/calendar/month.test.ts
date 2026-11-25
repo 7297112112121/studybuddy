@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildMonthGrid } from "@/features/calendar/useClientScreen";
 import { addMonths } from "@/features/calendar/useClientScreen";
-import { isValidDateString } from "@/modules/calendar/validators";
+import { isValidDateString } from "@/validation/calendar-validators";
 import { formatHhmm, monthRange } from "@/modules/calendar/queries";
 
 /**

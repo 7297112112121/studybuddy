@@ -4,7 +4,7 @@ import {
   buildWeekDays,
   weekStartFor,
 } from "@/features/calendar/useClientScreen";
-import { isValidWeekStart } from "@/modules/calendar/validators";
+import { isValidWeekStart } from "@/validation/calendar-validators";
 import { weekRange } from "@/modules/calendar/queries";
 
 /**

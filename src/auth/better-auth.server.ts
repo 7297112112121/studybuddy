@@ -25,7 +25,7 @@ import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_RE,
-} from "./validators";
+} from "@/validation/auth-validators";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
