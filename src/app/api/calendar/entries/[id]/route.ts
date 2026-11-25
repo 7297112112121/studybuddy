@@ -29,6 +29,7 @@ export async function PUT(
 
 /** 删除指定条目;无请求体,any schema 直通契约切面。 */
 export async function DELETE(
+  // ts语法解释: _request前缀下划线表示该参数未使用,避免ts编译器报错
   _request: Request,
   context: RouteContext,
 ): Promise<Response> {
