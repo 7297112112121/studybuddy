@@ -61,7 +61,8 @@ npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 
 
 - 凡是编码实现前，必须提请用户审查，通过后才能写入代码文件
 - 凡是涉及编码实现/落地请看[docs\dev\编码排版纪律.md](docs\dev\编码排版纪律.md)
-
+- 编码实现需要涉及参数校验请看[docs\dev\校验纪律.md](docs\dev\校验纪律.md)
+- 编码实现需要涉及异常处理请看[docs\dev\异常处理纪律.md](docs\dev\异常处理纪律.md)
 
 ## 不信任训练集
 
