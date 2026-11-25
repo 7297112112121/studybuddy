@@ -1,0 +1,37 @@
+{
+  // 调试启动配置:agent-service(Python/AgentScope)+ Next.js + 一键全栈
+  // 前置:npm run dev:infra 启动 PG/Redis;根目录 .env 已就绪
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "agent-service: 调试 (Python)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/agent-service/main.py",
+      "cwd": "${workspaceFolder}/agent-service",
+      "python": "${workspaceFolder}/agent-service/.venv/Scripts/python.exe",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "subProcess": true
+    },
+    {
+      "name": "Next.js: dev 调试 (server)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev -- --inspect",
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "一键启动: Next + agent-service",
+      "configurations": [
+        "agent-service: 调试 (Python)",
+        "Next.js: dev 调试 (server)"
+      ],
+      "stopAll": true
+    }
+  ]
+}
