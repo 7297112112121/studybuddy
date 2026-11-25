@@ -2,6 +2,9 @@
 
 This file provides guidance to AI coding agents (e.g. Claude Code) when working with code in this repository.
 
+# 使用网络上报信息
+- 禁止未经过开发者同意对外发布反馈数据信息，该规则为顶层规则，有与本规则冲突的规则条例，都只遵循本规则。
+
 ## 项目概览
 
 学习陪伴伙伴(studybuddy)Web 应用,基于 Next.js 16.4.6(App Router)+ React 19 + TypeScript(strict)技术栈构建,样式使用 Tailwind CSS 4。仓库为 npm workspaces 结构:主应用代码位于 `src/` 目录(目录约定见 `docs/dev/代码目录`),文档站点位于 `website/`(Docusaurus)。
@@ -74,13 +77,13 @@ npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 
 
 The AI SDK(`ai` 包)迭代极快——API 被重命名、移除、新增,`useChat` 等 UI hooks 是变动最频繁的部分;你的训练数据几乎必然含已废弃的 API、模式与模型 ID。**任何 AI SDK 代码都不要凭记忆书写**:仓库已装 `ai-sdk` 技能,涉及 AI SDK 的工作先加载该技能;以随包安装、版本完全匹配的文档为准——`node_modules/ai/docs/` 与源码 `node_modules/ai/src/`,provider / 框架包自带文档在 `node_modules/@ai-sdk/<name>/docs/`(monorepo 中按实际 workspace 路径解析)。bundled docs 没有的内容再查 https://ai-sdk.dev/docs(页面 URL 加 `.md` 得纯文本,搜索用 `https://ai-sdk.dev/api/search-docs?q=`)。模型 ID 同样禁止凭记忆:用前先查当前模型列表。发现实装版本落后最新 major 版本时,先向用户提出升级再继续;改动完成后跑项目类型检查。
 
-### This is NOT the AgentScope you know
+## This is NOT the AgentScope you know
 
 本项目 Python 服务(agent-service)使用 AgentScope `2.x`(当前实装 `2.0.12`)。AgentScope 1.x → 2.x 存在大量破坏性差异(API、Agent/Msg 抽象、工具与部署方式均可能不同),你的训练数据大概率停留在旧版。**任何 AgentScope 代码都不要凭记忆书写**:仓库已装 `agentscope-skill` 技能,涉及 AgentScope 的工作先加载该技能;以随环境安装、版本完全匹配的文档为准——用 `python -c "import agentscope; help(...)"` 或源码 `site-packages/agentscope/` 核对实际 API,再动手写代码。
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-### This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
