@@ -1,14 +1,19 @@
-/** 登录/注册屏的玻璃签名卡壳（AuthCard），卡内内容由组合层注入。 */
-import type { ReactNode } from "react";
+"use client";
 
+import { useClientScreen } from "../useClientScreen";
+import AuthTabs from "./AuthTabs";
+import AuthTitle from "./AuthTitle";
+import LoginForm from "./LoginForm";
+import RegisterForm from "./RegisterForm";
 import type { AuthView } from "./AuthTabs";
 
 type AuthCardProps = {
-  view: AuthView;
-  children: ReactNode;
+  initialView: AuthView;
 };
 
 export default function AuthCard(props: AuthCardProps) {
+  const auth = useClientScreen(props.initialView);
+
   return (
     <section className="relative order-1 lg:order-2">
       {/* 角落 aurora 吻光（aria-hidden）：垫在玻璃卡后，隔毛玻璃透出柔光。 */}
@@ -21,11 +26,63 @@ export default function AuthCard(props: AuthCardProps) {
         className="absolute -bottom-10 -left-10 -z-10 size-40 rounded-full bg-aurora-aqua/25 blur-2xl"
       />
       <div className="glass-card mx-auto min-h-[34.5rem] w-full max-w-md rounded-4xl border border-border p-8 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-3 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
-        {/* 视图级大标题：随 view 切换文案。 */}
-        <h1 className="mb-5 text-3xl font-bold tracking-tight text-foreground">
-          {props.view === "login" ? "欢迎回来" : "创建你的账号"}
-        </h1>
-        {props.children}
+        <AuthTitle view={auth.activeView} />
+        <AuthTabs active={auth.activeView} onSwitch={auth.switchView} />
+
+        <div
+          key={auth.activeView}
+          className="animate-in fade-in slide-in-from-bottom-2 [animation-duration:300ms] [animation-fill-mode:both] motion-reduce:animate-none"
+        >
+          {auth.activeView === "login" ? (
+            <LoginForm
+              account={auth.values.account}
+              password={auth.values.password}
+              accountInvalid={auth.isInvalid("account")}
+              passwordInvalid={
+                auth.isInvalid("password") ||
+                auth.topError === "auth.error.invalidCredentials"
+              }
+              errorText={
+                auth.topError === null
+                  ? undefined
+                  : auth.errorText(auth.topError)
+              }
+              submitting={auth.submitting}
+              onSubmit={auth.handleLoginSubmit}
+              onAccountChange={(value) => auth.updateValue("account", value)}
+              onPasswordChange={(value) => auth.updateValue("password", value)}
+              onSwitchView={auth.switchView}
+            />
+          ) : (
+            <RegisterForm
+              account={auth.values.account}
+              password={auth.values.password}
+              confirmPassword={auth.values.confirmPassword}
+              agreementAccepted={auth.values.agreementAccepted}
+              accountInvalid={auth.isInvalid("username")}
+              passwordInvalid={auth.isInvalid("password")}
+              confirmPasswordInvalid={auth.isInvalid("confirmPassword")}
+              agreementInvalid={auth.agreementInvalid}
+              topError={auth.topError}
+              topErrorText={
+                auth.topError === null
+                  ? undefined
+                  : auth.errorText(auth.topError)
+              }
+              submitting={auth.submitting}
+              onSubmit={auth.handleRegisterSubmit}
+              onAccountChange={(value) => auth.updateValue("account", value)}
+              onPasswordChange={(value) => auth.updateValue("password", value)}
+              onConfirmPasswordChange={(value) =>
+                auth.updateValue("confirmPassword", value)
+              }
+              onAgreementChange={(accepted) =>
+                auth.updateValue("agreementAccepted", accepted)
+              }
+              onSwitchView={auth.switchView}
+            />
+          )}
+        </div>
       </div>
     </section>
   );

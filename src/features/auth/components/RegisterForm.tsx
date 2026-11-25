@@ -1,13 +1,12 @@
-/**
- * 注册表单（受控）。账户名复用 AuthScreen 的 account 值（R16 跨视图保留）。
- * 校验链在 AuthScreen。协议勾选行保留——同意留痕（R15）仅注册侧收集。
- */
+
 import type { FormEvent } from "react";
 import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -16,6 +15,7 @@ import {
   accountRuleStates,
   confirmPasswordRuleStates,
   passwordRuleStates,
+  type AuthTopError,
 } from "../useClientScreen";
 import type { AuthView } from "./AuthTabs";
 
@@ -28,6 +28,10 @@ type RegisterFormProps = {
   passwordInvalid?: boolean;
   confirmPasswordInvalid?: boolean;
   agreementInvalid?: boolean;
+  /** 顶部错误键：提交失败的状态机归一产物，null 表示无。 */
+  topError: AuthTopError | null;
+  /** 顶部错误文案：与 topError 同源，由组合层渲染。 */
+  topErrorText?: string;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onAccountChange: (value: string) => void;
@@ -41,6 +45,22 @@ type RegisterFormProps = {
 export default function RegisterForm(props: RegisterFormProps) {
   return (
     <form id="auth-register" noValidate onSubmit={props.onSubmit}>
+      {props.topError !== null && (
+        <Alert variant="destructive" className="mb-4">
+          {props.topError === "auth.error.usernameRegistered" ? (
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => props.onSwitchView("login")}
+              className="h-auto p-0 text-destructive"
+            >
+              {props.topErrorText}
+            </Button>
+          ) : (
+            props.topErrorText
+          )}
+        </Alert>
+      )}
       <div className="space-y-4">
         <AccountField
           id="register-account"

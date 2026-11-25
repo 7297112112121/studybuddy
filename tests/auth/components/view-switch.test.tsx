@@ -14,7 +14,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import AuthScreen from "../../../src/features/auth/components/AuthScreen";
+import AuthCard from "../../../src/features/auth/components/AuthCard";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
 
 const routerReplace = vi.hoisted(() => vi.fn());
@@ -30,7 +30,7 @@ function renderAuthScreen(
 ): ReturnType<typeof render> {
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={{ auth: authMessages }}>
-      <AuthScreen initialView={props.initialView ?? "login"} />
+      <AuthCard initialView={props.initialView ?? "login"} />
     </NextIntlClientProvider>,
   );
 }

@@ -1,9 +1,4 @@
-/**
- * 顶部视图切换 tab（R16）。纯受控：激活态与切换回调均来自 AuthScreen。
- * 视觉：shadcn Tabs（Radix，ADR-0004），受控 value/onValueChange 接
- * switchView；内容区仍由 AuthScreen 条件渲染 LoginForm/RegisterForm，
- * 不使用 TabsContent（表单 id 与视图同步逻辑保持不变）。
- */
+
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type AuthView = "login" | "register";

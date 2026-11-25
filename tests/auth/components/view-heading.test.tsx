@@ -6,7 +6,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import AuthScreen from "../../../src/features/auth/components/AuthScreen";
+import AuthCard from "../../../src/features/auth/components/AuthCard";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
 
 const routerReplace = vi.hoisted(() => vi.fn());
@@ -20,7 +20,7 @@ afterEach(cleanup);
 function renderAuthScreen(initialView: "login" | "register" = "login"): void {
   render(
     <NextIntlClientProvider locale="zh-CN" messages={{ auth: authMessages }}>
-      <AuthScreen initialView={initialView} />
+      <AuthCard initialView={initialView} />
     </NextIntlClientProvider>,
   );
 }

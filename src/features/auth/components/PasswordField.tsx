@@ -1,13 +1,4 @@
-/**
- * 密码输入框（R17 显隐切换）。登录密码、注册密码、确认密码三处同构复用；
- * 显隐为视图局部态（wireframe 同构），不进 AuthScreen 全局状态。纯受控。
- * 错误态只以红框呈现（aria-invalid，文案不再渲染），hint 文案保留。
- * 视觉：shadcn Label + Input + ghost icon Button（lucide Eye/EyeOff，
- * 显隐图标按钮的可访问名经 aria-label 保持「显示密码/隐藏密码」不变），
- * 焦点环 aurora aqua。
- * 聚焦时展开规则浮层（FieldRulesPopover，AXY-8 UI 优化）：规则清单由
- * 调用方传入（确认密码只传匹配规则，不重复强度规则）；不传则无浮层。
- */
+
 import { useState } from "react";
 import type { FocusEvent } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
