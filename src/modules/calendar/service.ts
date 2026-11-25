@@ -1,6 +1,6 @@
 /**
  * 文件作用:日历条目写路径 service(统一接口端点调用,Drizzle ORM 封装)。
- * 视图导航日期数学已迁 features/calendar/date-nav.ts(数据流向评审裁决 4)。
+ * 视图导航日期数学已并入 features/calendar/useClientScreen.ts。
  */
 import { and, eq } from "drizzle-orm";
 

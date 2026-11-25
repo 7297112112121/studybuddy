@@ -18,7 +18,7 @@ import {
   addWeeks,
   buildWeekDays,
   weekStartFor,
-} from "../date-nav";
+} from "../useClientScreen";
 import {
   isValidWeekStart,
   isValidYearMonth,
@@ -29,7 +29,11 @@ import CalendarScreen from "./CalendarScreen";
 import WeekView from "./WeekView";
 
 /** searchParams wire 形状(与 /calendar?view=&week=&month= 一致)。 */
-export type CalendarPageParams = { view?: string; week?: string; month?: string };
+export type CalendarPageParams = {
+  view?: string;
+  week?: string;
+  month?: string;
+};
 
 /** 数字 → "M"/"MM" 零填充。 */
 function pad2(n: number): string {
@@ -98,10 +102,7 @@ export default function CalendarPageClient({
   const entries = useCalendarStore((s) => s.entries);
   // params 由薄壳 page 传入:同一次导航内引用稳定,store 更新引发的重渲染
   // 不会重建;跨导航由 page 侧新 searchParams 触发重建。
-  const shown = useMemo(
-    () => parseViewParams(params, today),
-    [params, today],
-  );
+  const shown = useMemo(() => parseViewParams(params, today), [params, today]);
 
   // 数据经 store 读域加载(评审裁决 1:RSC 首屏直读废除)
   useEffect(() => {

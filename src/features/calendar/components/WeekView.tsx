@@ -17,8 +17,11 @@ import { useTranslations } from "next-intl";
 import { cn } from "cn";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
-import type { WeekDay } from "../date-nav";
-import { layoutDayBlocks, slotPrefillStart } from "../useClientScreen";
+import {
+  layoutDayBlocks,
+  slotPrefillStart,
+  type WeekDay,
+} from "../useClientScreen";
 import WeekEntryDialog, { type WeekEntryDialogState } from "./WeekEntryDialog";
 
 const PX_PER_MINUTE = 2;

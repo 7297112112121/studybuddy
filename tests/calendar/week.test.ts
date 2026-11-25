@@ -3,7 +3,7 @@ import {
   addWeeks,
   buildWeekDays,
   weekStartFor,
-} from "@/features/calendar/date-nav";
+} from "@/features/calendar/useClientScreen";
 import { isValidWeekStart } from "@/modules/calendar/validators";
 import { weekRange } from "@/modules/calendar/queries";
 
