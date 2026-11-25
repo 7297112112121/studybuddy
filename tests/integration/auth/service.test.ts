@@ -1,12 +1,12 @@
 /**
- * registerWithUsername 集成测试（Task 5，design「modules/auth/service.ts」契约）。
+ * registerWithUsername 集成测试。
  *
- * 真实 Postgres（compose.dev.yaml），覆盖 R9/R10/R13/R14/R15 与 F-01：
- * 1. 注册成功——user/agreement 字段落库 + credential account 密码摘要（R9/R13/R15）；
- * 2. 同名再注册——23505 映射 USERNAME_ALREADY_REGISTERED，无重复行（R10）；
- * 3. 并发同名——恰一 ok 一 USERNAME_ALREADY_REGISTERED（R14）；
- * 4. 并发大小写变体——两行共存，user_username 区分大小写直证（R14/F-01）。
- * R13 日志纪律（不记录入参）属运行时行为，以查库断言密码不含明文间接守护。
+ * 真实 Postgres（compose.dev.yaml），覆盖：
+ * 1. 注册成功——user/agreement 字段落库 + credential account 密码摘要；
+ * 2. 同名再注册——23505 抛契约化错误（ApiError），无重复行；
+ * 3. 并发同名——恰一成功一抛契约化错误；
+ * 4. 并发大小写变体——两行共存，user_username 区分大小写直证。
+ * 日志纪律（不记录入参）属运行时行为，以查库断言密码不含明文间接守护。
  */
 import { eq, inArray } from "drizzle-orm";
 import { verifyPassword } from "better-auth/crypto";
@@ -30,12 +30,7 @@ describe("registerWithUsername（tests/integration/auth/service）", () => {
     const username = uniqueUsername();
     const password = "abcdefg1";
 
-    const result = await registerWithUsername({ username, password });
-
-    expect(result).toEqual({ ok: true, userId: expect.any(String) });
-    if (!result.ok) {
-      throw new Error("unreachable: 收窄判别联合");
-    }
+    await registerWithUsername({ username, password });
 
     const users = await db
       .select()
@@ -43,7 +38,6 @@ describe("registerWithUsername（tests/integration/auth/service）", () => {
       .where(eq(user.username, username));
     expect(users).toHaveLength(1);
     const u = users[0];
-    expect(u.id).toBe(result.userId);
     expect(u.name).toBe(username);
     expect(u.email).toBe(usernameToPlaceholderEmail(username));
     expect(u.username).toBe(username);
@@ -70,11 +64,10 @@ describe("registerWithUsername（tests/integration/auth/service）", () => {
     const username = uniqueUsername();
     const password = "abcdefg1";
 
-    const first = await registerWithUsername({ username, password });
-    expect(first.ok).toBe(true);
-    const second = await registerWithUsername({ username, password });
-
-    expect(second).toEqual({ ok: false, error: "USERNAME_ALREADY_REGISTERED" });
+    await registerWithUsername({ username, password });
+    await expect(
+      registerWithUsername({ username, password }),
+    ).rejects.toMatchObject({ code: "USERNAME_ALREADY_REGISTERED" });
     const users = await db
       .select()
       .from(user)
@@ -92,24 +85,12 @@ describe("registerWithUsername（tests/integration/auth/service）", () => {
     ]);
 
     expect(settled).toHaveLength(2);
-    for (const s of settled) {
-      expect(s.status).toBe("fulfilled");
-    }
-    const outcomes = settled.map(
-      (s) =>
-        (
-          s as PromiseFulfilledResult<
-            Awaited<ReturnType<typeof registerWithUsername>>
-          >
-        ).value,
-    );
-    const succeeded = outcomes.filter((o) => o.ok);
-    expect(succeeded).toHaveLength(1);
-    expect(
-      outcomes.filter(
-        (o) => !o.ok && o.error === "USERNAME_ALREADY_REGISTERED",
-      ),
-    ).toHaveLength(1);
+    const rejected = settled.filter((s) => s.status === "rejected");
+    expect(rejected).toHaveLength(1);
+    expect((rejected[0] as PromiseRejectedResult).reason).toMatchObject({
+      code: "USERNAME_ALREADY_REGISTERED",
+    });
+    expect(settled.filter((s) => s.status === "fulfilled")).toHaveLength(1);
 
     const users = await db
       .select()
@@ -130,19 +111,7 @@ describe("registerWithUsername（tests/integration/auth/service）", () => {
       registerWithUsername({ username: upper, password }),
     ]);
 
-    expect(settled).toHaveLength(2);
-    for (const s of settled) {
-      expect(s.status).toBe("fulfilled");
-    }
-    const outcomes = settled.map(
-      (s) =>
-        (
-          s as PromiseFulfilledResult<
-            Awaited<ReturnType<typeof registerWithUsername>>
-          >
-        ).value,
-    );
-    expect(outcomes.filter((o) => o.ok)).toHaveLength(2);
+    expect(settled.map((s) => s.status)).toEqual(["fulfilled", "fulfilled"]);
 
     const users = await db
       .select()

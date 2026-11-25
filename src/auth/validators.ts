@@ -2,6 +2,7 @@
  * 登录/注册表单校验纯函数，账户名与密码业务规则的唯一来源。
  * 规则界限禁止在本文件之外复写字面值，消费方一律引用本文件导出的常量、正则与类型。
  */
+import { z } from "zod";
 
 /** 账户名长度下界：最短字符数，正则量词、规则浮层与 Better Auth 插件配置同源引用。 */
 export const USERNAME_MIN_LENGTH = 1;
@@ -180,3 +181,37 @@ export function validateRegisterForm(
 
   return Object.keys(errors).length > 0 ? errors : null;
 }
+
+/**
+ * 注册端点入参 schema(统一接口切面复验用):规则与文案 key 与上方纯函数
+ * 同源引用,勿复写字面值;密码为空报必填,格式不过报无效(与纯函数语义一致)。
+ */
+export const registerFormSchema = z
+  .object({
+    username: z
+      .string({ message: "auth.account.invalid" })
+      .regex(USERNAME_RE, { message: "auth.account.invalid" }),
+    password: z
+      .string({ message: "auth.password.required" })
+      .refine((value) => value !== "", { message: "auth.password.required" })
+      .refine((value) => PASSWORD_RE.test(value), {
+        message: "auth.password.invalid",
+      }),
+    confirmPassword: z.string({ message: "auth.account.invalid" }),
+    agreementAccepted: z.boolean({ message: "auth.agreement.required" }),
+  })
+  // 密码本身非法时由 password 字段报错,确认字段不重复报(与纯函数判定一致)
+  .refine(
+    (value) =>
+      !PASSWORD_RE.test(value.password) ||
+      (value.confirmPassword !== "" &&
+        value.confirmPassword === value.password),
+    {
+      path: ["confirmPassword"],
+      message: "auth.register.passwordMismatch",
+    },
+  )
+  .refine((value) => value.agreementAccepted, {
+    path: ["agreement"],
+    message: "auth.agreement.required",
+  });

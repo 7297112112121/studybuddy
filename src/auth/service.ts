@@ -4,6 +4,7 @@
  */
 import { hashPassword } from "better-auth/crypto";
 
+import { ApiError } from "@/common/error";
 import { db } from "@/db/client";
 import { account, user } from "@/db/schema";
 
@@ -13,14 +14,11 @@ export function usernameToPlaceholderEmail(username: string): string {
   return `${username}@user.styb.invalid`;
 }
 
-export type RegisterOutcome =
-  | { ok: true; userId: string }
-  | { ok: false; error: typeof USERNAME_ALREADY_REGISTERED };
-
+/** 注册账户名与占位邮箱(单事务两行写入);账户名唯一冲突(23505)抛契约化错误(ApiError),其余 DB 异常向上抛由切面归一。 */
 export async function registerWithUsername(input: {
   username: string;
   password: string;
-}): Promise<RegisterOutcome> {
+}): Promise<void> {
   try {
     return await db.transaction(async (tx) => {
       const userId = crypto.randomUUID();
@@ -39,11 +37,10 @@ export async function registerWithUsername(input: {
         userId,
         password: await hashPassword(input.password),
       });
-      return { ok: true, userId };
     });
   } catch (err) {
     if (isUsernameUniqueViolation(err)) {
-      return { ok: false, error: USERNAME_ALREADY_REGISTERED };
+      throw new ApiError(USERNAME_ALREADY_REGISTERED);
     }
     throw err;
   }

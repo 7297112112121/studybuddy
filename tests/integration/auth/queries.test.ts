@@ -9,9 +9,11 @@
  * 覆盖：无 cookie → null；登录后携该 cookie → AuthSession 形状
  * （user.id/name=账户名/username、session.id/userId/expiresAt instanceof Date）。
  */
+import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { db } from "@/db/client";
+import { user } from "@/db/schema";
 import { redis } from "@/common/redis";
 
 const headerStore = vi.hoisted(() => ({ current: new Headers() }));
@@ -45,13 +47,12 @@ describe("getCurrentSession（tests/integration/auth/queries）", () => {
 
   it("登录后携该 cookie → AuthSession 形状（user.name=账户名，expiresAt 为 Date）", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({
-      username,
-      password: PASSWORD,
-    });
-    if (!registered.ok) {
-      throw new Error("unreachable: 注册应成功");
-    }
+    await registerWithUsername({ username, password: PASSWORD });
+    const rows = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.username, username));
+    const userId = rows[0]!.id;
     const cookie = await signInAndGetCookie(username, PASSWORD);
     headerStore.current = new Headers({ cookie });
 
@@ -59,11 +60,11 @@ describe("getCurrentSession（tests/integration/auth/queries）", () => {
 
     expect(result).not.toBeNull();
     const s = result!;
-    expect(s.user.id).toBe(registered.userId);
+    expect(s.user.id).toBe(userId);
     expect(s.user.name).toBe(username);
     expect(s.user.username).toBe(username);
     expect(s.session.id).toEqual(expect.any(String));
-    expect(s.session.userId).toBe(registered.userId);
+    expect(s.session.userId).toBe(userId);
     expect(s.session.expiresAt).toBeInstanceOf(Date);
     expect(s.session.expiresAt.getTime()).toBeGreaterThan(Date.now());
   });

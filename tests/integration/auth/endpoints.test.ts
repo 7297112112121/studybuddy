@@ -26,18 +26,22 @@ import { session, user } from "@/db/schema";
 import { auth } from "@/auth/better-auth.server";
 import { redis } from "@/common/redis";
 import { directPost, signInAndGetCookie, uniqueUsername } from "../helpers";
-import {
-  registerWithUsername,
-  type RegisterOutcome,
-} from "../../../src/auth/service";
+import { registerWithUsername } from "../../../src/auth/service";
 
-/** expect 断言不改类型，判别联合经 throw 收窄（与 service.test.ts 同法） */
-function expectRegisteredOk(
-  outcome: RegisterOutcome,
-): asserts outcome is Extract<RegisterOutcome, { ok: true }> {
-  if (!outcome.ok) {
-    throw new Error("unreachable: 注册应成功");
+/** 注册测试账号并回读 user id(注册成功无载荷,userId 由库内取)。 */
+async function registerTestUser(input: {
+  username: string;
+  password: string;
+}): Promise<string> {
+  await registerWithUsername(input);
+  const rows = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.username, input.username));
+  if (rows.length !== 1) {
+    throw new Error("unreachable: 注册应落库");
   }
+  return rows[0]!.id;
 }
 
 /** 与 service.test.ts 一致的合法测试密码（PASSWORD_RE：字母+数字，8..20） */
@@ -67,11 +71,7 @@ afterAll(async () => {
 describe("R7：/sign-in/username 三失败情形同文案（Review Focus #1）", () => {
   it("未注册账户名/错密码/空密码：同状态码 + 同 code + 同 message，无差异字样", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({
-      username,
-      password: PASSWORD,
-    });
-    expectRegisteredOk(registered);
+    await registerTestUser({ username, password: PASSWORD });
 
     const cases = [
       { username: uniqueUsername(), password: PASSWORD }, // ① 未注册账户名 + 任意密码
@@ -128,11 +128,7 @@ describe("hook 403：三路径直连禁用（B2/非目标 #4）", () => {
 describe("immutable 守卫：/update-user 携 username 改名拒绝（负空间无改名语义）", () => {
   it("已登录会话 POST /update-user（含新 username）→ 4xx，库内 username 不变", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({
-      username,
-      password: PASSWORD,
-    });
-    expectRegisteredOk(registered);
+    const userId = await registerTestUser({ username, password: PASSWORD });
 
     const cookie = await signInAndGetCookie(username, PASSWORD);
 
@@ -145,10 +141,7 @@ describe("immutable 守卫：/update-user 携 username 改名拒绝（负空间�
     expect(res.status).toBeLessThan(500);
 
     // 库内核验：username 保持注册原值，未被改名
-    const rows = await db
-      .select()
-      .from(user)
-      .where(eq(user.id, registered.userId));
+    const rows = await db.select().from(user).where(eq(user.id, userId));
     expect(rows).toHaveLength(1);
     expect(rows[0].username).toBe(username);
   });
@@ -157,11 +150,7 @@ describe("immutable 守卫：/update-user 携 username 改名拒绝（负空间�
 describe("登录成功双写（B5）", () => {
   it("200 + set-cookie；PG session 行与 Redis 会话键同时存在", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({
-      username,
-      password: PASSWORD,
-    });
-    expectRegisteredOk(registered);
+    const userId = await registerTestUser({ username, password: PASSWORD });
 
     const res = await directPost("/sign-in/username", {
       username,
@@ -174,7 +163,7 @@ describe("登录成功双写（B5）", () => {
     const rows = await db
       .select()
       .from(session)
-      .where(eq(session.userId, registered.userId));
+      .where(eq(session.userId, userId));
     expect(rows).toHaveLength(1);
     expect(rows[0].expiresAt.getTime()).toBeGreaterThan(Date.now());
 
@@ -188,11 +177,7 @@ describe("登录成功双写（B5）", () => {
 describe("退出失效（R11 服务端半边）", () => {
   it("sign-out 后旧 cookie get-session 无用户，Redis 键与 PG 行均删", async () => {
     const username = uniqueUsername();
-    const registered = await registerWithUsername({
-      username,
-      password: PASSWORD,
-    });
-    expectRegisteredOk(registered);
+    const userId = await registerTestUser({ username, password: PASSWORD });
 
     const cookie = await signInAndGetCookie(username, PASSWORD);
 
@@ -200,7 +185,7 @@ describe("退出失效（R11 服务端半边）", () => {
     const rowsBefore = await db
       .select()
       .from(session)
-      .where(eq(session.userId, registered.userId));
+      .where(eq(session.userId, userId));
     expect(rowsBefore).toHaveLength(1);
     const token = rowsBefore[0].token;
     expect(
@@ -226,7 +211,7 @@ describe("退出失效（R11 服务端半边）", () => {
     const rowsAfter = await db
       .select()
       .from(session)
-      .where(eq(session.userId, registered.userId));
+      .where(eq(session.userId, userId));
     expect(rowsAfter).toHaveLength(0);
   });
 });

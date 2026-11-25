@@ -9,6 +9,8 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
+import { API_ERROR } from "@/common/error";
 import { ROUTES } from "@/common/routes";
 import { authClient } from "@/stores/auth-client";
 import type { RegisterApiResult } from "@/app/api/auth/register/route";
@@ -156,11 +158,13 @@ export function useClientScreen(initialView: AuthView) {
       });
       const result = (await response.json()) as RegisterApiResult;
       if (!result.ok) {
-        if (result.error === "USERNAME_ALREADY_REGISTERED") {
+        if (result.error === USERNAME_ALREADY_REGISTERED) {
           setTopError("auth.error.usernameRegistered");
           return;
         }
-        setErrors(result.fieldErrors);
+        if (result.error === API_ERROR.INVALID_INPUT) {
+          setErrors(result.fieldErrors as AuthFormErrors);
+        }
         return;
       }
       await signInWithUsername();
