@@ -6,9 +6,14 @@ import { hashPassword } from "better-auth/crypto";
 
 import { ApiError } from "@/common/error";
 import { db } from "@/common/db";
-import { account, user } from "@/db/schema";
+import {
+  account,
+  user,
+  USER_EMAIL_UNIQUE_NAME,
+  USER_USERNAME_INDEX_NAME,
+} from "@/db/schema";
 
-import { USERNAME_ALREADY_REGISTERED } from "./error";
+import { PG_UNIQUE_VIOLATION_CODE, USERNAME_ALREADY_REGISTERED } from "./error";
 
 export function usernameToPlaceholderEmail(username: string): string {
   return `${username}@user.styb.invalid`;
@@ -57,9 +62,9 @@ function isUsernameUniqueViolation(err: unknown): boolean {
     | undefined;
   while (e) {
     if (
-      e.code === "23505" &&
-      (e.constraint_name === "user_username" ||
-        e.constraint_name === "user_email_key")
+      e.code === PG_UNIQUE_VIOLATION_CODE &&
+      (e.constraint_name === USER_USERNAME_INDEX_NAME ||
+        e.constraint_name === USER_EMAIL_UNIQUE_NAME)
     ) {
       return true;
     }

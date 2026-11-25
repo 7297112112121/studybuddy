@@ -14,6 +14,7 @@ import {
 export async function GET(request: Request): Promise<Response> {
   const query = Object.fromEntries(new URL(request.url).searchParams);
   const result = await withSessionApiContract(
+    request,
     query,
     calendarEntriesQuerySchema,
     async (userId, q) => {
@@ -35,6 +36,7 @@ export async function POST(request: Request): Promise<Response> {
     body = null;
   }
   const result = await withSessionApiContract(
+    request,
     body,
     calendarEntryInputSchema,
     (userId, input) => createEntry(userId, input),

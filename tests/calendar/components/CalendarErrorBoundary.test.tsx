@@ -1,41 +1,41 @@
 /**
- * /calendar 路由错误边界组件测试(AXY-23 tasks.md Task 9「失败测试」行)。
- *
- * 覆盖:E-05 逐字「加载失败,请重试」呈现、点击重试调用 reset()、
- * 不向用户泄漏 error.message。R9 的测试归属(design 开放问题 #2 假设):
- * RSC 数据流无前端请求可拦截,E2E 不注入 DB 故障,本组件测试承载。
+ * /calendar 路由错误边界组件测试:通用文案「加载失败,请重试」呈现、
+ * 点击重试调用 retry()、不向用户泄漏 error.message。
  */
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+
 import { NextIntlClientProvider } from "next-intl";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+
 import CalendarError from "@/app/(app)/calendar/error";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 
 afterEach(cleanup);
 
-function renderBoundary(error: Error, reset: () => void): void {
+function renderBoundary(error: unknown, retry: () => void): void {
   render(
     <NextIntlClientProvider
       locale="zh-CN"
       messages={{ calendar: calendarMessages }}
     >
-      <CalendarError error={error} reset={reset} />
+      <CalendarError error={error} retry={retry} />
     </NextIntlClientProvider>,
   );
 }
 
-describe("CalendarErrorBoundary(AXY-23 Task 9)", () => {
-  it("渲染 E-05 逐字文案「加载失败,请重试」与重试按钮", () => {
+describe("CalendarErrorBoundary", () => {
+  it("渲染通用文案「加载失败,请重试」与重试按钮", () => {
     renderBoundary(new Error("boom"), vi.fn());
     expect(screen.getByText("加载失败,请重试")).toBeTruthy();
     expect(screen.getByRole("button", { name: "重试" })).toBeTruthy();
   });
 
-  it("点击重试调用 reset()", () => {
-    const reset = vi.fn();
-    renderBoundary(new Error("boom"), reset);
+  it("点击重试调用 retry()", () => {
+    const retry = vi.fn();
+    renderBoundary(new Error("boom"), retry);
     fireEvent.click(screen.getByRole("button", { name: "重试" }));
-    expect(reset).toHaveBeenCalledOnce();
+    expect(retry).toHaveBeenCalledOnce();
   });
 
   it("不泄漏 error.message 给用户", () => {

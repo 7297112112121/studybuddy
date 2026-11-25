@@ -6,6 +6,7 @@ import {
   session,
   user,
   verification,
+  USER_USERNAME_INDEX_NAME,
 } from "@/db/schema";
 
 /** 将列清单转成 name -> column 的映射，便于按列断言。 */
@@ -35,8 +36,10 @@ describe("user 表", () => {
     expect(cols["username"]?.notNull).toBe(true);
   });
 
-  it("唯一索引显式命名 user_username 且落在 username 列", () => {
-    const idx = config.indexes.find((i) => i.config.name === "user_username");
+  it("唯一索引显式命名且落在 username 列", () => {
+    const idx = config.indexes.find(
+      (i) => i.config.name === USER_USERNAME_INDEX_NAME,
+    );
     expect(idx).toBeDefined();
     expect(idx?.config.unique).toBe(true);
     expect(

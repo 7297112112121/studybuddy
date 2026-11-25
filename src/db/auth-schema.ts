@@ -18,6 +18,11 @@ import {
 
 const pgTable = snakeCase.table;
 
+/** 账户名唯一索引名:service 层唯一冲突判定与 schema 测试引用同一常量,防漂移。 */
+export const USER_USERNAME_INDEX_NAME = "user_username";
+/** 邮箱唯一约束名:PG 默认命名(表_列_key),service 层唯一冲突判定引用同一常量。 */
+export const USER_EMAIL_UNIQUE_NAME = "user_email_key";
+
 /**
  * user 表。username 为登录凭据（CR-20261116-1：手机号→账户名+密码）。
  * email 为 Better Auth 核心必填列，本产品无邮箱账号，
@@ -38,7 +43,7 @@ export const user = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("user_username").on(t.username)],
+  (t) => [uniqueIndex(USER_USERNAME_INDEX_NAME).on(t.username)],
 );
 
 /**

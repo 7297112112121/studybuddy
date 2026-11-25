@@ -10,9 +10,19 @@ export const API_ERROR = {
   UNAUTHORIZED: "UNAUTHORIZED",
   NOT_FOUND: "NOT_FOUND",
   SAVE_FAILED: "SAVE_FAILED",
+  LOAD_FAILED: "LOAD_FAILED",
 } as const;
 
 export type ApiErrorCode = keyof typeof API_ERROR;
+
+/** 公共错误码 → HTTP 状态(仅传输语义);与码表同处登记,新增码未补状态即编译报错。 */
+export const API_ERROR_STATUS: Record<ApiErrorCode, number> = {
+  [API_ERROR.INVALID_INPUT]: 400,
+  [API_ERROR.UNAUTHORIZED]: 401,
+  [API_ERROR.NOT_FOUND]: 404,
+  [API_ERROR.SAVE_FAILED]: 500,
+  [API_ERROR.LOAD_FAILED]: 500,
+};
 
 /** 业务层抛出的契约化错误(ApiError):携带错误码,切面按错误码归一进响应体;其余异常一律归一保存失败(SAVE_FAILED)。错误码类型参数容纳各层 error.ts 的域码。 */
 export class ApiError<TCode extends string = ApiErrorCode> extends Error {

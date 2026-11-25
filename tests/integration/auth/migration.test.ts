@@ -13,7 +13,7 @@ import { inArray, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/common/db";
-import { user } from "@/db/schema";
+import { user, USER_USERNAME_INDEX_NAME } from "@/db/schema";
 
 afterAll(async () => {
   await db.$client.end();
@@ -28,7 +28,7 @@ describe("username 迁移落库（tests/integration/auth/migration）", () => {
       sql`SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = 'public' AND tablename = 'user'`,
     );
 
-    const target = rows.find((r) => r.indexname === "user_username");
+    const target = rows.find((r) => r.indexname === USER_USERNAME_INDEX_NAME);
     expect(target).toBeDefined();
     expect(target?.indexdef).toContain("CREATE UNIQUE INDEX");
   });

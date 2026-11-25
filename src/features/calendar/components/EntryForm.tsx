@@ -146,6 +146,8 @@ export default function EntryForm({
         void resync();
         return;
       case API_ERROR.SAVE_FAILED:
+      case API_ERROR.LOAD_FAILED:
+        // 写端点不产出读兜底码(LOAD_FAILED),穷尽分支与保存失败同呈现
         setFormError(true);
         return;
     }

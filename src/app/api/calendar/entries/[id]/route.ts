@@ -20,6 +20,7 @@ export async function PUT(
     body = null;
   }
   const result = await withSessionApiContract(
+    request,
     body,
     calendarEntryInputSchema,
     (userId, input) => updateEntry(userId, id, input),
@@ -29,13 +30,15 @@ export async function PUT(
 
 /** 删除指定条目;无请求体,any schema 直通契约切面。 */
 export async function DELETE(
-  // ts语法解释: _request前缀下划线表示该参数未使用,避免ts编译器报错
-  _request: Request,
+  request: Request,
   context: RouteContext,
 ): Promise<Response> {
   const { id } = await context.params;
-  const result = await withSessionApiContract(undefined, z.any(), (userId) =>
-    deleteEntry(userId, id),
+  const result = await withSessionApiContract(
+    request,
+    undefined,
+    z.any(),
+    (userId) => deleteEntry(userId, id),
   );
   return respondWith(result);
 }

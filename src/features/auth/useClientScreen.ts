@@ -11,7 +11,11 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
+import {
+  USERNAME_ALREADY_REGISTERED,
+  mapSignInError,
+  type SignInErrorKey,
+} from "@/auth/error";
 import {
   loginFormSchema,
   PASSWORD_MAX_LENGTH,
@@ -35,12 +39,6 @@ export type AuthFormValues = {
   confirmPassword: string;
   agreementAccepted: boolean;
 };
-
-/** 登录失败映射后的文案键（auth.error.* 命名空间）。 */
-export type SignInErrorKey =
-  | "auth.error.invalidCredentials"
-  | "auth.error.tooManyAttempts"
-  | "auth.error.unknown";
 
 /** 屏顶部错误键：登录失败经 mapSignInError 归一；注册账户名已存在固定为账户名已存在（usernameRegistered）。 */
 export type AuthTopError = SignInErrorKey | "auth.error.usernameRegistered";
@@ -109,22 +107,6 @@ export function confirmPasswordRuleStates(
       passed: confirmPassword !== "" && confirmPassword === password,
     },
   ];
-}
-
-/** 把 better-auth 客户端错误对象（status 可选）映射为登录文案键，空值兜底未知（unknown）。 */
-export function mapSignInError(
-  err: { status?: number } | null | undefined,
-): SignInErrorKey {
-  if (!err) {
-    return "auth.error.unknown";
-  }
-  if (err.status === 429) {
-    return "auth.error.tooManyAttempts";
-  }
-  if (err.status === 401 || err.status === 400) {
-    return "auth.error.invalidCredentials";
-  }
-  return "auth.error.unknown";
 }
 
 /** 产出组合层渲染所需的全部状态、派生错误态与回调。 */

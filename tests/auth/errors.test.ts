@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { mapSignInError } from "../../src/features/auth/useClientScreen";
+import { mapSignInError } from "../../src/auth/error";
 
 describe("mapSignInError", () => {
   it("status 401 → auth.error.invalidCredentials", () => {

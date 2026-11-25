@@ -1,6 +1,7 @@
 import { getRequestConfig } from "next-intl/server";
 import auth from "@/locales/zh-CN/auth.json";
 import calendar from "@/locales/zh-CN/calendar.json";
+import workbench from "@/locales/zh-CN/workbench.json";
 
 /**
  * 请求级 i18n 配置（ADR-0010 无前缀策略：URL 不带语言前缀）。
@@ -17,5 +18,5 @@ import calendar from "@/locales/zh-CN/calendar.json";
  */
 export default getRequestConfig(async () => ({
   locale: "zh-CN",
-  messages: { auth, calendar },
+  messages: { auth, calendar, workbench },
 }));

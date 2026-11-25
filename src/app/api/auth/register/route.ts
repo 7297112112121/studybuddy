@@ -23,6 +23,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const result = await withSessionlessApiContract(
+    request,
     body,
     registerFormSchema,
     (input) =>
