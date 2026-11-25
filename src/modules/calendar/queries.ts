@@ -4,7 +4,7 @@
  */
 import { and, eq, gte, lte } from "drizzle-orm";
 
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { calendarEntry } from "@/db/schema";
 import { daysInMonth, formatUtcDate, MS_PER_DAY } from "@/common/date";
 

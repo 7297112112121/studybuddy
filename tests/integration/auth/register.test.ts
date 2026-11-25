@@ -13,7 +13,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { account, user } from "@/db/schema";
 import { uniqueUsername } from "../helpers";
 import { POST } from "../../../src/app/api/auth/register/route";

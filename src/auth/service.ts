@@ -5,7 +5,7 @@
 import { hashPassword } from "better-auth/crypto";
 
 import { ApiError } from "@/common/error";
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { account, user } from "@/db/schema";
 
 import { USERNAME_ALREADY_REGISTERED } from "./error";

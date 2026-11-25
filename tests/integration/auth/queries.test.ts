@@ -12,7 +12,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { user } from "@/db/schema";
 import { redis } from "@/common/redis";
 

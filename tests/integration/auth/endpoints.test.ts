@@ -21,7 +21,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { session, user } from "@/db/schema";
 import { auth } from "@/auth/better-auth.server";
 import { redis } from "@/common/redis";

@@ -16,7 +16,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { username } from "better-auth/plugins";
 
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { account, session, user, verification } from "@/db/schema";
 import { redis } from "@/common/redis";
 import {

@@ -5,7 +5,7 @@
  */
 import { afterAll, describe, expect, it } from "vitest";
 
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { user } from "@/db/schema";
 import { createEntry } from "@/modules/calendar/service";
 import { listWeekEntries } from "@/modules/calendar/queries";

@@ -14,7 +14,7 @@ vi.mock("@/auth", () => ({
   getCurrentSession: getCurrentSessionMock,
 }));
 
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { user } from "@/db/schema";
 import { API_ERROR, type ApiResult } from "@/common/error";
 import { DELETE, PUT } from "../../../src/app/api/calendar/entries/[id]/route";

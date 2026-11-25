@@ -5,7 +5,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { API_ERROR, ApiError } from "@/common/error";
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 import { calendarEntry } from "@/db/schema";
 
 import type { CalendarEntryInput } from "@/validation/calendar-validators";

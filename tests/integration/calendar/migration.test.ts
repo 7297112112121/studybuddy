@@ -10,7 +10,7 @@
 import { sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { db } from "@/db/client";
+import { db } from "@/common/db";
 
 afterAll(async () => {
   await db.$client.end();

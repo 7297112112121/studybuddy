@@ -1,5 +1,6 @@
 /**
- * drizzle 客户端单例（design「数据模型」节放置约定）。
+ * drizzle 客户端单例（common 服务连接配置件，与 redis 同层；
+ * relational config 依赖 db schema barrel，表定义属基础设施层）。
  *
  * 无 .env 构建守卫：DATABASE_URL 缺失时回退本地连接串，模块作用域
  * 不抛错、不发起连接——postgres-js 为惰性连接，首条查询才真正建链。
@@ -13,7 +14,7 @@ import { defineRelations } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import * as schema from "./schema";
+import * as schema from "@/db/schema";
 
 const tables = {
   user: schema.user,
