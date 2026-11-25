@@ -1,6 +1,6 @@
 /**
  * 日历域的校验规则单一真源(auth 先例,消费方引用不复写):
- * 覆盖时刻格式、日期/周一/年月/条目 id 严格校验、条目写端点入参
+ * 覆盖时刻格式、日期/周一/年月严格校验、条目写端点入参
  * schema(calendarEntryInputSchema)与条目集合读端点查询参数 schema。
  * 日期语义是字面日期 "YYYY-MM-DD"(单时区假设),时刻一律 "HH:MM";
  * month 入参为 1~12(产品口径),不是 JS Date 的 0~11。
@@ -10,10 +10,6 @@ import { z } from "zod";
 
 /** "HH:MM" 分钟粒度格式(时刻契约单一来源:schema 校验与 timeToMinutes 共用)。 */
 export const TIME_HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-/** 条目 id 合法域:uuid 主键的形状约束(读路径 readEntry 入参约束)。 */
-const ENTRY_ID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** 严格校验 "YYYY-MM-DD":格式合法且为真实存在的日历日(拒收 2026-02-30)。 */
 export function isValidDateString(value: string): value is string {
@@ -41,11 +37,6 @@ export function isValidYearMonth(year: number, month: number): boolean {
     month >= 1 &&
     month <= 12
   );
-}
-
-/** 严格校验条目 id 为 uuid 形状(readEntry 入参约束)。 */
-export function isValidEntryId(value: string): boolean {
-  return ENTRY_ID_RE.test(value);
 }
 
 /** 作用:条目新增/编辑入参的结构与字段规则;message 直接承载 i18n key。 */
