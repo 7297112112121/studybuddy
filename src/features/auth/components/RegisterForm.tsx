@@ -5,39 +5,36 @@ import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import ErrorAlert from "./ErrorAlert";
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
+  type AuthFormErrors,
 } from "@/validation/auth-validators";
 import {
   accountRuleStates,
   confirmPasswordRuleStates,
   passwordRuleStates,
+  type AuthFormValues,
   type AuthTopError,
 } from "../useClientScreen";
 import type { AuthView } from "./AuthTabs";
 
 type RegisterFormProps = {
-  account: string;
-  password: string;
-  confirmPassword: string;
-  agreementAccepted: boolean;
-  accountInvalid?: boolean;
-  passwordInvalid?: boolean;
-  confirmPasswordInvalid?: boolean;
-  agreementInvalid?: boolean;
+  /** 表单值：状态机自有形状，跨视图保留由组合层持有。 */
+  values: AuthFormValues;
+  /** 字段校验错误：键归 validators，红框判定在本表单内派生。 */
+  errors: AuthFormErrors;
   /** 顶部错误键：提交失败的状态机归一产物，null 表示无。 */
-  topError: AuthTopError | null;
-  /** 顶部错误文案：与 topError 同源，由组合层渲染。 */
-  topErrorText?: string;
+  errorKey: AuthTopError | null;
+  /** 顶部错误文案：与 errorKey 同源，由组合层渲染。 */
+  errorText?: string;
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onAccountChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
-  onConfirmPasswordChange: (value: string) => void;
-  onAgreementChange: (accepted: boolean) => void;
+  onFieldChange: <K extends keyof AuthFormValues>(
+    key: K,
+    value: AuthFormValues[K],
+  ) => void;
   /** R16/R10：底部「去登录」切换视图。 */
   onSwitchView: (view: AuthView) => void;
 };
@@ -45,63 +42,56 @@ type RegisterFormProps = {
 export default function RegisterForm(props: RegisterFormProps) {
   return (
     <form id="auth-register" noValidate onSubmit={props.onSubmit}>
-      {props.topError !== null && (
-        <Alert variant="destructive" className="mb-4">
-          {props.topError === "auth.error.usernameRegistered" ? (
-            <Button
-              type="button"
-              variant="link"
-              onClick={() => props.onSwitchView("login")}
-              className="h-auto p-0 text-destructive"
-            >
-              {props.topErrorText}
-            </Button>
-          ) : (
-            props.topErrorText
-          )}
-        </Alert>
+      {props.errorKey !== null && (
+        <ErrorAlert
+          errorKey={props.errorKey}
+          text={props.errorText ?? ""}
+          onSwitchToLogin={() => props.onSwitchView("login")}
+        />
       )}
       <div className="space-y-4">
         <AccountField
           id="register-account"
-          value={props.account}
-          invalid={props.accountInvalid}
-          rules={accountRuleStates(props.account)}
-          onChange={props.onAccountChange}
+          value={props.values.account}
+          invalid={props.errors.username !== undefined}
+          rules={accountRuleStates(props.values.account)}
+          onChange={(value) => props.onFieldChange("account", value)}
         />
 
         <PasswordField
           id="register-password"
           label="设置密码"
-          value={props.password}
-          invalid={props.passwordInvalid}
+          value={props.values.password}
+          invalid={props.errors.password !== undefined}
           autoComplete="new-password"
           placeholder={`${PASSWORD_MIN_LENGTH} 位以上，含字母与数字`}
           hint={`长度 ${PASSWORD_MIN_LENGTH}—${PASSWORD_MAX_LENGTH} 位，需同时含字母与数字`}
-          rules={passwordRuleStates(props.password)}
-          onChange={props.onPasswordChange}
+          rules={passwordRuleStates(props.values.password)}
+          onChange={(value) => props.onFieldChange("password", value)}
         />
 
         {/* 确认密码的规则只有匹配一条（R8：强度由「与 password 一致」间接保证）。 */}
         <PasswordField
           id="register-confirm"
           label="确认密码"
-          value={props.confirmPassword}
-          invalid={props.confirmPasswordInvalid}
+          value={props.values.confirmPassword}
+          invalid={props.errors.confirmPassword !== undefined}
           autoComplete="new-password"
           placeholder="再输一次"
           rules={confirmPasswordRuleStates(
-            props.password,
-            props.confirmPassword,
+            props.values.password,
+            props.values.confirmPassword,
           )}
-          onChange={props.onConfirmPasswordChange}
+          onChange={(value) => props.onFieldChange("confirmPassword", value)}
         />
 
         <AgreementCheckbox
           id="register-agreement"
-          checked={props.agreementAccepted}
-          invalid={props.agreementInvalid}
-          onChange={props.onAgreementChange}
+          checked={props.values.agreementAccepted}
+          invalid={props.errors.agreement !== undefined}
+          onChange={(accepted) =>
+            props.onFieldChange("agreementAccepted", accepted)
+          }
         />
 
         <SubmitButton

@@ -4,41 +4,59 @@ import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
+import type { AuthFormErrors } from "@/validation/auth-validators";
+import type {
+  AuthFormValues,
+  AuthTopError,
+} from "../useClientScreen";
 import type { AuthView } from "./AuthTabs";
 
+type LoginFormValues = Pick<AuthFormValues, "account" | "password">;
+
 type LoginFormProps = {
-  account: string;
-  password: string;
-  accountInvalid?: boolean;
-  passwordInvalid?: boolean;
-  submitting: boolean;
+  /** 表单值：状态机自有形状，跨视图保留由组合层持有。 */
+  values: LoginFormValues;
+  /** 字段校验错误：键归 validators，红框判定在本表单内派生。 */
+  errors: AuthFormErrors;
+  /** 提交失败顶部错误键：凭据不匹配时密码框报红，null 表示无。 */
+  errorKey: AuthTopError | null;
+  /** 顶部错误文案：与 errorKey 同源，由组合层渲染。 */
   errorText?: string;
+  submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onAccountChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
+  onFieldChange: <K extends keyof LoginFormValues>(
+    key: K,
+    value: LoginFormValues[K],
+  ) => void;
   /** R16：底部「注册一个」切换视图。 */
   onSwitchView: (view: AuthView) => void;
 };
 
 export default function LoginForm(props: LoginFormProps) {
+  const accountInvalid = props.errors.account !== undefined;
+  // 凭据不匹配仅密码框报红，账户框不报红，避免泄露账户探测面。
+  const passwordInvalid =
+    props.errors.password !== undefined ||
+    props.errorKey === "auth.error.invalidCredentials";
+
   return (
     <form id="auth-login" noValidate onSubmit={props.onSubmit}>
       <div className="space-y-4">
         <AccountField
           id="login-account"
-          value={props.account}
-          invalid={props.accountInvalid}
-          onChange={props.onAccountChange}
+          value={props.values.account}
+          invalid={accountInvalid}
+          onChange={(value) => props.onFieldChange("account", value)}
         />
 
         <PasswordField
           id="login-password"
           label="密码"
-          value={props.password}
-          invalid={props.passwordInvalid}
+          value={props.values.password}
+          invalid={passwordInvalid}
           autoComplete="current-password"
           placeholder="8 位以上，含字母与数字"
-          onChange={props.onPasswordChange}
+          onChange={(value) => props.onFieldChange("password", value)}
         />
 
         {props.errorText !== undefined && (

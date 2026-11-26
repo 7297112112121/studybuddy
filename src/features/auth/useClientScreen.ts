@@ -109,7 +109,7 @@ export function confirmPasswordRuleStates(
   ];
 }
 
-/** 产出组合层渲染所需的全部状态、派生错误态与回调。 */
+/** 产出组合层渲染所需的全部状态与回调。 */
 export function useClientScreen(initialView: AuthView) {
   const router = useRouter();
   const [activeView, setActiveView] = useState<AuthView>(initialView);
@@ -256,11 +256,6 @@ export function useClientScreen(initialView: AuthView) {
     void submitRegister();
   }
 
-  /** 字段错误态：仅以红框呈现（aria-invalid），文案不再渲染。 */
-  const isInvalid = (key: keyof Omit<AuthFormErrors, "agreement">) =>
-    errors[key] !== undefined;
-  const agreementInvalid = errors.agreement !== undefined;
-
   return {
     activeView,
     values,
@@ -270,8 +265,6 @@ export function useClientScreen(initialView: AuthView) {
     errorText,
     updateValue,
     switchView,
-    isInvalid,
-    agreementInvalid,
     handleLoginSubmit,
     handleRegisterSubmit,
   };

@@ -35,13 +35,9 @@ export default function AuthCard(props: AuthCardProps) {
         >
           {auth.activeView === "login" ? (
             <LoginForm
-              account={auth.values.account}
-              password={auth.values.password}
-              accountInvalid={auth.isInvalid("account")}
-              passwordInvalid={
-                auth.isInvalid("password") ||
-                auth.topError === "auth.error.invalidCredentials"
-              }
+              values={auth.values}
+              errors={auth.errors}
+              errorKey={auth.topError}
               errorText={
                 auth.topError === null
                   ? undefined
@@ -49,36 +45,22 @@ export default function AuthCard(props: AuthCardProps) {
               }
               submitting={auth.submitting}
               onSubmit={auth.handleLoginSubmit}
-              onAccountChange={(value) => auth.updateValue("account", value)}
-              onPasswordChange={(value) => auth.updateValue("password", value)}
+              onFieldChange={auth.updateValue}
               onSwitchView={auth.switchView}
             />
           ) : (
             <RegisterForm
-              account={auth.values.account}
-              password={auth.values.password}
-              confirmPassword={auth.values.confirmPassword}
-              agreementAccepted={auth.values.agreementAccepted}
-              accountInvalid={auth.isInvalid("username")}
-              passwordInvalid={auth.isInvalid("password")}
-              confirmPasswordInvalid={auth.isInvalid("confirmPassword")}
-              agreementInvalid={auth.agreementInvalid}
-              topError={auth.topError}
-              topErrorText={
+              values={auth.values}
+              errors={auth.errors}
+              errorKey={auth.topError}
+              errorText={
                 auth.topError === null
                   ? undefined
                   : auth.errorText(auth.topError)
               }
               submitting={auth.submitting}
               onSubmit={auth.handleRegisterSubmit}
-              onAccountChange={(value) => auth.updateValue("account", value)}
-              onPasswordChange={(value) => auth.updateValue("password", value)}
-              onConfirmPasswordChange={(value) =>
-                auth.updateValue("confirmPassword", value)
-              }
-              onAgreementChange={(accepted) =>
-                auth.updateValue("agreementAccepted", accepted)
-              }
+              onFieldChange={auth.updateValue}
               onSwitchView={auth.switchView}
             />
           )}
