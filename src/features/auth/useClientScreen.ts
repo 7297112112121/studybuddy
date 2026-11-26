@@ -6,7 +6,7 @@
  * 本文件只持规则浮层实时拆解与表单状态编排。
  */
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -226,7 +226,7 @@ export function useClientScreen(initialView: AuthView) {
   }
 
   /** 登录提交前校验：登录表单 schema(loginFormSchema) 不过则呈现字段错误、不提交。 */
-  function handleLoginSubmit(event: FormEvent<HTMLFormElement>): void {
+  function handleLoginSubmit(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
     const parsed = loginFormSchema.safeParse({
       account: values.account,
@@ -241,7 +241,7 @@ export function useClientScreen(initialView: AuthView) {
   }
 
   /** 注册提交前校验：注册表单 schema(registerFormSchema,与服务端复验同一 schema) 不过则呈现字段错误、不提交。 */
-  function handleRegisterSubmit(event: FormEvent<HTMLFormElement>): void {
+  function handleRegisterSubmit(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
     const parsed = registerFormSchema.safeParse({
       username: values.account,

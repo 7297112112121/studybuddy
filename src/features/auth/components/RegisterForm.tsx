@@ -1,5 +1,5 @@
 
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import AgreementCheckbox from "./AgreementCheckbox";
@@ -30,7 +30,7 @@ type RegisterFormProps = {
   /** 顶部错误文案：与 errorKey 同源，由组合层渲染。 */
   errorText?: string;
   submitting: boolean;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => void;
   onFieldChange: <K extends keyof AuthFormValues>(
     key: K,
     value: AuthFormValues[K],

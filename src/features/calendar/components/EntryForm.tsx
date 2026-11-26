@@ -4,7 +4,7 @@
  * 条目新建/编辑表单（AXY-22 design「UI 与组件」节）。
  *
  */
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -91,7 +91,7 @@ export default function EntryForm({
     clearFieldError("date");
   }
 
-  async function handleSubmit(e: FormEvent): Promise<void> {
+  async function handleSubmit(e: SubmitEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     if (isPending) return;
 
