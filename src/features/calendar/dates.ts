@@ -1,3 +1,7 @@
+/**
+ * 日历域日期数学与条目展示派生工具（纯函数，无框架依赖）：
+ * 月网格/周序列构建、时刻换算、重叠色块布局、条目按日分组。
+ */
 import { formatUtcDate, MS_PER_DAY } from "@/common/date";
 
 import {
@@ -6,13 +10,13 @@ import {
 } from "@/validation/calendar-validators";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-/** 作用:构建 6 行 × 7 列月网格,周一为每周首日,含邻月补位格(inMonth 为 false)。 */
+/** 构建 6 行 × 7 列月网格，周一为每周首日，含邻月补位格（inMonth 为 false）。 */
 export function buildMonthGrid(
   year: number,
   month: number,
   today: string,
 ): MonthCell[] {
-  // 该月 1 日的星期(周日为 0),换算为周一首日的偏移天数
+  // 该月 1 日的星期（周日为 0），换算为周一首日的偏移天数
   const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
   const leadingBlanks = (firstWeekday + 6) % 7;
   const firstCellMs = Date.UTC(year, month - 1, 1) - leadingBlanks * MS_PER_DAY;
@@ -32,23 +36,52 @@ export function buildMonthGrid(
 
 export type MonthCell = { date: string; inMonth: boolean; isToday: boolean };
 
-/** 作用:"HH:MM" 换算为当日分钟数 0–1439(非法输入抛 RangeError,仅内部可信输入)。 */
+/** "HH:MM" 换算为当日分钟数 0–1439（非法输入抛 RangeError，仅内部可信输入）。 */
 export function timeToMinutes(time: string): number {
   if (!TIME_HHMM_RE.test(time)) {
     throw new RangeError(`invalid HH:MM time: ${time}`);
   }
-  const [h, m] = time.split(":").map(Number) as [number, number];
-  return h * 60 + m;
+  const [hour, minute] = time.split(":").map(Number) as [number, number];
+  return hour * 60 + minute;
 }
 
-/** 作用:点击位置分钟数换算为所在 30 分钟槽的起点("HH:00" 或 "HH:30",向下取整)。 */
+/** 分钟数换算为 "HH:MM"（零填充，刻度与实时线标签共用）。 */
+export function minutesToHhmm(minutes: number): string {
+  const hour = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const minute = String(minutes % 60).padStart(2, "0");
+  return `${hour}:${minute}`;
+}
+
+/** 点击位置分钟数换算为所在 30 分钟槽的起点（"HH:00" 或 "HH:30"，向下取整）。 */
 export function slotPrefillStart(minutes: number): string {
   return minutesToHhmm(Math.floor(minutes / 30) * 30);
 }
 
-/**
- * 作用:把单日带时间条目布局成周网格块,重叠条目在列内并列均分。
- */
+/** 条目时间前缀：双时间「HH:MM–HH:MM」、仅开始「HH:MM」、无时间 null。 */
+export function timePrefix(entry: CalendarEntryView): string | null {
+  if (entry.startTime === null) return null;
+  return entry.endTime === null
+    ? entry.startTime
+    : `${entry.startTime}–${entry.endTime}`;
+}
+
+/** 条目按日期分组（周视图全天区/时间网格与月视图网格摘要共用）。 */
+export function groupEntriesByDate(
+  entries: CalendarEntryView[],
+): Map<string, CalendarEntryView[]> {
+  const byDate = new Map<string, CalendarEntryView[]>();
+  for (const entry of entries) {
+    const list = byDate.get(entry.date);
+    if (list) {
+      list.push(entry);
+    } else {
+      byDate.set(entry.date, [entry]);
+    }
+  }
+  return byDate;
+}
+
+/** 把单日带时间条目布局成周网格块，重叠条目在列内并列均分。 */
 export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
   type Item = { id: string; start: number; end: number };
   const items: Item[] = dayEntries
@@ -108,17 +141,17 @@ export type WeekBlock = {
   durationMinutes: number;
 };
 
-/** 作用:周内星期键(周一首),周表头列序与 buildWeekDays 产出共用。 */
+/** 周内星期键（周一首），周表头列序与 buildWeekDays 产出共用。 */
 export type WeekdayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
-/** 作用:周视图单日展示模型(buildWeekDays 产出,UI 层只读消费)。 */
+/** 周视图单日展示模型（buildWeekDays 产出，UI 层只读消费）。 */
 export type WeekDay = {
   date: string;
   weekdayKey: WeekdayKey;
   isToday: boolean;
 };
 
-/** 作用:月份加减,delta 可正可负,自动进退位。 */
+/** 月份加减，delta 可正可负，自动进退位。 */
 export function addMonths(
   year: number,
   month: number,
@@ -128,19 +161,19 @@ export function addMonths(
   return { year: Math.floor(total / 12), month: (total % 12) + 1 };
 }
 
-/** 作用:给出日期所在周的周一;date 不是合法 "YYYY-MM-DD" 时,抛 RangeError。 */
+/** 给出日期所在周的周一；date 不是合法 "YYYY-MM-DD" 时抛 RangeError。 */
 export function weekStartFor(date: string): string {
   if (!isValidDateString(date)) {
     throw new RangeError(`invalid date: ${date}`);
   }
   const [year, month, day] = date.split("-").map(Number);
-  // 该日星期(周日为 0),换算为周一首日的偏移天数(周一为 0)
+  // 该日星期（周日为 0），换算为周一首日的偏移天数（周一为 0）
   const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
   const offset = (weekday + 6) % 7;
   return formatUtcDate(Date.UTC(year, month - 1, day) - offset * MS_PER_DAY);
 }
 
-/** 作用:由周一锚点给出周内 7 天,列序周一首,并逐日标记是否今天。 */
+/** 由周一锚点给出周内 7 天，列序周一首，并逐日标记是否今天。 */
 export function buildWeekDays(weekStart: string, today: string): WeekDay[] {
   const startMs = Date.parse(`${weekStart}T00:00:00Z`);
   return WEEKDAY_KEYS.map((weekdayKey, i) => {
@@ -149,17 +182,10 @@ export function buildWeekDays(weekStart: string, today: string): WeekDay[] {
   });
 }
 
-/** 作用:周一锚点加减 delta 周,跨月跨年由 UTC 毫秒运算兜住。 */
+/** 周一锚点加减 delta 周，跨月跨年由 UTC 毫秒运算兜住。 */
 export function addWeeks(weekStart: string, delta: number): string {
   const startMs = Date.parse(`${weekStart}T00:00:00Z`);
   return formatUtcDate(startMs + delta * 7 * MS_PER_DAY);
-}
-
-/** 作用:分钟数换算为 "HH:MM"(零填充)。 */
-function minutesToHhmm(minutes: number): string {
-  const hour = String(Math.floor(minutes / 60)).padStart(2, "0");
-  const minute = String(minutes % 60).padStart(2, "0");
-  return `${hour}:${minute}`;
 }
 
 const WEEKDAY_KEYS: WeekdayKey[] = [

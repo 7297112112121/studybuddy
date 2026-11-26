@@ -1,17 +1,14 @@
 "use client";
 
 /**
- * 当日详情面板（AXY-22 design「UI 与组件」节）。
- *
- * 标题「M月D日 · 今天」（今日）/「M月D日」（其余）；条目列表（EntryRow，
- * 无条目渲染空态文案「这天还没有安排」，R6）；底部嵌 EntryForm——
- * 编辑模式经本组件本地态切换（EntryRow onEdit → 表单预填被编辑条目，
- * 演示态 3 复用新建表单区）。entries 由服务端按当日过滤后 props 下行。
+ * 当日面板组合层：接屏状态机（useDayPanel），接线条目行列表与底部表单；
+ * 自身零状态。
  */
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
+
+import { useDayPanel } from "../useDayPanel";
 import EntryForm from "./EntryForm";
 import EntryRow from "./EntryRow";
 
@@ -23,15 +20,14 @@ type DayPanelProps = {
 
 /** "YYYY-MM-DD" → "M月D日"（去前导零）。 */
 function formatMonthDay(date: string): string {
-  const [, m, d] = date.split("-");
-  return `${Number(m)}月${Number(d)}日`;
+  const [, month, day] = date.split("-");
+  return `${Number(month)}月${Number(day)}日`;
 }
 
 export default function DayPanel({ date, entries, today }: DayPanelProps) {
   const t = useTranslations("calendar");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const editingEntry =
-    editingId === null ? undefined : entries.find((e) => e.id === editingId);
+  const { editingId, editingEntry, openEdit, clearEditing } =
+    useDayPanel(entries);
 
   const title = formatMonthDay(date) + (date === today ? " · 今天" : "");
 
@@ -50,7 +46,7 @@ export default function DayPanel({ date, entries, today }: DayPanelProps) {
             <EntryRow
               key={entry.id}
               entry={entry}
-              onEdit={() => setEditingId(entry.id)}
+              onEdit={() => openEdit(entry.id)}
             />
           ))}
         </ul>
@@ -62,7 +58,7 @@ export default function DayPanel({ date, entries, today }: DayPanelProps) {
         key={editingId ?? "create"}
         date={date}
         entry={editingEntry}
-        onSaved={() => setEditingId(null)}
+        onSaved={clearEditing}
       />
     </section>
   );

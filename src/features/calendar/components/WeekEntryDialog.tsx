@@ -1,16 +1,12 @@
 "use client";
 
 /**
- * 周视图编辑卡(AXY-23 design「UI 与组件」节)。
- *
- * 呈现形态为 shadcn Dialog(演示态 2/3):create 模式(点空白槽)——日期锁定
- * 所在列、开始时间预填槽起点(F-05,经 EntryForm initialStartTime)、无删除;
- * edit 模式(点色块/全天区条目)——预填原值 + AlertDialog 二次确认删除
- * (AXY-22 D-08 同款,确认层无额外输入)。两模式均 showDateField=false
- * (D-03:编辑卡仅文字+时间两字段,改期仍在月视图表单)。校验与错误呈现
- * (E-01/E-03 字段下方、E-02 提示区)由 EntryForm 既有逻辑承载。
+ * 周视图编辑卡组合层：Dialog 承载表单（EntryForm 双挂载点之一）——create
+ * 模式日期锁定所在列、开始时间预填槽起点、无删除；edit 模式预填原值 +
+ * 删除（共享删除确认状态机 useEntryDelete，确认层无额外输入，落定后关闭
+ * 弹窗）。两模式均不渲染所属日期控件（编辑卡仅文字+时间两字段，改期仍在
+ * 月视图表单）。
  */
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -30,7 +26,8 @@ import {
 } from "@/components/ui/dialog";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
-import { useCalendarStore } from "@/stores/calendar";
+
+import { useEntryDelete } from "../useEntryDelete";
 import EntryForm from "./EntryForm";
 
 export type WeekEntryDialogState =
@@ -47,26 +44,14 @@ export default function WeekEntryDialog({
   onClose,
 }: WeekEntryDialogProps) {
   const t = useTranslations("calendar");
-  const deleteEntry = useCalendarStore((s) => s.deleteEntry);
-  const resync = useCalendarStore((s) => s.resync);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { confirmOpen, openConfirm, closeConfirm, confirmDelete } =
+    useEntryDelete(onClose);
 
   if (state === null) {
     return null;
   }
 
   const editing = state.mode === "edit";
-
-  async function handleConfirmDelete(): Promise<void> {
-    if (state === null || state.mode !== "edit") return;
-    const result = await deleteEntry(state.entry.id);
-    setConfirmOpen(false);
-    if (!result.ok && result.error === "NOT_FOUND") {
-      // 条目已被他端删除:按当前读域静默重取
-      await resync();
-    }
-    onClose();
-  }
 
   return (
     <>
@@ -97,7 +82,7 @@ export default function WeekEntryDialog({
               <Button
                 variant="ghost"
                 className="text-destructive"
-                onClick={() => setConfirmOpen(true)}
+                onClick={openConfirm}
               >
                 {t("entry.delete")}
               </Button>
@@ -105,22 +90,25 @@ export default function WeekEntryDialog({
           )}
         </DialogContent>
       </Dialog>
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
-          {editing && (
+      {state.mode === "edit" && (
+        <AlertDialog
+          open={confirmOpen}
+          onOpenChange={(open) => (open ? openConfirm() : closeConfirm())}
+        >
+          <AlertDialogContent>
+            <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
             <p className="text-muted-foreground text-sm">{state.entry.title}</p>
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmOpen(false)}>
-              {t("entry.cancel")}
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>
-              {t("entry.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={closeConfirm}>
+                {t("entry.cancel")}
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => confirmDelete(state.entry.id)}>
+                {t("entry.delete")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </>
   );
 }

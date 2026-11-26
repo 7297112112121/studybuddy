@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import WeekView from "@/features/calendar/components/WeekView";
-import { buildWeekDays } from "@/features/calendar/useClientScreen";
+import { buildWeekDays } from "@/features/calendar/dates";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 

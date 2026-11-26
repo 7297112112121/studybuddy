@@ -1,15 +1,9 @@
 "use client";
 
 /**
- * 条目行（AXY-22 design「UI 与组件」节）。
- *
- * 行文案：「HH:MM–HH:MM title」（时间段）/「HH:MM title」（时间点）/
- * 「title」（不带时间），值经 queries 层 formatHhmm 归一（秒位不泄漏）。
- * 「编辑」→ onEdit 回调（DayPanel 切编辑模式）；「删除」→ shadcn
- * AlertDialog 二次确认（D-08：确认层无额外输入），确认后经日历 store
- * deleteEntry 走统一接口；NOT_FOUND → store 按当前读域静默重取。
+ * 条目行组合层：行文案与操作按钮接线；删除走共享删除确认状态机
+ * （useEntryDelete），确认层无额外输入。
  */
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -24,38 +18,19 @@ import {
 import { Button } from "@/components/ui/button";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
-import { useCalendarStore } from "@/stores/calendar";
+
+import { timePrefix } from "../dates";
+import { useEntryDelete } from "../useEntryDelete";
 
 type EntryRowProps = {
   entry: CalendarEntryView;
   onEdit: () => void;
 };
 
-/** 时间前缀：双时间「HH:MM–HH:MM」、仅开始「HH:MM」、无时间 null。 */
-function timePrefix(entry: CalendarEntryView): string | null {
-  if (entry.startTime === null) return null;
-  return entry.endTime === null
-    ? entry.startTime
-    : `${entry.startTime}–${entry.endTime}`;
-}
-
 export default function EntryRow({ entry, onEdit }: EntryRowProps) {
   const t = useTranslations("calendar");
-  const deleteEntry = useCalendarStore((s) => s.deleteEntry);
-  const resync = useCalendarStore((s) => s.resync);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  async function handleConfirmDelete(): Promise<void> {
-    setIsDeleting(true);
-    const result = await deleteEntry(entry.id);
-    setIsDeleting(false);
-    setConfirmOpen(false);
-    if (!result.ok && result.error === "NOT_FOUND") {
-      // 条目已被他端删除:按当前读域静默重取
-      await resync();
-    }
-  }
+  const { confirmOpen, openConfirm, closeConfirm, isDeleting, confirmDelete } =
+    useEntryDelete();
 
   const time = timePrefix(entry);
 
@@ -77,12 +52,15 @@ export default function EntryRow({ entry, onEdit }: EntryRowProps) {
             <Button variant="ghost" size="sm" onClick={onEdit}>
               {t("entry.edit")}
             </Button>
-            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <AlertDialog
+              open={confirmOpen}
+              onOpenChange={(open) => (open ? openConfirm() : closeConfirm())}
+            >
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={isDeleting}
-                onClick={() => setConfirmOpen(true)}
+                onClick={openConfirm}
               >
                 {t("entry.delete")}
               </Button>
@@ -90,10 +68,10 @@ export default function EntryRow({ entry, onEdit }: EntryRowProps) {
                 <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
                 <AlertDialogDescription>{entry.title}</AlertDialogDescription>
                 <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setConfirmOpen(false)}>
+                  <AlertDialogCancel onClick={closeConfirm}>
                     {t("entry.cancel")}
                   </AlertDialogCancel>
-                  <AlertDialogAction onClick={handleConfirmDelete}>
+                  <AlertDialogAction onClick={() => confirmDelete(entry.id)}>
                     {t("entry.delete")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
