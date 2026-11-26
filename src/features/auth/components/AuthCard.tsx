@@ -1,11 +1,10 @@
 "use client";
 
-import { useClientScreen } from "../useClientScreen";
+import { useClientScreen, type AuthView } from "../useClientScreen";
 import AuthTabs from "./AuthTabs";
 import AuthTitle from "./AuthTitle";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
-import type { AuthView } from "./AuthTabs";
 
 type AuthCardProps = {
   initialView: AuthView;

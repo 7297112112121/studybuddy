@@ -1,5 +1,5 @@
 
-import type { AuthView } from "./AuthTabs";
+import type { AuthView } from "../useClientScreen";
 
 type AuthTitleProps = {
   view: AuthView;

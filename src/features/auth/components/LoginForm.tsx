@@ -8,8 +8,8 @@ import type { AuthFormErrors } from "@/validation/auth-validators";
 import type {
   AuthFormValues,
   AuthTopError,
+  AuthView,
 } from "../useClientScreen";
-import type { AuthView } from "./AuthTabs";
 
 type LoginFormValues = Pick<AuthFormValues, "account" | "password">;
 

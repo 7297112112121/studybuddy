@@ -1,13 +1,5 @@
 "use client";
 
-/**
- * 退出登录按钮（R11/B5，(app)/workbench 承接页使用）。
- *
- * authClient.signOut() 由 Better Auth 删 Redis 键 + PG 行；按 Task 10 裁决，
- * 失败形态是 resolve `{ data: null, error }` 而非 reject——无论成功还是两种
- * 失败形态，都强制 router.replace(ROUTES.login)（design 契约总表「失败仍
- * 强制 replace」），避免失败后残留受保护视图。
- */
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/common/routes";
 import { authClient } from "@/stores/auth-client";

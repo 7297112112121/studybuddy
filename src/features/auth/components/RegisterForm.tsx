@@ -17,8 +17,8 @@ import {
   passwordRuleStates,
   type AuthFormValues,
   type AuthTopError,
+  type AuthView,
 } from "../useClientScreen";
-import type { AuthView } from "./AuthTabs";
 
 type RegisterFormProps = {
   /** 表单值：状态机自有形状，跨视图保留由组合层持有。 */

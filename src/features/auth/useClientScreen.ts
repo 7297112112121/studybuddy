@@ -30,7 +30,8 @@ import { API_ERROR, toFieldErrors } from "@/common/error";
 import { ROUTES } from "@/common/routes";
 import { authClient } from "@/stores/auth-client";
 import type { RegisterApiResult } from "@/app/api/auth/register/route";
-import type { AuthView } from "./components/AuthTabs";
+
+export type AuthView = "login" | "register";
 
 /** 表单值（login/register 共用一份，切换视图保留）。注册账户名复用 account。 */
 export type AuthFormValues = {

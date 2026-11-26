@@ -1,7 +1,7 @@
 
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import type { AuthView } from "./AuthTabs";
+import type { AuthView } from "../useClientScreen";
 
 type ViewSwitchLinkProps = {
   target: AuthView;
