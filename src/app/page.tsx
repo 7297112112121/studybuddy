@@ -3,7 +3,7 @@
  * 工作台；未登录 → /login 进登录页。无自身 UI，分流在客户端屏经会话 store
  * 完成，服务端零会话读（可静态预渲染）。
  */
-import { HomeRedirect } from "@/features/auth";
+import HomeRedirect from "@/app/_guards/HomeRedirect";
 
 export default function HomePage() {
   return <HomeRedirect />;

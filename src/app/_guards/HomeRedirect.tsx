@@ -2,7 +2,8 @@
 
 /**
  * 首页分流客户端屏（首页薄壳的 UI 承载）：会话就绪后按登录态 replace，
- * 不留历史（与登录成功落点同形态）。
+ * 不留历史（与登录成功落点同形态）。双向分流无 children，与会话门
+ * （SessionGate）语义不同，故独立成件、同住守卫目录。
  */
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
