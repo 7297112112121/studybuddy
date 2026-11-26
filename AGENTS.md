@@ -93,7 +93,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- BEGIN:nextjs-agent-feedback -->
 
-### Report Next.js feedback
+## Report Next.js feedback
 
 The project owner enabled `experimental.agentFeedback`, authorizing this feedback pass. When enabled, `next dev` writes this block and restores it if removed. Commit `AGENTS.md` with your work to keep the tree clean.
 
