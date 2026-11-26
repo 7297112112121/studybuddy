@@ -2,7 +2,7 @@
 
 /**
  * 条目表单组合层：接表单状态机（useEntryForm，字段态/校验/保存链全部在
- * hook），排版字段与错误呈现；DayPanel 与 WeekEntryDialog 双挂载点共用。
+ * hook），排版字段与错误呈现；WeekEntryDialog 唯一挂载点。
  */
 import { useTranslations } from "next-intl";
 

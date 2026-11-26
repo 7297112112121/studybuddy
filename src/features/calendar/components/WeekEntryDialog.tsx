@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { useEntryDelete } from "../useEntryDelete";
-import type { WeekEntryDialogState } from "../useWeekView";
+import type { WeekEntryDialogState } from "../useCalendarScreen";
 import EntryForm from "./EntryForm";
 
 export type WeekEntryDialogProps = {

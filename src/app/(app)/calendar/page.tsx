@@ -3,14 +3,15 @@
  * 逻辑、零服务端数据读，UI 与数据全部下沉客户端屏（features）与 store；
  * 守卫继承 (app)/layout 客户端会话守卫（裁决 5a）。
  *
- * 视图态经 searchParams 承载（design「UI 与组件」节，proposal 开放问题 #1
- * 闭合）：解析与回退语义在 CalendarPageClient 内承接，薄壳只透传。
+ * 周定位经 searchParams 承载（?week=YYYY-MM-DD，周一锚）：解析与回退
+ * 语义在 CalendarPageClient 内承接，薄壳只透传；历史 view/month 参数
+ * 不再承载，屏状态机静默回退今天所在周。
  */
 import { CalendarPageClient } from "@/features/calendar";
 
 export const instant = false;
 
-type CalendarSearchParams = { view?: string; week?: string; month?: string };
+type CalendarSearchParams = { week?: string };
 
 export default async function CalendarPage({
   searchParams,

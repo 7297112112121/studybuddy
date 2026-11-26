@@ -1,27 +1,18 @@
 /**
- * 周视图屏状态机：编辑卡开合、实时线时钟、纵向滚动锚定与按日分组派生——
- * 周视图组合层（WeekView）的唯一状态来源。
+ * 周视图屏状态机：实时线时钟、纵向滚动锚定与按日分组派生——
+ * 周视图组合层（WeekView）的唯一状态来源。编辑卡开合在页面级
+ * 屏状态机（useCalendarScreen），周网格与今日日程共用同一开合态。
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-import {
-  PX_PER_MINUTE,
-  groupEntriesByDate,
-  slotPrefillStart,
-  type WeekDay,
-} from "./dates";
+import { PX_PER_MINUTE, groupEntriesByDate, type WeekDay } from "./dates";
 
 /** 非今天所在周的滚动锚点（08:00）。 */
 const NON_TODAY_ANCHOR_MINUTES = 8 * 60;
 /** 打开即锚定当前时段前两小时，免切换即可见实时线。 */
 const ANCHOR_LOOKBACK_MINUTES = 120;
-
-/** 周编辑卡开合态：create 模式带所在列日期与槽起点预填，edit 模式带原条目。 */
-export type WeekEntryDialogState =
-  | { mode: "create"; date: string; prefillStart: string }
-  | { mode: "edit"; entry: CalendarEntryView };
 
 /** 客户端本地时钟 → 当日分钟数。 */
 function clientNowMinutes(): number {
@@ -31,9 +22,6 @@ function clientNowMinutes(): number {
 
 export function useWeekView(days: WeekDay[], entries: CalendarEntryView[]) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [dialogState, setDialogState] = useState<WeekEntryDialogState | null>(
-    null,
-  );
   const [nowMinutes, setNowMinutes] = useState<number>(clientNowMinutes);
   const hasToday = days.some((day) => day.isToday);
 
@@ -59,22 +47,5 @@ export function useWeekView(days: WeekDay[], entries: CalendarEntryView[]) {
 
   const byDate = useMemo(() => groupEntriesByDate(entries), [entries]);
 
-  return {
-    scrollRef,
-    dialogState,
-    openCreate: (date: string, slotMinutes: number) => {
-      setDialogState({
-        mode: "create",
-        date,
-        prefillStart: slotPrefillStart(slotMinutes),
-      });
-    },
-    openEdit: (entry: CalendarEntryView) => {
-      setDialogState({ mode: "edit", entry });
-    },
-    closeDialog: () => setDialogState(null),
-    nowMinutes,
-    hasToday,
-    byDate,
-  };
+  return { scrollRef, nowMinutes, hasToday, byDate };
 }

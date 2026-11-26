@@ -20,11 +20,17 @@ export type CalendarLoadError = "UNAUTHORIZED" | "NETWORK";
 
 type CalendarState = {
   entries: CalendarEntryView[];
+  /** 今日读域:今天所在周条目,独立于导航读域(今日日程常驻的数据源)。 */
+  todayEntries: CalendarEntryView[];
+  /** 今日读域锚点(周一):loadToday 记录,写后失效据此重取。 */
+  todayScope: string | null;
   loading: boolean;
   loadError: CalendarLoadError | null;
   scope: CalendarScope | null;
-  /** 加载读域条目(周/月),替换既有 entries。 */
+  /** 加载导航读域条目(周/月),替换既有 entries。 */
   load: (scope: CalendarScope) => Promise<void>;
+  /** 加载今日读域条目(今天所在周,weekStart 由调用方锚定),替换 todayEntries。 */
+  loadToday: (weekStart: string) => Promise<void>;
   /** 写路径:统一走契约结果(ApiResult)返回(fieldErrors 供表单定位)。 */
   createEntry: (input: CalendarEntryInput) => Promise<ApiResult>;
   updateEntry: (
@@ -52,8 +58,20 @@ async function requestWrite(
   return (await response.json()) as ApiResult;
 }
 
+/** 写后失效编排:导航读域与今日读域并行重取(各自有锚点才取)。
+    导航域即今天所在周时两读域同 URL,双请求为读域单一形状的代价。 */
+function refreshAfterWrite(get: () => CalendarState): Promise<unknown> {
+  const { scope, todayScope, load, loadToday } = get();
+  return Promise.all([
+    scope ? load(scope) : Promise.resolve(),
+    todayScope !== null ? loadToday(todayScope) : Promise.resolve(),
+  ]);
+}
+
 export const useCalendarStore = create<CalendarState>()((set, get) => ({
   entries: [],
+  todayEntries: [],
+  todayScope: null,
   loading: false,
   loadError: null,
   scope: null,
@@ -80,16 +98,28 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
     }
   },
 
+  /** 加载今日读域(今天所在周),替换 todayEntries。失败静默空:鉴权/网络
+      异常由导航读域同一通道呈报,今日面板不为次要读域另设错误态。 */
+  loadToday: async (weekStart) => {
+    set({ todayScope: weekStart });
+    try {
+      const response = await fetch(
+        `/api/calendar/entries?week=${encodeURIComponent(weekStart)}`,
+      );
+      const data = (await response.json()) as ApiResult<CalendarEntryView[]>;
+      set({ todayEntries: data.ok ? data.data : [] });
+    } catch {
+      set({ todayEntries: [] });
+    }
+  },
+
   createEntry: async (input) => {
     const result = await requestWrite("/api/calendar/entries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
-    if (result.ok) {
-      const scope = get().scope;
-      if (scope) await get().load(scope); // 写后重取
-    }
+    if (result.ok) await refreshAfterWrite(get);
     return result;
   },
 
@@ -102,10 +132,7 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
         body: JSON.stringify(input),
       },
     );
-    if (result.ok) {
-      const scope = get().scope;
-      if (scope) await get().load(scope);
-    }
+    if (result.ok) await refreshAfterWrite(get);
     return result;
   },
 
@@ -114,10 +141,7 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
       `/api/calendar/entries/${encodeURIComponent(entryId)}`,
       { method: "DELETE" },
     );
-    if (result.ok) {
-      const scope = get().scope;
-      if (scope) await get().load(scope);
-    }
+    if (result.ok) await refreshAfterWrite(get);
     return result;
   },
 

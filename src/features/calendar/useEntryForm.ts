@@ -1,7 +1,7 @@
 /**
  * 条目表单屏状态机：五字段态、校验提交门（与统一接口复验同一 schema）与
  * 保存链（统一接口判别联合按码分支）。表单组合层（EntryForm）的唯一状态
- * 来源，DayPanel 与 WeekEntryDialog 双挂载点共用。
+ * 来源，WeekEntryDialog 唯一挂载点。
  */
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";

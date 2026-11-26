@@ -194,6 +194,12 @@ export function addWeeks(weekStart: string, delta: number): string {
   return formatUtcDate(startMs + delta * 7 * MS_PER_DAY);
 }
 
+/** "YYYY-MM-DD" → "M月D日"（去前导零），今日日程标题等短日期文案用。 */
+export function formatMonthDay(date: string): string {
+  const [, month, day] = date.split("-");
+  return `${Number(month)}月${Number(day)}日`;
+}
+
 const WEEKDAY_KEYS: WeekdayKey[] = [
   "mon",
   "tue",

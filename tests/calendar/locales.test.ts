@@ -28,10 +28,8 @@ describe("calendar.week 文案键(AXY-23)", () => {
     expect(week.loadFailed).toBe("加载失败,请重试");
   });
 
-  it("其余九键存在且非空字符串", () => {
+  it("其余七键存在且非空字符串", () => {
     const keys = [
-      "viewWeek",
-      "viewMonth",
       "prevWeek",
       "nextWeek",
       "today",

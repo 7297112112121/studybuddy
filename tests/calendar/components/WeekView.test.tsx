@@ -3,7 +3,7 @@
  *
  * 覆盖:整周无条目 E-04 逐字、全天区条目(且时间网格无对应色块)、
  * 色块文字与时段可读、实时线可见性(Review Focus 5)、槽位 aria-label
- * (createAt 插值)。actions 桩接(WeekEntryDialog→EntryForm 边界)。
+ * (createAt 插值)、卡片头部翻周链接。编辑卡开合在页面级,本层 props 透传。
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
@@ -12,19 +12,6 @@ import WeekView from "@/features/calendar/components/WeekView";
 import { buildWeekDays } from "@/features/calendar/dates";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
-
-vi.mock("@/stores/calendar", () => ({
-  useCalendarStore: (selector: (state: Record<string, unknown>) => unknown) =>
-    selector({
-      createEntry: vi.fn(),
-      updateEntry: vi.fn(),
-      deleteEntry: vi.fn(),
-      resync: vi.fn(),
-    }),
-}));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
-}));
 
 afterEach(cleanup);
 
@@ -50,12 +37,36 @@ function renderView(
       locale="zh-CN"
       messages={{ calendar: calendarMessages }}
     >
-      <WeekView days={weekDays} entries={entries} />
+      <WeekView
+        days={weekDays}
+        entries={entries}
+        nav={{
+          prevHref: "/calendar?week=2026-11-09",
+          todayHref: "/calendar?week=2026-11-16",
+          nextHref: "/calendar?week=2026-11-23",
+        }}
+        onCreate={vi.fn()}
+        onEdit={vi.fn()}
+      />
     </NextIntlClientProvider>,
   );
 }
 
 describe("WeekView(AXY-23 Task 8)", () => {
+  it("卡片头部翻周链接:前/今天/后 href 逐字承接 nav prop", () => {
+    renderView([]);
+    expect(
+      screen.getByRole("link", { name: "上一周" }).getAttribute("href"),
+    ).toBe("/calendar?week=2026-11-09");
+    expect(screen.getByRole("link", { name: "今天" }).textContent).toBe("今天");
+    expect(
+      screen.getByRole("link", { name: "今天" }).getAttribute("href"),
+    ).toBe("/calendar?week=2026-11-16");
+    expect(
+      screen.getByRole("link", { name: "下一周" }).getAttribute("href"),
+    ).toBe("/calendar?week=2026-11-23");
+  });
+
   it("整周无条目 → E-04 逐字「这周还没有安排」", () => {
     renderView([]);
     expect(screen.getByText("这周还没有安排")).toBeTruthy();
