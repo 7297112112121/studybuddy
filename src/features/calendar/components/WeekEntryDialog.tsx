@@ -25,14 +25,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import type { CalendarEntryView } from "@/modules/calendar/queries";
-
 import { useEntryDelete } from "../useEntryDelete";
+import type { WeekEntryDialogState } from "../useWeekView";
 import EntryForm from "./EntryForm";
-
-export type WeekEntryDialogState =
-  | { mode: "create"; date: string; prefillStart: string }
-  | { mode: "edit"; entry: CalendarEntryView };
 
 export type WeekEntryDialogProps = {
   state: WeekEntryDialogState | null;

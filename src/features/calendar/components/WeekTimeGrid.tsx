@@ -10,13 +10,14 @@ import { cn } from "cn";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-import { minutesToHhmm, type WeekDay } from "../dates";
+import {
+  PX_PER_MINUTE,
+  SLOT_MINUTES,
+  SLOTS_PER_DAY,
+  minutesToHhmm,
+  type WeekDay,
+} from "../dates";
 import WeekDayColumn from "./WeekDayColumn";
-
-/** 网格几何：每分钟像素与 30 分钟槽（单日列共用同一来源）。 */
-export const PX_PER_MINUTE = 2;
-export const SLOT_MINUTES = 30;
-export const SLOTS_PER_DAY = (24 * 60) / SLOT_MINUTES;
 
 type WeekTimeGridProps = {
   days: WeekDay[];

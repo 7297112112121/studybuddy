@@ -6,12 +6,14 @@ import { useTranslations } from "next-intl";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 import {
+  PX_PER_MINUTE,
+  SLOT_MINUTES,
+  SLOTS_PER_DAY,
   layoutDayBlocks,
   minutesToHhmm,
   timePrefix,
   type WeekDay,
 } from "../dates";
-import { PX_PER_MINUTE, SLOT_MINUTES, SLOTS_PER_DAY } from "./WeekTimeGrid";
 
 type WeekDayColumnProps = {
   day: WeekDay;

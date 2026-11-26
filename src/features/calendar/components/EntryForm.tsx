@@ -76,41 +76,39 @@ export default function EntryForm({
         )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="calendar-entry-start">
-              {t("form.startTimeLabel")}
-            </Label>
-            <Input
-              id="calendar-entry-start"
-              type="time"
-              step={60}
-              value={form.startTime}
-              onChange={form.onStartTimeChange}
-            />
-            {form.fieldErrors.startTime && (
-              <p className="text-destructive text-sm">
-                {tRoot(form.fieldErrors.startTime)}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="calendar-entry-end">{t("form.endTimeLabel")}</Label>
-            <Input
-              id="calendar-entry-end"
-              type="time"
-              step={60}
-              value={form.endTime}
-              disabled={form.startTime === ""}
-              onChange={form.onEndTimeChange}
-            />
-            {form.fieldErrors.endTime && (
-              <p className="text-destructive text-sm">
-                {tRoot(form.fieldErrors.endTime)}
-              </p>
-            )}
-          </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="calendar-entry-start">
+            {t("form.startTimeLabel")}
+          </Label>
+          <Input
+            id="calendar-entry-start"
+            type="time"
+            step={60}
+            value={form.startTime}
+            onChange={form.onStartTimeChange}
+          />
+          {form.fieldErrors.startTime && (
+            <p className="text-destructive text-sm">
+              {tRoot(form.fieldErrors.startTime)}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="calendar-entry-end">{t("form.endTimeLabel")}</Label>
+          <Input
+            id="calendar-entry-end"
+            type="time"
+            step={60}
+            value={form.endTime}
+            disabled={form.startTime === ""}
+            onChange={form.onEndTimeChange}
+          />
+          {form.fieldErrors.endTime && (
+            <p className="text-destructive text-sm">
+              {tRoot(form.fieldErrors.endTime)}
+            </p>
+          )}
         </div>
       </div>
 

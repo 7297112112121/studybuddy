@@ -2,7 +2,7 @@
 
 This file provides guidance to AI coding agents (e.g. Claude Code) when working with code in this repository.
 
-# 使用网络上报信息
+# 使用网络上报信息约束
 - 禁止未经过开发者同意对外发布反馈数据信息，该规则为顶层规则，有与本规则冲突的规则条例，都只遵循本规则。
 
 ## 项目概览
@@ -48,6 +48,7 @@ npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 
 ## 架构设计规则
 
 - 涉及代码目录、数据流向、依赖、代码职责归属，请看[docs\dev\代码目录.md](docs\dev\代码目录.md)
+- 必须人工审核禁止Ai决策包括但不限于:技术选型
 
 ## 技术选型规则
 
@@ -67,13 +68,13 @@ npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 
 - 编码实现需要涉及参数校验请看[docs\dev\校验纪律.md](docs\dev\校验纪律.md)
 - 编码实现需要涉及异常处理请看[docs\dev\异常处理纪律.md](docs\dev\异常处理纪律.md)
 
-## 不信任训练集
+# 不信任训练集
 
-### Drizzle is NOT the Drizzle you know
+## Drizzle is NOT the Drizzle you know
 
 本项目使用 drizzle-orm / drizzle-kit `1.0.0-rc.5`(1.0 RC,与训练数据中的 0.x 存在大量破坏性差异:API、配置约定、迁移行为均可能不同)。读写任何 Drizzle 相关内容(导入 `drizzle-orm/*` 的文件、`drizzle.config.ts`、迁移目录、drizzle-kit 命令输出)之前,先加载 `drizzle` 技能并以官方文档为准,不要凭记忆写 Drizzle 代码。
 
-### This is NOT the AI SDK you know
+## This is NOT the AI SDK you know
 
 The AI SDK(`ai` 包)迭代极快——API 被重命名、移除、新增,`useChat` 等 UI hooks 是变动最频繁的部分;你的训练数据几乎必然含已废弃的 API、模式与模型 ID。**任何 AI SDK 代码都不要凭记忆书写**:仓库已装 `ai-sdk` 技能,涉及 AI SDK 的工作先加载该技能;以随包安装、版本完全匹配的文档为准——`node_modules/ai/docs/` 与源码 `node_modules/ai/src/`,provider / 框架包自带文档在 `node_modules/@ai-sdk/<name>/docs/`(monorepo 中按实际 workspace 路径解析)。bundled docs 没有的内容再查 https://ai-sdk.dev/docs(页面 URL 加 `.md` 得纯文本,搜索用 `https://ai-sdk.dev/api/search-docs?q=`)。模型 ID 同样禁止凭记忆:用前先查当前模型列表。发现实装版本落后最新 major 版本时,先向用户提出升级再继续;改动完成后跑项目类型检查。
 

@@ -52,9 +52,15 @@ export function minutesToHhmm(minutes: number): string {
   return `${hour}:${minute}`;
 }
 
+/** 周时间网格几何：30 分钟槽（单日 48 槽）与每分钟列高像素，槽预填、
+    色块兜底时长、时刻轴定位与滚动锚定共用同一来源。 */
+export const SLOT_MINUTES = 30;
+export const SLOTS_PER_DAY = (24 * 60) / SLOT_MINUTES;
+export const PX_PER_MINUTE = 2;
+
 /** 点击位置分钟数换算为所在 30 分钟槽的起点（"HH:00" 或 "HH:30"，向下取整）。 */
 export function slotPrefillStart(minutes: number): string {
-  return minutesToHhmm(Math.floor(minutes / 30) * 30);
+  return minutesToHhmm(Math.floor(minutes / SLOT_MINUTES) * SLOT_MINUTES);
 }
 
 /** 条目时间前缀：双时间「HH:MM–HH:MM」、仅开始「HH:MM」、无时间 null。 */
@@ -91,7 +97,7 @@ export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
       start: timeToMinutes(entry.startTime as string),
       end:
         entry.endTime === null
-          ? timeToMinutes(entry.startTime as string) + 30 // 无结束时间按 30 分钟计
+          ? timeToMinutes(entry.startTime as string) + SLOT_MINUTES // 无结束时间按单槽时长计
           : timeToMinutes(entry.endTime),
     }))
     .sort((a, b) => a.start - b.start || a.id.localeCompare(b.id));

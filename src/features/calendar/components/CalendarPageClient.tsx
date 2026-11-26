@@ -34,6 +34,8 @@ export default function CalendarPageClient({
         />
       ) : (
         <CalendarScreen
+          /* key 绑定所示月份：换月重挂载，选中日回落与侧栏编辑态随月作用域重算 */
+          key={`${shown.year}-${shown.month}`}
           year={shown.year}
           month={shown.month}
           today={today}

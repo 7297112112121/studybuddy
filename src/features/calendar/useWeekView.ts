@@ -6,14 +6,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-import { groupEntriesByDate, slotPrefillStart, type WeekDay } from "./dates";
-import type { WeekEntryDialogState } from "./components/WeekEntryDialog";
-import { PX_PER_MINUTE } from "./components/WeekTimeGrid";
+import {
+  PX_PER_MINUTE,
+  groupEntriesByDate,
+  slotPrefillStart,
+  type WeekDay,
+} from "./dates";
 
 /** 非今天所在周的滚动锚点（08:00）。 */
 const NON_TODAY_ANCHOR_MINUTES = 8 * 60;
 /** 打开即锚定当前时段前两小时，免切换即可见实时线。 */
 const ANCHOR_LOOKBACK_MINUTES = 120;
+
+/** 周编辑卡开合态：create 模式带所在列日期与槽起点预填，edit 模式带原条目。 */
+export type WeekEntryDialogState =
+  | { mode: "create"; date: string; prefillStart: string }
+  | { mode: "edit"; entry: CalendarEntryView };
 
 /** 客户端本地时钟 → 当日分钟数。 */
 function clientNowMinutes(): number {
