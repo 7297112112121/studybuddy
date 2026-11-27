@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * 今日日程组合层：从今日读域（今天所在周）过滤今天条目，接线 EntryRow
- * 列表；编辑走页面级编辑卡回调，删除确认由 EntryRow 内置状态机承接；
- * 自身零状态。
+ * 今日日程（纯展示）：渲染今天当天的条目列表（过滤派生在屏状态机
+ * useCalendarScreen 的 todaysSchedule）；标题日期为纯函数排版派生；
+ * 编辑走页面级编辑卡回调，删除确认由 EntryRow 内置状态机承接。
  */
 import { useTranslations } from "next-intl";
 
@@ -14,19 +14,18 @@ import EntryRow from "./EntryRow";
 
 type TodayPanelProps = {
   today: string;
-  /** 今日读域（今天所在周条目），本层过滤 date === today。 */
-  weekEntries: CalendarEntryView[];
+  /** 今天当天的条目（屏状态机 todaysSchedule 派生产物）。 */
+  entries: CalendarEntryView[];
   /** 编辑回调（页面级编辑卡开合态）。 */
   onEdit: (entry: CalendarEntryView) => void;
 };
 
 export default function TodayPanel({
   today,
-  weekEntries,
+  entries,
   onEdit,
 }: TodayPanelProps) {
   const t = useTranslations("calendar");
-  const todayEntries = weekEntries.filter((entry) => entry.date === today);
 
   return (
     <section
@@ -36,11 +35,11 @@ export default function TodayPanel({
       <h2 className="text-base font-semibold tracking-tight">
         {formatMonthDay(today)} · 今天
       </h2>
-      {todayEntries.length === 0 ? (
+      {entries.length === 0 ? (
         <p className="text-muted-foreground text-sm">{t("empty.day")}</p>
       ) : (
         <ul className="flex flex-col">
-          {todayEntries.map((entry) => (
+          {entries.map((entry) => (
             <EntryRow
               key={entry.id}
               entry={entry}

@@ -8,12 +8,12 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 import { useEntryForm } from "../useEntryForm";
+import EntryFieldRow from "./EntryFieldRow";
 
 type EntryFormProps = {
   /** 所选日期（新建模式提交日期；编辑模式被日期控件初值覆盖）。 */
@@ -36,7 +36,6 @@ export default function EntryForm({
   initialStartTime = "",
 }: EntryFormProps) {
   const t = useTranslations("calendar");
-  const tRoot = useTranslations();
   const form = useEntryForm({ date, entry, onSaved, initialStartTime });
 
   return (
@@ -45,42 +44,39 @@ export default function EntryForm({
       noValidate
       className="flex flex-col gap-3 border-t border-border pt-4"
     >
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="calendar-entry-title">{t("form.titleLabel")}</Label>
+      <EntryFieldRow
+        id="calendar-entry-title"
+        label={t("form.titleLabel")}
+        error={form.fieldErrors.title}
+      >
         <Input
           id="calendar-entry-title"
           value={form.title}
           maxLength={50}
           onChange={form.onTitleChange}
         />
-        {form.fieldErrors.title && (
-          <p className="text-destructive text-sm">
-            {tRoot(form.fieldErrors.title)}
-          </p>
-        )}
-      </div>
+      </EntryFieldRow>
 
       {/* 具体内容：纯文本记录，不做格式化；可空 */}
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="calendar-entry-content">{t("form.contentLabel")}</Label>
+      <EntryFieldRow
+        id="calendar-entry-content"
+        label={t("form.contentLabel")}
+        error={form.fieldErrors.content}
+      >
         <Textarea
           id="calendar-entry-content"
           value={form.content}
           maxLength={2000}
           onChange={form.onContentChange}
         />
-        {form.fieldErrors.content && (
-          <p className="text-destructive text-sm">
-            {tRoot(form.fieldErrors.content)}
-          </p>
-        )}
-      </div>
+      </EntryFieldRow>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="calendar-entry-start">
-            {t("form.startTimeLabel")}
-          </Label>
+        <EntryFieldRow
+          id="calendar-entry-start"
+          label={t("form.startTimeLabel")}
+          error={form.fieldErrors.startTime}
+        >
           <Input
             id="calendar-entry-start"
             type="time"
@@ -88,14 +84,12 @@ export default function EntryForm({
             value={form.startTime}
             onChange={form.onStartTimeChange}
           />
-          {form.fieldErrors.startTime && (
-            <p className="text-destructive text-sm">
-              {tRoot(form.fieldErrors.startTime)}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="calendar-entry-end">{t("form.endTimeLabel")}</Label>
+        </EntryFieldRow>
+        <EntryFieldRow
+          id="calendar-entry-end"
+          label={t("form.endTimeLabel")}
+          error={form.fieldErrors.endTime}
+        >
           <Input
             id="calendar-entry-end"
             type="time"
@@ -104,29 +98,22 @@ export default function EntryForm({
             disabled={form.startTime === ""}
             onChange={form.onEndTimeChange}
           />
-          {form.fieldErrors.endTime && (
-            <p className="text-destructive text-sm">
-              {tRoot(form.fieldErrors.endTime)}
-            </p>
-          )}
-        </div>
+        </EntryFieldRow>
       </div>
 
       {form.editing && showDateField && (
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="calendar-entry-date">{t("form.dateLabel")}</Label>
+        <EntryFieldRow
+          id="calendar-entry-date"
+          label={t("form.dateLabel")}
+          error={form.fieldErrors.date}
+        >
           <Input
             id="calendar-entry-date"
             type="date"
             value={form.entryDate}
             onChange={form.onDateChange}
           />
-          {form.fieldErrors.date && (
-            <p className="text-destructive text-sm">
-              {tRoot(form.fieldErrors.date)}
-            </p>
-          )}
-        </div>
+        </EntryFieldRow>
       )}
 
       {form.formError && (

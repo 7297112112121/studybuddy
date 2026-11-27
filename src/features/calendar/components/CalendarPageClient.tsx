@@ -27,7 +27,7 @@ export default function CalendarPageClient({
     weekStart,
     today,
     entries,
-    todayEntries,
+    todaysSchedule,
     nav,
     selectDate,
     dialogState,
@@ -62,7 +62,7 @@ export default function CalendarPageClient({
           />
           <TodayPanel
             today={today}
-            weekEntries={todayEntries}
+            entries={todaysSchedule}
             onEdit={openEdit}
           />
         </div>

@@ -5,4 +5,3 @@
  * 业务逻辑（queries/service/validators）在 src/modules/calendar；
  */
 export { default as CalendarPageClient } from "./components/CalendarPageClient";
-export { default as WeekView } from "./components/WeekView";

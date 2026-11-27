@@ -1,9 +1,10 @@
 /**
  * TodayPanel 组件测试。
  *
- * 覆盖:标题逐字「11月17日 · 今天」、今日过滤(所在周其他日期条目不显示)、
- * 空态文案、编辑回调带条目、删除确认层无额外输入且取消/确认分支
- * (EntryRow 复用面,承接原 DayPanel 测试的删除确认覆盖)。
+ * 覆盖:标题逐字「11月17日 · 今天」、条目全量渲染(今日过滤派生已上移
+ * 屏状态机 useCalendarScreen)、空态文案、编辑回调带条目、删除确认层
+ * 无额外输入且取消/确认分支(EntryRow 复用面,承接原 DayPanel 测试的
+ * 删除确认覆盖)。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -48,7 +49,7 @@ function entry(
 const today = "2026-11-17";
 
 function renderPanel(
-  weekEntries: CalendarEntryView[] = [],
+  entries: CalendarEntryView[] = [],
   onEdit = vi.fn(),
 ): ReturnType<typeof render> {
   return render(
@@ -56,7 +57,7 @@ function renderPanel(
       locale="zh-CN"
       messages={{ calendar: calendarMessages }}
     >
-      <TodayPanel today={today} weekEntries={weekEntries} onEdit={onEdit} />
+      <TodayPanel today={today} entries={entries} onEdit={onEdit} />
     </NextIntlClientProvider>,
   );
 }
@@ -68,13 +69,13 @@ describe("TodayPanel", () => {
     expect(screen.getByText("这天还没有安排")).toBeTruthy();
   });
 
-  it("② 今日过滤:所在周其他日期条目不显示,仅今天条目在场", () => {
+  it("② 条目全量渲染:传入条目(屏状态机已按今天过滤)逐行在场", () => {
     renderPanel([
-      entry("e1", "2026-11-16", "昨天的安排", "09:00", "10:00"),
+      entry("e1", "2026-11-16", "周内其他日的安排", "09:00", "10:00"),
       entry("e2", today, "高数复习", "14:00", "15:30"),
     ]);
     expect(screen.getByText("高数复习")).toBeTruthy();
-    expect(screen.queryByText("昨天的安排")).toBeNull();
+    expect(screen.getByText("周内其他日的安排")).toBeTruthy();
   });
 
   it("③ 编辑:点「编辑」→ onEdit 以今天条目被调", () => {

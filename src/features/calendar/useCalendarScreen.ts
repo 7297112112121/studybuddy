@@ -83,11 +83,15 @@ export function useCalendarScreen(params: CalendarPageParams) {
     null,
   );
 
+  const todaysSchedule = todayEntries.filter((entry) => entry.date === today);
+
   return {
     weekStart,
     today,
     entries,
     todayEntries,
+    /** 今天当天的条目（自今日读域过滤）；todayEntries 是今天所在周的读域，两词异义。 */
+    todaysSchedule,
     nav,
     selectDate,
     dialogState,

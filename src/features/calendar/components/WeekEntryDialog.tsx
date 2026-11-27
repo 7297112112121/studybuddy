@@ -9,14 +9,6 @@
  */
 import { useTranslations } from "next-intl";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +19,7 @@ import {
 
 import { useEntryDelete } from "../useEntryDelete";
 import type { WeekEntryDialogState } from "../useCalendarScreen";
+import EntryDeleteConfirm from "./EntryDeleteConfirm";
 import EntryForm from "./EntryForm";
 
 export type WeekEntryDialogProps = {
@@ -86,23 +79,12 @@ export default function WeekEntryDialog({
         </DialogContent>
       </Dialog>
       {state.mode === "edit" && (
-        <AlertDialog
+        <EntryDeleteConfirm
           open={confirmOpen}
-          onOpenChange={(open) => (open ? openConfirm() : closeConfirm())}
-        >
-          <AlertDialogContent>
-            <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
-            <p className="text-muted-foreground text-sm">{state.entry.title}</p>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={closeConfirm}>
-                {t("entry.cancel")}
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={() => confirmDelete(state.entry.id)}>
-                {t("entry.delete")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          title={state.entry.title}
+          onCancel={closeConfirm}
+          onConfirm={() => confirmDelete(state.entry.id)}
+        />
       )}
     </>
   );

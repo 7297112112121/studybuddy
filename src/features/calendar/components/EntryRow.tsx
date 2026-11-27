@@ -6,21 +6,13 @@
  */
 import { useTranslations } from "next-intl";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 import { timePrefix } from "../dates";
 import { useEntryDelete } from "../useEntryDelete";
+import EntryDeleteConfirm from "./EntryDeleteConfirm";
 
 type EntryRowProps = {
   entry: CalendarEntryView;
@@ -52,31 +44,20 @@ export default function EntryRow({ entry, onEdit }: EntryRowProps) {
             <Button variant="ghost" size="sm" onClick={onEdit}>
               {t("entry.edit")}
             </Button>
-            <AlertDialog
-              open={confirmOpen}
-              onOpenChange={(open) => (open ? openConfirm() : closeConfirm())}
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isDeleting}
+              onClick={openConfirm}
             >
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={isDeleting}
-                onClick={openConfirm}
-              >
-                {t("entry.delete")}
-              </Button>
-              <AlertDialogContent>
-                <AlertDialogTitle>{t("entry.confirmTitle")}</AlertDialogTitle>
-                <AlertDialogDescription>{entry.title}</AlertDialogDescription>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={closeConfirm}>
-                    {t("entry.cancel")}
-                  </AlertDialogCancel>
-                  <AlertDialogAction onClick={() => confirmDelete(entry.id)}>
-                    {t("entry.delete")}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+              {t("entry.delete")}
+            </Button>
+            <EntryDeleteConfirm
+              open={confirmOpen}
+              title={entry.title}
+              onCancel={closeConfirm}
+              onConfirm={() => confirmDelete(entry.id)}
+            />
           </div>
         </div>
       </div>
