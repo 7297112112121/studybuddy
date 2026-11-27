@@ -35,14 +35,14 @@
   },
   "dependencies": {
     "@better-auth/redis-storage": "1.7",
-    "better-auth": "^1.7.25",
+    "better-auth": "^1.7.27",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "drizzle-orm": "^1.0.0-rc.5",
     "ioredis": "^5.11.1",
-    "lucide-react": "^1.73.0",
+    "lucide-react": "^1.78.0",
     "next": "16.4.6",
-    "next-intl": "^4.15.1",
+    "next-intl": "^4.16.0",
     "postgres": "^4.1.1",
     "radix-ui": "^1.8.1",
     "react": "19.3.1",
@@ -65,14 +65,14 @@
     "eslint": "^10",
     "eslint-config-next": "16.4.6",
     "jsdom": "^31.0.1",
-    "knip": "^6.45.1",
-    "lint-staged": "^17.6.1",
+    "knip": "^6.48.0",
+    "lint-staged": "^17.6.2",
     "prettier": "^3.10.1",
     "shadcn": "^4.23.0",
     "tailwindcss": "4.3.5",
     "typescript": "6.0.3",
     "vite": "^8.3.8",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "5.1.0"
+    "vitest": "5.1.1"
   }
 }
