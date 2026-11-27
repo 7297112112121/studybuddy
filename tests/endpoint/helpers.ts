@@ -7,34 +7,49 @@
 import { auth } from "@/auth/better-auth.server";
 
 /**
- * 直调 auth.handler 的 POST 基座（Task 6，design「Produces」directPost）。
- *
- * 构造 Request 直调 betterAuth handler（不经 HTTP 层），URL 锚定
- * basePath '/api/auth'（Better Auth 默认）与 BETTER_AUTH_URL 同源。
- * 携 cookie 的 POST 会触发 originCheckMiddleware 的 CSRF 校验
- * （useCookies=true 时强制校验 origin），故此时补受信任 origin 头；
- * 未携 cookie 时该中间件短路（validateOrigin 对无 cookie 请求直接放行）。
+ * auth.handler 直调请求基座（不经 HTTP 层），URL 锚定 basePath
+ * '/api/auth'（Better Auth 默认）与 BETTER_AUTH_URL 同源。携 cookie
+ * 的请求会触发 originCheckMiddleware 的 CSRF 校验（useCookies=true 时
+ * 强制校验 origin），故此时补受信任 origin 头；未携 cookie 时该中间件
+ * 短路（validateOrigin 对无 cookie 请求直接放行）。
  */
+function authRequest(
+  method: "GET" | "POST",
+  path: string,
+  body?: unknown,
+  cookie?: string,
+): Request {
+  const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+  const headers: Record<string, string> = {};
+  if (method === "POST") {
+    headers["content-type"] = "application/json";
+  }
+  if (cookie) {
+    headers.cookie = cookie;
+    headers.origin = base;
+  }
+  return new Request(`${base}/api/auth${path}`, {
+    method,
+    headers,
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  });
+}
+
+/** 直调 auth.handler 的 POST 基座（Task 6，design「Produces」directPost）。 */
 export async function directPost(
   path: string,
   body: unknown,
   cookie?: string,
 ): Promise<Response> {
-  const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-  const headers: Record<string, string> = {
-    "content-type": "application/json",
-  };
-  if (cookie) {
-    headers.cookie = cookie;
-    headers.origin = base;
-  }
-  return auth.handler(
-    new Request(`${base}/api/auth${path}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    }),
-  );
+  return auth.handler(authRequest("POST", path, body, cookie));
+}
+
+/** 直调 auth.handler 的 GET 基座（get-session 语义为 GET）。 */
+export async function directGet(
+  path: string,
+  cookie?: string,
+): Promise<Response> {
+  return auth.handler(authRequest("GET", path, undefined, cookie));
 }
 
 /**

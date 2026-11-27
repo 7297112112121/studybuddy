@@ -21,7 +21,6 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/common/db";
 import { account, user } from "@/db/schema";
-import { usernameToPlaceholderEmail } from "@/auth/service";
 import { uniqueUsername } from "../../support/username";
 import { POST } from "@/app/api/auth/register/route";
 
@@ -70,7 +69,8 @@ describe("POST /api/auth/register（tests/endpoint/auth/register）", () => {
     const u = users[0]!;
     expect(u.name).toBe(username);
     expect(u.username).toBe(username);
-    expect(u.email).toBe(usernameToPlaceholderEmail(username));
+    // 占位邮箱字面模板——格式变更即有意变更，须同步本断言
+    expect(u.email).toBe(`${username}@user.styb.invalid`);
     // R15：agreement 同意留痕
     expect(u.agreementVersion).toBe("v1");
     expect(u.agreedAt.getTime()).toBeGreaterThan(startedAt.getTime());

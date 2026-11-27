@@ -25,9 +25,8 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/common/db";
 import { session, user } from "@/db/schema";
-import { auth } from "@/auth/better-auth.server";
 import { redis } from "@/common/redis";
-import { directPost, signInAndGetCookie } from "../helpers";
+import { directGet, directPost, signInAndGetCookie } from "../helpers";
 import { uniqueUsername } from "../../support/username";
 import { registerWithUsername } from "@/auth/service";
 
@@ -49,20 +48,6 @@ async function registerTestUser(input: {
 
 /** 与 service.test.ts 一致的合法测试密码（PASSWORD_RE：字母+数字，8..20） */
 const PASSWORD = "abcdefg1";
-
-/**
- * GET 基座：directPost 仅覆盖 POST，get-session 语义为 GET（Task 7 卡）。
- * 构造方式与 helpers.directPost 同源（basePath '/api/auth' + 受信任 origin）。
- */
-async function directGetSession(cookie: string): Promise<Response> {
-  const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-  return auth.handler(
-    new Request(`${base}/api/auth/get-session`, {
-      method: "GET",
-      headers: { cookie, origin: base },
-    }),
-  );
-}
 
 afterAll(async () => {
   await db.$client.end();
@@ -200,7 +185,7 @@ describe("退出失效（R11 服务端半边）", () => {
     expect(signOutRes.status).toBe(200);
 
     // 旧 cookie 直连 get-session（GET）：响应不含用户
-    const sessionRes = await directGetSession(cookie);
+    const sessionRes = await directGet("/get-session", cookie);
     const sessionBody = await sessionRes.json();
     expect(sessionBody?.user ?? null).toBeNull();
 
@@ -225,7 +210,7 @@ describe("会话链路正读（queries.test.ts 直测面并轨，形状映射归
     await registerTestUser({ username, password: PASSWORD });
     const cookie = await signInAndGetCookie(username, PASSWORD);
 
-    const sessionRes = await directGetSession(cookie);
+    const sessionRes = await directGet("/get-session", cookie);
     expect(sessionRes.status).toBe(200);
     const body = (await sessionRes.json()) as {
       user: { username: string | null };
