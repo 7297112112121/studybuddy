@@ -56,6 +56,7 @@ npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 
 - 测试编写、分层 mock 边界与统一接口端点壳纪律请看[docs\dev\测试纪律.md](docs\dev\测试纪律.md)
 - 单元测试用例结构与断言纪律请看[docs\dev\单元测试纪律.md](docs\dev\单元测试纪律.md)
 - 接口测试真依赖、期望值独立与直调基座纪律请看[docs\dev\接口测试纪律.md](docs\dev\接口测试纪律.md)
+- e2e 端到端测试真依赖门控、固定周锚与并行造号纪律请看[docs\dev\e2e测试纪律.md](docs\dev\e2e测试纪律.md)
 
 ## 架构设计规则
 
