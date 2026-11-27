@@ -10,7 +10,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { load, loadToday } from "@/api/calendar-sync";
 import { useApiFailureHandler } from "@/api/failure";
 import { localToday } from "@/common/date";
 import type { ApiFailure } from "@/common/error";
@@ -72,7 +71,7 @@ export default function CalendarPageClient({
 
   // 导航域装载与失败重试共用同一链:load 返回新鲜契约结果(null 即过期丢弃)
   const retry = useCallback(async (): Promise<void> => {
-    const data = await load(weekStart);
+    const data = await useCalendarStore.getState().load(weekStart);
     if (data !== null && !data.ok) {
       await dispatchReadFailure(data);
     }
@@ -83,7 +82,7 @@ export default function CalendarPageClient({
     void retry();
   }, [retry]);
   useEffect(() => {
-    void loadToday(weekStartFor(today));
+    void useCalendarStore.getState().loadToday(weekStartFor(today));
   }, [today]);
 
   // 两卡按有无开始时间二分：今日卡只收已安排时间，无时间归右栏未安排卡（互斥，交集恒空）

@@ -1,6 +1,6 @@
 /**
  * 日历域统一接口端点词汇:读/写端点的 URL、方法与请求体组装单一来源,
- * 供读/写编排(calendar-sync)调用;本文件不触碰状态,不依赖 stores。
+ * 供各域 store 读/写编排调用;本文件不触碰状态,不依赖 stores。
  */
 import { requestContractResult } from "@/api/request";
 import type { ApiErrorCode, ApiResult } from "@/common/error";

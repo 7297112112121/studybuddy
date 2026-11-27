@@ -1,13 +1,15 @@
 /**
- * calendar-sync 读/写编排单测:竞态守卫(过期响应整体丢弃)、失败归一与
+ * 日历 store 读/写编排单测:竞态守卫(过期响应整体丢弃)、失败归一与
  * 失败重试。fetch 经 vi.stubGlobal 桩接;store 为模块单例,每例前重置状态。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { load, loadToday, resync } from "@/api/calendar-sync";
 import { API_ERROR } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import { useCalendarStore } from "@/stores/calendar";
+
+/** 编排 action 为稳定引用,模块级解构一次(get 取态在调用时实时)。 */
+const { load, loadToday, resync } = useCalendarStore.getState();
 
 function entry(id: string): CalendarEntryView {
   return {
@@ -58,7 +60,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("calendar-sync load 竞态守卫", () => {
+describe("store load 竞态守卫", () => {
   it("快速翻周:前序响应后到,不覆盖新读域;新鲜结果原样返回、过期返回 null", async () => {
     const weekA = deferredBody();
     const weekB = deferredBody();
@@ -107,7 +109,7 @@ describe("calendar-sync load 竞态守卫", () => {
   });
 });
 
-describe("calendar-sync load 失败归一", () => {
+describe("store load 失败归一", () => {
   it("技术失败落失败态;未授权(UNAUTHORIZED)不落失败态、新鲜结果原样返回供调用侧分派;成功清位", async () => {
     vi.stubGlobal(
       "fetch",
@@ -152,7 +154,7 @@ describe("calendar-sync load 失败归一", () => {
   });
 });
 
-describe("calendar-sync loadToday 竞态守卫", () => {
+describe("store loadToday 竞态守卫", () => {
   it("前序响应后到,不覆盖今日读域", async () => {
     const todayA = deferredBody();
     const todayB = deferredBody();
@@ -175,7 +177,7 @@ describe("calendar-sync loadToday 竞态守卫", () => {
   });
 });
 
-describe("calendar-sync resync 失败重试", () => {
+describe("store resync 失败重试", () => {
   it("按当前 scope 重载,成功后清失败态", async () => {
     vi.stubGlobal(
       "fetch",

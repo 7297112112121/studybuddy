@@ -7,15 +7,10 @@
  */
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 
-import {
-  createEntry,
-  deleteEntry,
-  resync,
-  updateEntry,
-} from "@/api/calendar-sync";
 import { useApiFailureHandler } from "@/api/failure";
 import { toFieldErrors } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
+import { useCalendarStore } from "@/stores/calendar";
 import {
   calendarEntryInputSchema,
   type CalendarEntryInput,
@@ -105,6 +100,7 @@ export function useEntryForm(props: UseEntryFormProps) {
 
     setFieldErrors({});
     setFormError(false);
+    const { createEntry, updateEntry } = useCalendarStore.getState();
     setIsPending(true);
     const result = editing
       ? await updateEntry(entry.id, parsed.data)
@@ -121,7 +117,7 @@ export function useEntryForm(props: UseEntryFormProps) {
     }
     await handleApiFailure(result, {
       onInvalidInput: setFieldErrors,
-      onNotFound: () => void resync(),
+      onNotFound: () => void useCalendarStore.getState().resync(),
       onFailure: () => setFormError(true),
     });
   }
@@ -165,7 +161,7 @@ export function useEntryDeleteConfirm(onSettled?: () => void) {
 
   async function confirmDelete(entryId: string): Promise<void> {
     setIsDeleting(true);
-    const result = await deleteEntry(entryId);
+    const result = await useCalendarStore.getState().deleteEntry(entryId);
     setIsDeleting(false);
     setConfirmOpen(false);
 
@@ -175,7 +171,7 @@ export function useEntryDeleteConfirm(onSettled?: () => void) {
     }
     await handleApiFailure(result, {
       onNotFound: async () => {
-        await resync();
+        await useCalendarStore.getState().resync();
         onSettled?.();
       },
       onFailure: () => setDeleteError(true),
