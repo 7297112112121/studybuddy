@@ -3,7 +3,7 @@
 /** 周视图单日列（纯展示）：48 个点击槽（时间预填槽起点）与重叠并列均分的色块。 */
 import { useTranslations } from "next-intl";
 
-import type { CalendarEntryView } from "@/validation/calendar-response";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 
 import {
   PX_PER_MINUTE,

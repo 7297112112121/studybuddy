@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { CalendarEntryView } from "@/validation/calendar-response";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 
 import { useEntryForm } from "../forms";
 import EntryFieldRow from "./EntryFieldRow";

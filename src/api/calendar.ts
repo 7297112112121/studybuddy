@@ -6,11 +6,11 @@ import { z } from "zod";
 
 import { requestContractResult } from "@/api/contract";
 import type { ApiErrorCode, ApiResult } from "@/common/error";
-import type { CalendarEntryInput } from "@/validation/calendar-request";
+import type { CalendarEntryInput } from "@/app/api/calendar/request";
 import {
   calendarEntryViewSchema,
   type CalendarEntryView,
-} from "@/validation/calendar-response";
+} from "@/app/api/calendar/response";
 
 /** 读端点:按周锚点(周一)取条目集合,以数据载荷(data)携带条目视图,
     载荷经响应契约 schema 复验。 */

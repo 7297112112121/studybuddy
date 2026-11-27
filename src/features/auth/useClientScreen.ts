@@ -2,7 +2,7 @@
 
 /**
  * 登录/注册屏的表单状态机与登录错误文案映射。提交链携带凭据，日志与失败文案不得泄露凭据细节。
- * 提交门校验用校验契约层的 schema（src/validation/auth-request.ts），
+ * 提交门校验用账户域请求契约的 schema（src/app/api/auth/request.ts），
  * 本文件只持规则浮层实时拆解与表单状态编排。
  */
 import { useState } from "react";
@@ -13,15 +13,17 @@ import { useTranslations } from "next-intl";
 
 import { mapSignInError, type SignInErrorKey } from "@/auth/error";
 import {
-  loginFormSchema,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
-  registerFormSchema,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
+} from "@/validation/auth";
+import {
+  loginFormSchema,
+  registerFormSchema,
   type AuthFormErrors,
   type AuthMessageKey,
-} from "@/validation/auth-request";
+} from "@/app/api/auth/request";
 import { registerAccount } from "@/api/auth";
 import { useApiFailureHandler } from "@/api/contract";
 import { toFieldErrors } from "@/common/error";

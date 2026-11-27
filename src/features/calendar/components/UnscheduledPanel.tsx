@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 
-import type { CalendarEntryView } from "@/validation/calendar-response";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 
 import { weekdayKeyOf } from "../utils";
 import EntryRow from "./EntryRow";

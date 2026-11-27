@@ -8,8 +8,8 @@ import {
   TIME_HHMM_RE,
   isValidDateString,
   parseYearMonth,
-} from "@/validation/calendar-request";
-import type { CalendarEntryView } from "@/validation/calendar-response";
+} from "@/validation/calendar";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 
 /** 构建 6 行 × 7 列月网格，周一为每周首日，含邻月补位格（inMonth 为 false）。 */
 export function buildMonthGrid(

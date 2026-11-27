@@ -10,7 +10,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import UnscheduledPanel from "@/features/calendar/components/UnscheduledPanel";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
-import type { CalendarEntryView } from "@/validation/calendar-response";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 
 const deleteEntryMock = vi.hoisted(() => vi.fn());
 const resyncMock = vi.hoisted(() => vi.fn());

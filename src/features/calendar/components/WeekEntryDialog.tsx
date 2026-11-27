@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import type { CalendarEntryView } from "@/validation/calendar-response";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 
 import { useEntryDeleteConfirm } from "../forms";
 import EntryDeleteConfirm from "./EntryDeleteConfirm";

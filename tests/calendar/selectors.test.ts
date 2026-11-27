@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import type { CalendarEntryView } from "@/validation/calendar-response";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 import {
   selectTodaysSchedule,
   selectWeekUnscheduled,

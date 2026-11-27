@@ -14,8 +14,8 @@ import {
   calendarEntryInputSchema,
   type CalendarEntryInput,
   type CalendarFieldErrors,
-} from "@/validation/calendar-request";
-import type { CalendarEntryView } from "@/validation/calendar-response";
+} from "@/app/api/calendar/request";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 type UseEntryFormProps = {
   /** 提交日期（新建模式固定；编辑模式被表单内日期控件初值覆盖）。 */
   date: string;

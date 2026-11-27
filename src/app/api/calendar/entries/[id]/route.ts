@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { respondWith, withSessionApiContract } from "@/app/api/contract";
 import { deleteEntry, updateEntry } from "@/modules/calendar/service";
-import { calendarEntryInputSchema } from "@/validation/calendar-request";
+import { calendarEntryInputSchema } from "@/app/api/calendar/request";
 
 type RouteContext = { params: Promise<{ id: string }> };
 

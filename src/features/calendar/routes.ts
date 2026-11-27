@@ -2,7 +2,7 @@
  * 日历域路由词汇：URL 周参数解析回退与周导航链接派生（纯函数，无 React）。
  * 跳转动作由组合层承接，本模块只产出链接与锚点。
  */
-import { isValidWeekStart } from "@/validation/calendar-request";
+import { isValidWeekStart } from "@/validation/calendar";
 
 import { addWeeks, weekStartFor } from "./utils";
 

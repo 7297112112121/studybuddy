@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "cn";
 
-import type { CalendarEntryView } from "@/validation/calendar-response";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 
 import {
   PX_PER_MINUTE,

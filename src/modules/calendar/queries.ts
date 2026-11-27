@@ -8,7 +8,7 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/common/db";
 import { calendarEntry } from "@/db/schema";
 import { daysInMonth, formatUtcDate, MS_PER_DAY } from "@/common/date";
-import type { CalendarEntryView } from "@/validation/calendar-response";
+import type { CalendarEntryView } from "@/app/api/calendar/response";
 
 /** 作用:给出该月的日期闭区间("YYYY-MM-DD"),作为月度条目查询的入参来源。 */
 export function monthRange(

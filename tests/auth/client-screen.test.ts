@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { loginFormSchema } from "../../src/validation/auth-request";
+import { loginFormSchema } from "../../src/app/api/auth/request";
 import {
   accountRuleStates,
   confirmPasswordRuleStates,

@@ -4,7 +4,7 @@ import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
-import type { AuthFormErrors } from "@/validation/auth-request";
+import type { AuthFormErrors } from "@/app/api/auth/request";
 import type {
   AuthFormValues,
   AuthTopError,

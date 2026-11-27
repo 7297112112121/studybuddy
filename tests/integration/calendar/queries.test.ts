@@ -10,7 +10,7 @@ import { db } from "@/common/db";
 import { user } from "@/db/schema";
 import { createEntry } from "@/modules/calendar/service";
 import { listWeekEntries } from "@/modules/calendar/queries";
-import { calendarEntryViewSchema } from "@/validation/calendar-response";
+import { calendarEntryViewSchema } from "@/app/api/calendar/response";
 
 afterAll(async () => {
   await db.$client.end();

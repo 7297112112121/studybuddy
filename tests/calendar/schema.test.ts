@@ -3,16 +3,18 @@ import { describe, expect, it } from "vitest";
 
 import { calendarEntry } from "@/db/schema";
 import {
-  TIME_HHMM_RE,
   calendarEntriesQuerySchema,
   calendarEntryInputSchema,
+} from "@/app/api/calendar/request";
+import {
+  TIME_HHMM_RE,
   formatYearMonth,
   parseYearMonth,
-} from "@/validation/calendar-request";
+} from "@/validation/calendar";
 
 /**
  * calendar 表定义与条目入参契约单测（AXY-22 design「数据模型」「契约」节）。
- * 表定义在 schema.ts,zod 契约在 validators.ts(校验单一真源)。
+ * 表定义在 src/db,zod 契约在 src/app/api/calendar/request(校验单一真源)。
  * 断言值逐字取自 tasks.md Task 2「失败测试」行。
  */
 
