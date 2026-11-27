@@ -16,15 +16,21 @@ import EntryDeleteConfirm from "./EntryDeleteConfirm";
 
 type EntryRowProps = {
   entry: CalendarEntryView;
+  /** 传入时替代时间前缀展示于行首（右栏未安排卡显示周几）。 */
+  leadingText?: string;
   onEdit: () => void;
 };
 
-export default function EntryRow({ entry, onEdit }: EntryRowProps) {
+export default function EntryRow({
+  entry,
+  leadingText,
+  onEdit,
+}: EntryRowProps) {
   const t = useTranslations("calendar");
   const { confirmOpen, openConfirm, closeConfirm, isDeleting, confirmDelete } =
     useEntryDelete();
 
-  const time = timePrefix(entry);
+  const time = leadingText ?? timePrefix(entry);
 
   return (
     <li className="flex items-start gap-2 py-1.5">

@@ -1,7 +1,7 @@
 /**
  * WeekView 组件测试(AXY-23 tasks.md Task 8「失败测试」行)。
  *
- * 覆盖:整周无条目 E-04 逐字、全天区条目(且时间网格无对应色块)、
+ * 覆盖:整周无条目 E-04 逐字、无时间条目不进周视图(归右栏未安排卡)、
  * 色块文字与时段可读、实时线可见性(Review Focus 5)、槽位 aria-label
  * (createAt 插值)、卡片头部翻周链接。编辑卡开合在页面级,本层 props 透传。
  */
@@ -72,11 +72,12 @@ describe("WeekView(AXY-23 Task 8)", () => {
     expect(screen.getByText("这周还没有安排")).toBeTruthy();
   });
 
-  it("全天区:无时间条目展示于全天区按钮,时间网格无对应色块", () => {
+  it("无时间条目不渲染于周视图(归右栏未安排卡),时间网格无对应色块", () => {
     renderView([entry("e1", "2026-11-18", "交英语作业", null, null)]);
 
-    expect(screen.getByRole("button", { name: "交英语作业" })).toBeTruthy();
+    expect(screen.queryByText("交英语作业")).toBeNull();
     expect(screen.queryByTestId("week-block-e1")).toBeNull();
+    expect(screen.queryByText("这周还没有安排")).toBeNull();
   });
 
   it("带时间条目渲染为色块,文字与时段可读(14:00–15:30)", () => {

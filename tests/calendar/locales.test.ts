@@ -28,12 +28,11 @@ describe("calendar.week 文案键(AXY-23)", () => {
     expect(week.loadFailed).toBe("加载失败,请重试");
   });
 
-  it("其余七键存在且非空字符串", () => {
+  it("其余六键存在且非空字符串", () => {
     const keys = [
       "prevWeek",
       "nextWeek",
       "today",
-      "allDay",
       "retry",
       "nowLine",
       "createAt",
@@ -56,5 +55,15 @@ describe("calendar.week 编辑卡标题键(AXY-23 Task 7 补口)", () => {
     const week = readCalendarJson().week ?? {};
     expect(week.dialogCreate).toBe("新建条目");
     expect(week.dialogEdit).toBe("编辑条目");
+  });
+});
+
+describe("calendar.unscheduled 文案键(右栏未安排卡)", () => {
+  it("title / create / empty 存在且非空字符串", () => {
+    const unscheduled = readCalendarJson().unscheduled ?? {};
+    const keys = ["title", "create", "empty"] as const;
+    for (const key of keys) {
+      expect(unscheduled[key], `calendar.unscheduled.${key}`).toBeTruthy();
+    }
   });
 });

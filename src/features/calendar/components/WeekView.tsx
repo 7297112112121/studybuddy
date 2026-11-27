@@ -2,7 +2,7 @@
 
 /**
  * 周视图组合层：接屏状态机（useWeekView），接线卡片头部翻周链接、星期
- * 表头、全天区与时间网格；编辑卡开合在页面级屏状态机，本层只承接回调
+ * 表头与时间网格；编辑卡开合在页面级屏状态机，本层只承接回调
  * 透传；自身零状态，整周空态由本层条件渲染。
  */
 import Link from "next/link";
@@ -16,7 +16,6 @@ import type { CalendarEntryView } from "@/modules/calendar/queries";
 import type { WeekDay } from "../dates";
 import type { CalendarNavLinks } from "../useCalendarScreen";
 import { useWeekView } from "../useWeekView";
-import AllDayLane from "./AllDayLane";
 import WeekHeader from "./WeekHeader";
 import WeekTimeGrid from "./WeekTimeGrid";
 
@@ -67,7 +66,6 @@ export default function WeekView({
       <div className="overflow-x-auto">
         <div className="min-w-[720px]">
           <WeekHeader days={days} />
-          <AllDayLane days={days} byDate={byDate} onEdit={onEdit} />
           {entries.length === 0 && (
             <p
               className="py-8 text-center text-sm text-muted-foreground"

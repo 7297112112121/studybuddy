@@ -2,7 +2,7 @@
 
 /**
  * 日历页组合层：接屏状态机（useCalendarScreen），接线标题、周视图主区与
- * 右栏（迷你月历 + 今日日程）双栏布局、页面级编辑卡；自身零状态。
+ * 右栏（迷你月历 + 今日日程 + 未安排时间）双栏布局、页面级编辑卡；自身零状态。
  * 断点依内容：周网格 min-w-720 + 侧栏 360 → xl 起双栏，以下纵向堆叠。
  */
 import { useTranslations } from "next-intl";
@@ -14,6 +14,7 @@ import {
 } from "../useCalendarScreen";
 import MiniMonthCard from "./MiniMonthCard";
 import TodayPanel from "./TodayPanel";
+import UnscheduledPanel from "./UnscheduledPanel";
 import WeekEntryDialog from "./WeekEntryDialog";
 import WeekView from "./WeekView";
 
@@ -28,10 +29,12 @@ export default function CalendarPageClient({
     today,
     entries,
     todaysSchedule,
+    weekUnscheduled,
     nav,
     selectDate,
     dialogState,
     openCreate,
+    openCreateUnscheduled,
     openEdit,
     closeDialog,
   } = useCalendarScreen(params);
@@ -63,6 +66,16 @@ export default function CalendarPageClient({
           <TodayPanel
             today={today}
             entries={todaysSchedule}
+            onEdit={openEdit}
+          />
+          {/* 新建落点：今天在查看周落今天，否则落周一——新条目必落当前周，卡片立即可见 */}
+          <UnscheduledPanel
+            entries={weekUnscheduled}
+            onCreate={() =>
+              openCreateUnscheduled(
+                days.some((day) => day.isToday) ? today : weekStart,
+              )
+            }
             onEdit={openEdit}
           />
         </div>

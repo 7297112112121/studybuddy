@@ -42,11 +42,15 @@
     "confirmTitle": "确定删除这条安排吗？",
     "cancel": "取消"
   },
+  "unscheduled": {
+    "title": "未安排时间",
+    "create": "新建",
+    "empty": "本周没有未安排时间的事项"
+  },
   "week": {
     "prevWeek": "上一周",
     "nextWeek": "下一周",
     "today": "今天",
-    "allDay": "全天",
     "emptyWeek": "这周还没有安排",
     "loadFailed": "加载失败,请重试",
     "retry": "重试",

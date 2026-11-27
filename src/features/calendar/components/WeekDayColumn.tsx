@@ -17,7 +17,6 @@ import {
 
 type WeekDayColumnProps = {
   day: WeekDay;
-  /** 该日全部条目（带时间与全天，全天条目不进本列）。 */
   entries: CalendarEntryView[];
   onCreate: (date: string, slotMinutes: number) => void;
   onEdit: (entry: CalendarEntryView) => void;

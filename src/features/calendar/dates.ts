@@ -71,7 +71,7 @@ export function timePrefix(entry: CalendarEntryView): string | null {
     : `${entry.startTime}–${entry.endTime}`;
 }
 
-/** 条目按日期分组（周视图全天区/时间网格与月视图网格摘要共用）。 */
+/** 条目按日期分组（周视图时间网格与月视图网格摘要共用）。 */
 export function groupEntriesByDate(
   entries: CalendarEntryView[],
 ): Map<string, CalendarEntryView[]> {
@@ -198,6 +198,12 @@ export function addWeeks(weekStart: string, delta: number): string {
 export function formatMonthDay(date: string): string {
   const [, month, day] = date.split("-");
   return `${Number(month)}月${Number(day)}日`;
+}
+
+/** "YYYY-MM-DD" → 周内星期键（周一首），右栏未安排卡行首展示用。 */
+export function weekdayKeyOf(date: string): WeekdayKey {
+  const weekday = new Date(Date.parse(`${date}T00:00:00Z`)).getUTCDay();
+  return WEEKDAY_KEYS[(weekday + 6) % 7];
 }
 
 const WEEKDAY_KEYS: WeekdayKey[] = [

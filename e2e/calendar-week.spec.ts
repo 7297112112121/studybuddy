@@ -82,7 +82,7 @@ test.describe("AXY-23 日程周视图", () => {
     await expect(weekBlock(page, "高数复习")).toBeVisible();
   });
 
-  test("R8:窄屏 375px 周视图横向滚动,全天区与表头可见", async ({ browser }) => {
+  test("R8:窄屏 375px 周视图横向滚动,表头可见", async ({ browser }) => {
     const context = await browser.newContext({
       viewport: { width: 375, height: 720 },
     });
@@ -97,7 +97,6 @@ test.describe("AXY-23 日程周视图", () => {
     await expect(
       page.locator('[data-testid^="week-col-"]').first(),
     ).toBeVisible();
-    await expect(page.getByText("全天")).toBeVisible();
     await context.close();
   });
 
@@ -180,7 +179,7 @@ test.describe("AXY-23 日程周视图", () => {
     await expect(page.getByText("这周还没有安排")).toBeVisible();
   });
 
-  test("R5 演示态 4:不带时间条目仅展示于全天区,点击可编辑", async ({
+  test("R5 演示态 4:不带时间条目仅展示于右栏未安排卡,可进编辑卡", async ({
     page,
   }) => {
     const today = fmt(new Date());
@@ -188,11 +187,19 @@ test.describe("AXY-23 日程周视图", () => {
     await createViaMonth(page, { date: today, title: "交英语作业" });
     await page.goto("/calendar");
 
-    const allDay = page.getByRole("button", { name: "交英语作业" });
-    await expect(allDay).toBeVisible();
+    const unscheduled = page.getByTestId("unscheduled-panel");
+    await expect(unscheduled.getByText("交英语作业")).toBeVisible();
     await expect(weekBlock(page, "交英语作业")).toHaveCount(0);
 
-    await allDay.click();
+    // 两卡互斥：无时间条目归未安排卡，今日日程卡只收已安排时间——不含、呈空态
+    await expect(
+      page.getByTestId("today-panel").getByText("交英语作业"),
+    ).toHaveCount(0);
+    await expect(
+      page.getByTestId("today-panel").getByText("这天还没有安排"),
+    ).toBeVisible();
+
+    await unscheduled.getByRole("button", { name: "编辑" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog.locator("#calendar-entry-title")).toHaveValue(
@@ -220,9 +227,9 @@ test.describe("AXY-23 日程周视图", () => {
 
     await page.getByRole("link", { name: "周", exact: true }).click();
     await expect(page).toHaveURL(/\/calendar\?week=/);
-    // 不带时间条目 → 全天区(R5 形态),非色块
+    // 不带时间条目 → 右栏未安排卡(R5 形态),非色块
     await expect(
-      page.getByRole("button", { name: "月视图建的条目" }),
+      page.getByTestId("unscheduled-panel").getByText("月视图建的条目"),
     ).toBeVisible();
     await expect(page).toHaveURL(/\/calendar/);
   });

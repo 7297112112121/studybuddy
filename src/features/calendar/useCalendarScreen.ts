@@ -23,7 +23,7 @@ export type CalendarNavLinks = {
   nextHref: string;
 };
 
-/** 周编辑卡开合态：create 模式带所在列日期与槽起点预填，edit 模式带原条目。 */
+/** 周编辑卡开合态：create 模式带日期，槽起点预填空串即不预填（右栏未安排卡新建），edit 模式带原条目。 */
 export type WeekEntryDialogState =
   | { mode: "create"; date: string; prefillStart: string }
   | { mode: "edit"; entry: CalendarEntryView };
@@ -83,15 +83,21 @@ export function useCalendarScreen(params: CalendarPageParams) {
     null,
   );
 
-  const todaysSchedule = todayEntries.filter((entry) => entry.date === today);
+  // 两卡按有无开始时间二分：今日卡只收已安排时间，无时间归右栏未安排卡（互斥，交集恒空）
+  const todaysSchedule = todayEntries.filter(
+    (entry) => entry.date === today && entry.startTime !== null,
+  );
+  const weekUnscheduled = entries.filter((entry) => entry.startTime === null);
 
   return {
     weekStart,
     today,
     entries,
     todayEntries,
-    /** 今天当天的条目（自今日读域过滤）；todayEntries 是今天所在周的读域，两词异义。 */
+    /** 今天当天已安排时间的条目（自今日读域过滤）；todayEntries 是今天所在周的读域，两词异义。 */
     todaysSchedule,
+    /** 当前查看周的无时间条目（自周读域过滤），右栏未安排卡数据源。 */
+    weekUnscheduled,
     nav,
     selectDate,
     dialogState,
@@ -101,6 +107,9 @@ export function useCalendarScreen(params: CalendarPageParams) {
         date,
         prefillStart: slotPrefillStart(slotMinutes),
       });
+    },
+    openCreateUnscheduled: (date: string) => {
+      setDialogState({ mode: "create", date, prefillStart: "" });
     },
     openEdit: (entry: CalendarEntryView) => {
       setDialogState({ mode: "edit", entry });
