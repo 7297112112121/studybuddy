@@ -3,7 +3,7 @@
 /**
  * 周视图组合层：接屏状态机（useWeekView），接线卡片头部翻周链接、星期
  * 表头与时间网格；编辑卡开合在页面级屏状态机，本层只承接回调
- * 透传；自身零状态，整周空态由本层条件渲染。
+ * 透传；自身零状态，整周空态与导航读域失败态由本层条件渲染。
  */
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -26,6 +26,10 @@ type WeekViewProps = {
   entries: CalendarEntryView[];
   /** 翻周链接（前/今天/后），页面组合层派生。 */
   nav: CalendarNavLinks;
+  /** 导航读域加载失败：呈现失败文案与重试，替代整周空态。 */
+  loadFailed: boolean;
+  /** 失败重试：重载当前读域。 */
+  onRetry: () => void;
   /** 槽位/色块点击回调（编辑卡开合态在页面级）。 */
   onCreate: (date: string, slotMinutes: number) => void;
   onEdit: (entry: CalendarEntryView) => void;
@@ -35,6 +39,8 @@ export default function WeekView({
   days,
   entries,
   nav,
+  loadFailed,
+  onRetry,
   onCreate,
   onEdit,
 }: WeekViewProps) {
@@ -66,13 +72,27 @@ export default function WeekView({
       <div className="overflow-x-auto">
         <div className="min-w-[720px]">
           <WeekHeader days={days} />
-          {entries.length === 0 && (
-            <p
-              className="py-8 text-center text-sm text-muted-foreground"
-              role="status"
+          {loadFailed ? (
+            <div
+              role="alert"
+              className="flex items-center justify-center gap-3 py-8"
             >
-              {t("week.emptyWeek")}
-            </p>
+              <p className="text-sm text-muted-foreground">
+                {t("week.loadFailed")}
+              </p>
+              <Button variant="outline" size="sm" onClick={onRetry}>
+                {t("week.retry")}
+              </Button>
+            </div>
+          ) : (
+            entries.length === 0 && (
+              <p
+                className="py-8 text-center text-sm text-muted-foreground"
+                role="status"
+              >
+                {t("week.emptyWeek")}
+              </p>
+            )
           )}
           <div
             ref={scrollRef}

@@ -15,6 +15,9 @@ import type { CalendarEntryView } from "@/modules/calendar/queries";
 const deleteEntryMock = vi.hoisted(() => vi.fn());
 const resyncMock = vi.hoisted(() => vi.fn());
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+}));
 vi.mock("@/stores/calendar", () => ({
   useCalendarStore: (selector: (state: Record<string, unknown>) => unknown) =>
     selector({
@@ -43,21 +46,27 @@ function renderPanel(
   entries: CalendarEntryView[] = [],
   onEdit = vi.fn(),
   onCreate = vi.fn(),
+  loadFailed = false,
 ): ReturnType<typeof render> {
   return render(
     <NextIntlClientProvider
       locale="zh-CN"
       messages={{ calendar: calendarMessages }}
     >
-      <UnscheduledPanel entries={entries} onCreate={onCreate} onEdit={onEdit} />
+      <UnscheduledPanel
+        entries={entries}
+        loadFailed={loadFailed}
+        onCreate={onCreate}
+        onEdit={onEdit}
+      />
     </NextIntlClientProvider>,
   );
 }
 
 describe("UnscheduledPanel", () => {
-  it("① 空态:标题「未安排时间」+「本周没有未安排时间的事项」", () => {
+  it("① 空态:标题「本周未安排时间事项」+「本周没有未安排时间的事项」", () => {
     renderPanel();
-    expect(screen.getByText("未安排时间")).toBeTruthy();
+    expect(screen.getByText("本周未安排时间事项")).toBeTruthy();
     expect(screen.getByText("本周没有未安排时间的事项")).toBeTruthy();
   });
 
@@ -80,5 +89,13 @@ describe("UnscheduledPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "编辑" }));
     expect(onEdit).toHaveBeenCalledOnce();
     expect(onEdit.mock.calls[0][0].id).toBe("e1");
+  });
+
+  it("⑤ 读域失败:失败文案替代空态,不设重试钮(重试入口在周视图)", () => {
+    renderPanel([], vi.fn(), vi.fn(), true);
+
+    expect(screen.getByRole("alert").textContent).toContain("加载失败,请重试");
+    expect(screen.queryByText("本周没有未安排时间的事项")).toBeNull();
+    expect(screen.queryByRole("button", { name: "重试" })).toBeNull();
   });
 });

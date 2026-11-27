@@ -6,7 +6,7 @@
  * (createAt 插值)、卡片头部翻周链接。编辑卡开合在页面级,本层 props 透传。
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import WeekView from "@/features/calendar/components/WeekView";
 import { buildWeekDays } from "@/features/calendar/dates";
@@ -31,6 +31,8 @@ function entry(
 function renderView(
   entries: CalendarEntryView[],
   weekDays = days,
+  loadFailed = false,
+  onRetry: () => void = vi.fn(),
 ): ReturnType<typeof render> {
   return render(
     <NextIntlClientProvider
@@ -45,6 +47,8 @@ function renderView(
           todayHref: "/calendar?week=2026-11-16",
           nextHref: "/calendar?week=2026-11-23",
         }}
+        loadFailed={loadFailed}
+        onRetry={onRetry}
         onCreate={vi.fn()}
         onEdit={vi.fn()}
       />
@@ -70,6 +74,16 @@ describe("WeekView(AXY-23 Task 8)", () => {
   it("整周无条目 → E-04 逐字「这周还没有安排」", () => {
     renderView([]);
     expect(screen.getByText("这周还没有安排")).toBeTruthy();
+  });
+
+  it("导航读域失败:失败文案与重试钮替代整周空态,点重试回调 onRetry", () => {
+    const onRetry = vi.fn();
+    renderView([], days, true, onRetry);
+
+    expect(screen.getByRole("alert").textContent).toContain("加载失败,请重试");
+    expect(screen.queryByText("这周还没有安排")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "重试" }));
+    expect(onRetry).toHaveBeenCalledOnce();
   });
 
   it("无时间条目不渲染于周视图(归右栏未安排卡),时间网格无对应色块", () => {

@@ -27,8 +27,14 @@ export default function EntryRow({
   onEdit,
 }: EntryRowProps) {
   const t = useTranslations("calendar");
-  const { confirmOpen, openConfirm, closeConfirm, isDeleting, confirmDelete } =
-    useEntryDelete();
+  const {
+    confirmOpen,
+    openConfirm,
+    closeConfirm,
+    isDeleting,
+    deleteError,
+    confirmDelete,
+  } = useEntryDelete();
 
   const time = leadingText ?? timePrefix(entry);
 
@@ -61,11 +67,17 @@ export default function EntryRow({
             <EntryDeleteConfirm
               open={confirmOpen}
               title={entry.title}
+              isPending={isDeleting}
               onCancel={closeConfirm}
               onConfirm={() => confirmDelete(entry.id)}
             />
           </div>
         </div>
+        {deleteError && (
+          <p role="alert" className="text-destructive text-sm">
+            {t("error.deleteFailed")}
+          </p>
+        )}
       </div>
     </li>
   );

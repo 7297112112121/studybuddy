@@ -1,7 +1,7 @@
 /**
  * 日历页屏状态机：今天定格、周定位解析回退、双读域装载（导航域 + 今日域）、
- * 周导航链接派生、迷你月历接线与编辑卡开合——页面组合层（CalendarPageClient）
- * 的唯一状态来源。
+ * 导航读域失败态与重试、周导航链接派生、迷你月历接线与编辑卡开合——页面
+ * 组合层（CalendarPageClient）的唯一状态来源。
  */
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -66,6 +66,8 @@ export function useCalendarScreen(params: CalendarPageParams) {
   const loadToday = useCalendarStore((s) => s.loadToday);
   const entries = useCalendarStore((s) => s.entries);
   const todayEntries = useCalendarStore((s) => s.todayEntries);
+  const loadError = useCalendarStore((s) => s.loadError);
+  const resync = useCalendarStore((s) => s.resync);
   // params 由薄壳 page 传入：同一次导航内引用稳定；跨导航由 page 侧新
   // searchParams 触发重建。
   const weekStart = parseWeekParams(params, today);
@@ -108,6 +110,10 @@ export function useCalendarScreen(params: CalendarPageParams) {
     todaysSchedule,
     /** 当前查看周的无时间条目（自周读域过滤），右栏未安排卡数据源。 */
     weekUnscheduled,
+    /** 导航读域失败态（未授权或技术异常），周视图与未安排卡失败呈现依据。 */
+    loadError,
+    /** 失败重试：按当前读域重取。 */
+    retryLoad: () => void resync(),
     nav,
     selectDate,
     dialogState,

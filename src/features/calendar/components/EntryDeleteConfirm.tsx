@@ -21,6 +21,8 @@ type EntryDeleteConfirmProps = {
   open: boolean;
   /** 待删条目标题，呈现在确认层描述行。 */
   title: string;
+  /** 删除提交中：禁用确认钮，防确认框双击双发。 */
+  isPending?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 };
@@ -28,6 +30,7 @@ type EntryDeleteConfirmProps = {
 export default function EntryDeleteConfirm({
   open,
   title,
+  isPending = false,
   onCancel,
   onConfirm,
 }: EntryDeleteConfirmProps) {
@@ -45,7 +48,7 @@ export default function EntryDeleteConfirm({
           <AlertDialogCancel onClick={onCancel}>
             {t("entry.cancel")}
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>
+          <AlertDialogAction onClick={onConfirm} disabled={isPending}>
             {t("entry.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>

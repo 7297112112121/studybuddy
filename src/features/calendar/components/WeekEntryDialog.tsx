@@ -32,8 +32,14 @@ export default function WeekEntryDialog({
   onClose,
 }: WeekEntryDialogProps) {
   const t = useTranslations("calendar");
-  const { confirmOpen, openConfirm, closeConfirm, confirmDelete } =
-    useEntryDelete(onClose);
+  const {
+    confirmOpen,
+    openConfirm,
+    closeConfirm,
+    isDeleting,
+    deleteError,
+    confirmDelete,
+  } = useEntryDelete(onClose);
 
   if (state === null) {
     return null;
@@ -67,7 +73,7 @@ export default function WeekEntryDialog({
             />
           )}
           {editing && (
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col items-end gap-1">
               <Button
                 variant="ghost"
                 className="text-destructive"
@@ -75,6 +81,12 @@ export default function WeekEntryDialog({
               >
                 {t("entry.delete")}
               </Button>
+              {/* 删除失败时弹窗保持在场承载文案，落定回调不触发 */}
+              {deleteError && (
+                <p role="alert" className="text-destructive text-sm">
+                  {t("error.deleteFailed")}
+                </p>
+              )}
             </div>
           )}
         </DialogContent>
@@ -83,6 +95,7 @@ export default function WeekEntryDialog({
         <EntryDeleteConfirm
           open={confirmOpen}
           title={state.entry.title}
+          isPending={isDeleting}
           onCancel={closeConfirm}
           onConfirm={() => confirmDelete(state.entry.id)}
         />

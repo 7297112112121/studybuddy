@@ -15,7 +15,7 @@ export type CalendarScope =
   | { view: "week"; weekStart: string }
   | { view: "month"; year: number; month: number };
 
-/** 读失败归一:未授权(跳登录)或网络异常(不区分细节)。 */
+/** 读失败归一:未授权(UNAUTHORIZED)或技术异常(NETWORK,含读兜底码);两值同呈现失败态,仅作来源判别。 */
 export type CalendarLoadError = "UNAUTHORIZED" | "NETWORK";
 
 type CalendarState = {
@@ -24,7 +24,7 @@ type CalendarState = {
   todayEntries: CalendarEntryView[];
   /** 今日读域锚点(周一):loadToday 记录,写后失效据此重取。 */
   todayScope: string | null;
-  loading: boolean;
+  /** 导航读域失败态:失败呈现与重试的依据。 */
   loadError: CalendarLoadError | null;
   scope: CalendarScope | null;
   /** 加载导航读域条目(周/月),替换既有 entries。 */
@@ -38,7 +38,7 @@ type CalendarState = {
     input: CalendarEntryInput,
   ) => Promise<ApiResult>;
   deleteEntry: (entryId: string) => Promise<ApiResult>;
-  /** 按当前读域重取(写后失效编排之外的显式重同步,如 NOT_FOUND 静默刷新)。 */
+  /** 按当前读域重取(写后失效编排之外的显式重同步,如失败重试与未找到(NOT_FOUND)静默刷新)。 */
   resync: () => Promise<void>;
 };
 
@@ -68,47 +68,58 @@ function refreshAfterWrite(get: () => CalendarState): Promise<unknown> {
   ]);
 }
 
+/** 读域竞态守卫:单调序号,响应落库前校验仍为最新发起,过期响应整体丢弃
+    (快速翻周/翻月时前序响应后到不得覆盖新读域)。两读域独立计数。 */
+let navigationLoadSeq = 0;
+let todayLoadSeq = 0;
+
 export const useCalendarStore = create<CalendarState>()((set, get) => ({
   entries: [],
   todayEntries: [],
   todayScope: null,
-  loading: false,
   loadError: null,
   scope: null,
 
   load: async (scope) => {
-    set({ scope, loading: true, loadError: null });
+    const seq = ++navigationLoadSeq;
+    set({ scope, loadError: null });
     try {
       const response = await fetch(
         `/api/calendar/entries?${scopeQuery(scope)}`,
       );
       const data = (await response.json()) as ApiResult<CalendarEntryView[]>;
+      if (seq !== navigationLoadSeq) return;
       if (data.ok) {
-        set({ entries: data.data, loading: false });
+        set({ entries: data.data });
       } else {
         set({
           entries: [],
-          loading: false,
           loadError:
             data.error === API_ERROR.UNAUTHORIZED ? "UNAUTHORIZED" : "NETWORK",
         });
       }
-    } catch {
-      set({ entries: [], loading: false, loadError: "NETWORK" });
+    } catch (error) {
+      if (seq !== navigationLoadSeq) return;
+      console.error(error);
+      set({ entries: [], loadError: "NETWORK" });
     }
   },
 
   /** 加载今日读域(今天所在周),替换 todayEntries。失败静默空:鉴权/网络
       异常由导航读域同一通道呈报,今日面板不为次要读域另设错误态。 */
   loadToday: async (weekStart) => {
+    const seq = ++todayLoadSeq;
     set({ todayScope: weekStart });
     try {
       const response = await fetch(
         `/api/calendar/entries?week=${encodeURIComponent(weekStart)}`,
       );
       const data = (await response.json()) as ApiResult<CalendarEntryView[]>;
+      if (seq !== todayLoadSeq) return;
       set({ todayEntries: data.ok ? data.data : [] });
-    } catch {
+    } catch (error) {
+      if (seq !== todayLoadSeq) return;
+      console.error(error);
       set({ todayEntries: [] });
     }
   },

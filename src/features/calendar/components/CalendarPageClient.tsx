@@ -30,6 +30,8 @@ export default function CalendarPageClient({
     entries,
     todaysSchedule,
     weekUnscheduled,
+    loadError,
+    retryLoad,
     nav,
     selectDate,
     dialogState,
@@ -49,6 +51,8 @@ export default function CalendarPageClient({
             days={days}
             entries={entries}
             nav={nav}
+            loadFailed={loadError !== null}
+            onRetry={retryLoad}
             onCreate={openCreate}
             onEdit={openEdit}
           />
@@ -71,6 +75,7 @@ export default function CalendarPageClient({
           {/* 新建落点：今天在查看周落今天，否则落周一——新条目必落当前周，卡片立即可见 */}
           <UnscheduledPanel
             entries={weekUnscheduled}
+            loadFailed={loadError !== null}
             onCreate={() =>
               openCreateUnscheduled(
                 days.some((day) => day.isToday) ? today : weekStart,

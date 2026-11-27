@@ -67,3 +67,10 @@ describe("calendar.unscheduled 文案键(右栏未安排卡)", () => {
     }
   });
 });
+
+describe("calendar.error 删除失败文案键", () => {
+  it("deleteFailed 逐字「删除失败,请重试」(删除链失败呈现)", () => {
+    const errorSection = readCalendarJson().error ?? {};
+    expect(errorSection.deleteFailed).toBe("删除失败,请重试");
+  });
+});

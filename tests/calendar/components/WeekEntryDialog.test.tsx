@@ -14,6 +14,8 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
+
+import { API_ERROR } from "@/common/error";
 import WeekEntryDialog from "@/features/calendar/components/WeekEntryDialog";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 import type { WeekEntryDialogProps } from "@/features/calendar/components/WeekEntryDialog";
@@ -144,5 +146,30 @@ describe("WeekEntryDialog(AXY-23 Task 7)", () => {
     );
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     void dialog;
+  });
+
+  it("edit 模式删除失败 → 弹窗保持在场呈现删除失败文案,onClose 不回调", async () => {
+    deleteEntryActionMock.mockResolvedValue({
+      ok: false,
+      error: API_ERROR.SAVE_FAILED,
+    });
+    const onClose = vi.fn();
+    renderDialog({ state: { mode: "edit", entry }, onClose });
+
+    fireEvent.click(screen.getByRole("button", { name: "删除" }));
+    const dialog = await screen.findByRole("alertdialog");
+    // 确认按钮与行内「删除」触发器同名,取 alertdialog 内的
+    fireEvent.click(
+      [...dialog.querySelectorAll("button")].find(
+        (b) => b.textContent === "删除",
+      )!,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert").textContent).toContain(
+        "删除失败,请重试",
+      ),
+    );
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
