@@ -1,13 +1,7 @@
-
 import { expect, test, type Page } from "@playwright/test";
 
 import { E2E_PASSWORD, registerViaUI, uniqueUsername } from "./helpers/auth";
-
-/** Date → "YYYY-MM-DD"(本地时区字面日期)。 */
-function fmt(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
+import { createEntry, fmt } from "./helpers/calendar";
 
 /** 注册并直达周视图(登录态已在,直接 goto)。 */
 async function registerAndOpenWeek(page: Page): Promise<void> {
@@ -16,22 +10,15 @@ async function registerAndOpenWeek(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/calendar$/);
 }
 
-/** 经月视图详情面板在给定日期创建条目(复用 AXY-22 形态)。 */
+/** 经月视图详情面板在给定日期创建条目(共享建条基座 + web-first 收口)。 */
 async function createViaMonth(
   page: Page,
   entry: { date: string; title: string; start?: string; end?: string },
 ): Promise<void> {
   await page.goto("/calendar?view=month");
   await page.locator(`[data-date="${entry.date}"]`).click();
-  await page.locator("#calendar-entry-title").fill(entry.title);
-  if (entry.start) {
-    await page.locator("#calendar-entry-start").fill(entry.start);
-  }
-  if (entry.end) {
-    await page.locator("#calendar-entry-end").fill(entry.end);
-  }
-  await page.getByRole("button", { name: "添加" }).click();
-  await page.getByText(entry.title).first().waitFor();
+  await createEntry(page, entry);
+  await expect(page.getByText(entry.title).first()).toBeVisible();
 }
 
 /** 周视图网格里的色块(按标题过滤)。 */
@@ -74,22 +61,21 @@ test.describe("AXY-23 日程周视图", () => {
     await expect(weekBlock(page, "高数复习")).toBeVisible();
   });
 
-  test("R8:窄屏 375px 周视图横向滚动,表头可见", async ({ browser }) => {
-    const context = await browser.newContext({
-      viewport: { width: 375, height: 720 },
-    });
-    const page = await context.newPage();
-    await registerAndOpenWeek(page);
+  test.describe("窄屏", () => {
+    test.use({ viewport: { width: 375, height: 720 } });
 
-    const scroller = page.locator(".overflow-x-auto").first();
-    const scrollable = await scroller.evaluate(
-      (el) => el.scrollWidth > el.clientWidth,
-    );
-    expect(scrollable).toBe(true);
-    await expect(
-      page.locator('[data-testid^="week-col-"]').first(),
-    ).toBeVisible();
-    await context.close();
+    test("R8:窄屏 375px 周视图横向滚动,表头可见", async ({ page }) => {
+      await registerAndOpenWeek(page);
+
+      const scroller = page.locator(".overflow-x-auto").first();
+      const scrollable = await scroller.evaluate(
+        (el) => el.scrollWidth > el.clientWidth,
+      );
+      expect(scrollable).toBe(true);
+      await expect(
+        page.locator('[data-testid^="week-col-"]').first(),
+      ).toBeVisible();
+    });
   });
 
   test("R4 演示态 2:点槽创建 → 开始预填 14:30、终点默认 +1 小时,保存后色块出现", async ({

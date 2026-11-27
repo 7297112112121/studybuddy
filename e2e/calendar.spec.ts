@@ -1,22 +1,10 @@
-
 import { expect, test, type Page } from "@playwright/test";
 
-import {
-  E2E_PASSWORD,
-  registerViaUI,
-  throttleSignIn,
-  uniqueUsername,
-} from "./helpers/auth";
+import { E2E_PASSWORD, registerViaUI, uniqueUsername } from "./helpers/auth";
+import { createEntry, fmt } from "./helpers/calendar";
 
-/** Date → "YYYY-MM-DD"（本地时区字面日期）。 */
-function fmt(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-
-/** 拦截 Server Action POST（带 Next-Action 头的 POST 才算 action 调用）。 */
-/** 拦截写端点 POST（统一接口 /api/calendar/entries；actions 已废除）。 */
-async function interceptActions(
+/** 拦截写端点 POST(统一接口 /api/calendar/entries)。 */
+async function interceptEntryPosts(
   page: Page,
   handle: (route: import("@playwright/test").Route) => Promise<unknown>,
 ): Promise<void> {
@@ -29,42 +17,15 @@ async function interceptActions(
   });
 }
 
-/** 注册并落到 /calendar（注册对偶发限流失败重试一次，换新账户名）。 */
+/** 注册并直达月视图(?view=month 深链——非 auth 目标用例取最短进入路径)。 */
 async function registerAndOpenCalendar(page: Page): Promise<void> {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      await registerViaUI(page, uniqueUsername(), E2E_PASSWORD);
-      break;
-    } catch (error) {
-      if (attempt === 1) throw error;
-      await throttleSignIn();
-    }
-  }
-  await page.getByTestId("calendar-entry").click();
-  await expect(page).toHaveURL(/\/calendar$/);
-  // AXY-23 D-02(C-02):/calendar 默认周视图;本 spec 全部月视图用例
-  // 经 ?view=month 进入(进入 /calendar 的默认视图规则已归属 AXY-23 承载)。
+  await registerViaUI(page, uniqueUsername(), E2E_PASSWORD);
   await page.goto("/calendar?view=month");
 }
 
 /** 当日详情面板（断言锚点：月格摘要与详情行并存时收窄作用域）。 */
 function dayPanel(page: Page) {
   return page.getByTestId("day-panel");
-}
-
-/** 经详情面板底部表单创建条目。 */
-async function createEntry(
-  page: Page,
-  entry: { title: string; start?: string; end?: string },
-): Promise<void> {
-  await page.locator("#calendar-entry-title").fill(entry.title);
-  if (entry.start) {
-    await page.locator("#calendar-entry-start").fill(entry.start);
-  }
-  if (entry.end) {
-    await page.locator("#calendar-entry-end").fill(entry.end);
-  }
-  await page.getByRole("button", { name: "添加" }).click();
 }
 
 test.describe("AXY-22 日程日历", () => {
@@ -79,11 +40,12 @@ test.describe("AXY-22 日程日历", () => {
   test("R10 + 演示态 1：工作台入口 → 默认周视图(AXY-23 D-02);月视图当前月、今日高亮、空态文案", async ({
     page,
   }) => {
-    await registerAndOpenCalendar(page);
+    await registerViaUI(page, uniqueUsername(), E2E_PASSWORD);
 
     const now = new Date();
-    // 默认视图现为周视图(AXY-23 D-02):实时线在场即周视图证据
-    await page.goto("/calendar");
+    // 工作台入口 → /calendar 默认周视图(AXY-23 D-02):实时线在场即周视图证据
+    await page.getByTestId("calendar-entry").click();
+    await expect(page).toHaveURL(/\/calendar$/);
     await expect(page.getByTestId("now-line")).toBeVisible();
 
     await page.goto("/calendar?view=month");
@@ -233,63 +195,50 @@ test.describe("AXY-22 日程日历", () => {
     await expect(dayPanel(page).getByText(/冲突/)).toHaveCount(0);
   });
 
-  test("R5 演示态 5：过去日期补记 → 归入昨日、月格摘要同步", async ({
+  test("R5 演示态 5：过去日期补记 → 归入所选日、月格摘要同步", async ({
     page,
   }) => {
-    await registerAndOpenCalendar(page);
+    await registerViaUI(page, uniqueUsername(), E2E_PASSWORD);
 
-    const yesterdayDate = new Date(Date.now() - 86_400_000);
-    const yesterday = fmt(yesterdayDate);
-    // 跨月边界：昨日不在当前展示月时先导航到上月
-    const now = new Date();
-    if (yesterdayDate.getMonth() !== now.getMonth()) {
-      await page.getByRole("link", { name: "上一月" }).click();
-    }
-    await page.locator(`[data-date="${yesterday}"]`).click();
+    // 固定日历日字面(2026-01-01)+固定月深链:过去日期语义不随运行日漂移
+    await page.goto("/calendar?view=month&month=2026-01");
+    await page.locator('[data-date="2026-01-01"]').click();
     // 详情标题为所选过去日期（非「今天」）
-    await expect(
-      page.getByText(
-        `${yesterdayDate.getMonth() + 1}月${yesterdayDate.getDate()}日`,
-      ),
-    ).toBeVisible();
+    await expect(page.getByText("1月1日")).toBeVisible();
 
     await createEntry(page, {
-      title: "昨日补记",
+      title: "元旦补记",
       start: "09:00",
       end: "10:00",
     });
     await expect(dayPanel(page).getByText("09:00–10:00")).toBeVisible();
-    await expect(page.locator(`[data-date="${yesterday}"]`)).toContainText(
-      "昨日补记",
+    await expect(page.locator('[data-date="2026-01-01"]')).toContainText(
+      "元旦补记",
     );
   });
 
-  test("R11 演示态 3：编辑改所属日期 → 原日期消失、新日期出现", async ({
+  test("R11 演示态 3：编辑改所属日期跨月 → 原日期消失、新日期出现", async ({
     page,
   }) => {
-    await registerAndOpenCalendar(page);
-    const now = new Date();
-    const today = fmt(now);
+    await registerViaUI(page, uniqueUsername(), E2E_PASSWORD);
 
-    await page.locator(`[data-date="${today}"]`).click();
+    // 固定跨月锚 2026-11-30 → 2026-12-01:跨月分支每次运行确定性执行
+    await page.goto("/calendar?view=month&month=2026-11");
+    await page.locator('[data-date="2026-11-30"]').click();
     await createEntry(page, { title: "待改期条目" });
     await expect(dayPanel(page).getByText("待改期条目")).toBeVisible();
 
-    // 改期至相对日（today+2 天，可能跨月）；编辑在当前视图直接进行
-    const targetDate = new Date(now.getTime() + 2 * 86_400_000);
-    const target = fmt(targetDate);
+    // 改期至跨月的固定日；编辑在当前视图直接进行
     await page.getByRole("button", { name: "编辑" }).click();
-    await page.locator("#calendar-entry-date").fill(target);
+    await page.locator("#calendar-entry-date").fill("2026-12-01");
     await page.getByRole("button", { name: "保存" }).click();
 
-    // 原日期不再展示（RSC 重验证后今日详情已无该条目；目标格摘要合法在场）
+    // 原日期不再展示（RSC 重验证后 11-30 详情已无该条目；目标格摘要合法在场）
     await expect(dayPanel(page).getByText("待改期条目")).toHaveCount(0);
 
-    // 新日期出现：跨月先导航到目标月
-    if (targetDate.getMonth() !== now.getMonth()) {
-      await page.getByRole("link", { name: "下一月" }).click();
-    }
-    await page.locator(`[data-date="${target}"]`).click();
+    // 新日期出现：跨月导航到目标月
+    await page.getByRole("link", { name: "下一月" }).click();
+    await page.locator('[data-date="2026-12-01"]').click();
     await expect(dayPanel(page).getByText("待改期条目")).toBeVisible();
   });
 
@@ -300,8 +249,8 @@ test.describe("AXY-22 日程日历", () => {
     const today = fmt(new Date());
     await page.locator(`[data-date="${today}"]`).click();
 
-    // 拦截 action POST：延迟 1500ms 后放行（模拟慢保存窗口）
-    await interceptActions(page, async (route) => {
+    // 拦截写端点 POST：延迟 1500ms 后放行（模拟慢保存窗口）
+    await interceptEntryPosts(page, async (route) => {
       await new Promise((r) => setTimeout(r, 1500));
       return route.continue();
     });
@@ -314,7 +263,7 @@ test.describe("AXY-22 日程日历", () => {
     await expect(dayPanel(page).locator("ul > li")).toHaveCount(1);
 
     // 保存失败：拦截改 abort（网络异常 → E-02），原列表不变
-    await interceptActions(page, (route) => route.abort());
+    await interceptEntryPosts(page, (route) => route.abort());
     await page.locator("#calendar-entry-title").fill("注定失败");
     await page.getByRole("button", { name: "添加" }).click();
     await expect(dayPanel(page).getByText("保存失败,请重试")).toBeVisible({
