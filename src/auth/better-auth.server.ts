@@ -44,6 +44,9 @@ export const auth = betterAuth({
     minPasswordLength: PASSWORD_MIN_LENGTH,
     maxPasswordLength: PASSWORD_MAX_LENGTH,
   },
+  rateLimit: {
+    enabled: process.env.E2E_RATE_LIMIT === "off" ? false : undefined,
+  },
   plugins: [
     username({
       usernameValidator: (u: string) => USERNAME_RE.test(u),
