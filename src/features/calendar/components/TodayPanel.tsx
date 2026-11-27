@@ -7,7 +7,7 @@
  */
 import { useTranslations } from "next-intl";
 
-import type { CalendarEntryView } from "@/modules/calendar/queries";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 
 import { formatMonthDay } from "../utils";
 import EntryRow from "./EntryRow";

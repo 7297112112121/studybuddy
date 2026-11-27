@@ -4,11 +4,13 @@
  * 造号直插 user 行(与 service.test.ts 同款,不经 auth service)。
  */
 import { afterAll, describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import { db } from "@/common/db";
 import { user } from "@/db/schema";
 import { createEntry } from "@/modules/calendar/service";
 import { listWeekEntries } from "@/modules/calendar/queries";
+import { calendarEntryViewSchema } from "@/validation/calendar-response";
 
 afterAll(async () => {
   await db.$client.end();
@@ -102,5 +104,23 @@ describe("listWeekEntries(AXY-23 Task 4)", () => {
       "上午条目",
       "下午条目",
     ]);
+  });
+
+  it("产出形状对齐响应契约:查询结果过 calendarEntryViewSchema,时刻为 HH:MM", async () => {
+    const userId = await makeUser("contract");
+    await createEntry(
+      userId,
+      input("2026-11-18", "契约条目", "09:30", "10:00", "备注"),
+    );
+
+    const rows = await listWeekEntries(userId, "2026-11-16");
+    const parsed = z.array(calendarEntryViewSchema).parse(rows);
+    expect(parsed[0]).toMatchObject({
+      date: "2026-11-18",
+      title: "契约条目",
+      content: "备注",
+      startTime: "09:30",
+      endTime: "10:00",
+    });
   });
 });

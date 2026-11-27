@@ -9,13 +9,13 @@ import { useState, type ChangeEvent, type SubmitEvent } from "react";
 
 import { useApiFailureHandler } from "@/api/contract";
 import { toFieldErrors } from "@/common/error";
-import type { CalendarEntryView } from "@/modules/calendar/queries";
 import { useCalendarStore } from "@/stores/calendar";
 import {
   calendarEntryInputSchema,
   type CalendarEntryInput,
   type CalendarFieldErrors,
-} from "@/validation/calendar-validators";
+} from "@/validation/calendar-request";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 type UseEntryFormProps = {
   /** 提交日期（新建模式固定；编辑模式被表单内日期控件初值覆盖）。 */
   date: string;

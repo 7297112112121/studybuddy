@@ -13,7 +13,7 @@ import { useTranslations } from "next-intl";
 import { useApiFailureHandler } from "@/api/contract";
 import { localToday } from "@/common/date";
 import type { ApiFailure } from "@/common/error";
-import type { CalendarEntryView } from "@/modules/calendar/queries";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 import { useCalendarStore } from "@/stores/calendar";
 
 import {

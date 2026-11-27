@@ -8,7 +8,7 @@ import { API_ERROR, ApiError } from "@/common/error";
 import { db } from "@/common/db";
 import { calendarEntry } from "@/db/schema";
 
-import type { CalendarEntryInput } from "@/validation/calendar-validators";
+import type { CalendarEntryInput } from "@/validation/calendar-request";
 
 /** 作用:单行 INSERT 写入一条日历条目;DB 异常向上抛,由端点归一流归一。 */
 export async function createEntry(

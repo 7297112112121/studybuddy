@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { API_ERROR } from "@/common/error";
-import type { CalendarEntryView } from "@/modules/calendar/queries";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 import { useCalendarStore } from "@/stores/calendar";
 
 /** 编排 action 为稳定引用,模块级解构一次(get 取态在调用时实时)。 */

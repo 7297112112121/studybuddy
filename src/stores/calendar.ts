@@ -14,8 +14,8 @@ import {
   updateCalendarEntry,
 } from "@/api/calendar";
 import { API_ERROR, type ApiResult } from "@/common/error";
-import type { CalendarEntryView } from "@/modules/calendar/queries";
-import type { CalendarEntryInput } from "@/validation/calendar-validators";
+import type { CalendarEntryInput } from "@/validation/calendar-request";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 
 /** 读域竞态守卫:单调序号,响应落库前校验仍为最新发起,过期响应整体丢弃
     (快速翻周时前序响应后到不得覆盖新读域)。两读域独立计数。 */

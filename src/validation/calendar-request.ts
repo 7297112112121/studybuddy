@@ -1,12 +1,14 @@
 /**
- * 日历域的校验规则单一真源(消费方引用不复写):
+ * 日历域请求(入参)契约单一真源(消费方引用不复写):
  * 覆盖时刻格式、日期/周一/年月严格校验、年月 wire 解析与序列化、条目写端点入参
- * schema(calendarEntryInputSchema)与条目集合读端点查询参数 schema。
+ * schema(calendarEntryInputSchema)与条目集合读端点查询参数 schema;
+ * 响应(出参)契约在同层 calendar-response,共用判定函数留本文件。
  * 日期语义是字面日期 "YYYY-MM-DD"(单时区假设),时刻一律 "HH:MM";
  * month 入参为 1~12(产品口径),不是 JS Date 的 0~11。
  */
-import { daysInMonth } from "@/common/date";
 import { z } from "zod";
+
+import { daysInMonth } from "@/common/date";
 
 /** "HH:MM" 分钟粒度格式(时刻契约单一来源:schema 校验与 timeToMinutes 共用)。 */
 export const TIME_HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;

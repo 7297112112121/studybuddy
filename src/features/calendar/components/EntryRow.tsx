@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 
-import type { CalendarEntryView } from "@/modules/calendar/queries";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 
 import { timePrefix } from "../utils";
 import { useEntryDeleteConfirm } from "../forms";

@@ -17,7 +17,7 @@ import {
 import { NextIntlClientProvider } from "next-intl";
 import TodayPanel from "@/features/calendar/components/TodayPanel";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
-import type { CalendarEntryView } from "@/modules/calendar/queries";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 
 const deleteEntryMock = vi.hoisted(() => vi.fn());
 const resyncMock = vi.hoisted(() => vi.fn());

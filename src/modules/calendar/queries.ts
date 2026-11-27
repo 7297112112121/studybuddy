@@ -1,12 +1,14 @@
 /**
  * 日历读路径的数据库查询(统一接口端点调用);
- * 入参校验统一在契约切面完成,查询信任切面产出的合法入参。
+ * 入参校验统一在契约切面完成,查询信任切面产出的合法入参,
+ * 产出形状对齐响应契约(calendarEntryViewSchema)。
  */
 import { and, eq, gte, lte } from "drizzle-orm";
 
 import { db } from "@/common/db";
 import { calendarEntry } from "@/db/schema";
 import { daysInMonth, formatUtcDate, MS_PER_DAY } from "@/common/date";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 
 /** 作用:给出该月的日期闭区间("YYYY-MM-DD"),作为月度条目查询的入参来源。 */
 export function monthRange(
@@ -51,15 +53,6 @@ export async function listWeekEntries(
 export function formatHhmm(time: string): string {
   return time.slice(0, 5);
 }
-
-export type CalendarEntryView = {
-  id: string;
-  date: string; // 即数据库列 entryDate,"YYYY-MM-DD"
-  title: string;
-  content: string | null; // 具体内容,纯文本;null 表示未填写
-  startTime: string | null; // "HH:MM" 或 null
-  endTime: string | null; // "HH:MM" 或 null
-};
 
 /**
  * 作用:按账号读闭区间内的条目主体,供月度与周度查询共用;

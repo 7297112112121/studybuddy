@@ -2,17 +2,25 @@
  * 日历域统一接口端点词汇:读/写端点的 URL、方法与请求体组装单一来源,
  * 供各域 store 读/写编排调用;本文件不触碰状态,不依赖 stores。
  */
+import { z } from "zod";
+
 import { requestContractResult } from "@/api/contract";
 import type { ApiErrorCode, ApiResult } from "@/common/error";
-import type { CalendarEntryView } from "@/modules/calendar/queries";
-import type { CalendarEntryInput } from "@/validation/calendar-validators";
+import type { CalendarEntryInput } from "@/validation/calendar-request";
+import {
+  calendarEntryViewSchema,
+  type CalendarEntryView,
+} from "@/validation/calendar-response";
 
-/** 读端点:按周锚点(周一)取条目集合,以数据载荷(data)携带条目视图。 */
+/** 读端点:按周锚点(周一)取条目集合,以数据载荷(data)携带条目视图,
+    载荷经响应契约 schema 复验。 */
 export function fetchCalendarEntries(
   weekStart: string,
 ): Promise<ApiResult<CalendarEntryView[], ApiErrorCode>> {
   return requestContractResult<CalendarEntryView[]>(
     `/api/calendar/entries?week=${encodeURIComponent(weekStart)}`,
+    undefined,
+    z.array(calendarEntryViewSchema),
   );
 }
 

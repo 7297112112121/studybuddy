@@ -1,11 +1,13 @@
 /**
  * 统一接口客户端契约切面:请求封装把请求发起与响应解析归一为契约结果
- * (ApiResult),传输层异常按方向归一为兜底码并留痕;失败分支策略把收缩为
- * 失败臂的契约结果按码分派(未授权跳登录,其余交调用侧分支回调)。
- * 本切面不向调用侧抛出异常,不触碰状态,不依赖 stores。
+ * (ApiResult),传输层异常与响应载荷偏离契约按方向归一为兜底码并留痕;
+ * 失败分支策略把收缩为失败臂的契约结果按码分派(未授权跳登录,其余交调用
+ * 侧分支回调)。本切面不向调用侧抛出异常,不触碰状态,不依赖 stores。
  */
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+
+import type { ZodType } from "zod";
 
 import {
   API_ERROR,
@@ -16,11 +18,16 @@ import {
 import { ROUTES } from "@/common/routes";
 
 /** 请求统一接口端点并产出契约结果:判别以响应体为准,传输层异常
-    (网络失败、响应解析失败)归一为方向兜底码。 */
+    (网络失败、响应解析失败)归一为方向兜底码;传入响应契约 schema 时,
+    成功载荷经其复验,偏离契约(留痕后)亦按方向兜底码归一。 */
 export async function requestContractResult<
   TData = undefined,
   TError extends string = ApiErrorCode,
->(url: string, init?: RequestInit): Promise<ApiResult<TData, TError>> {
+>(
+  url: string,
+  init?: RequestInit,
+  dataSchema?: ZodType<TData>,
+): Promise<ApiResult<TData, TError>> {
   const method = init?.method ?? "GET";
   try {
     const response = await fetch(url, {
@@ -30,7 +37,20 @@ export async function requestContractResult<
           ? init?.headers
           : { "Content-Type": "application/json", ...init?.headers },
     });
-    return (await response.json()) as ApiResult<TData, TError>;
+    const body = (await response.json()) as ApiResult<TData, TError>;
+    if (!body.ok || dataSchema === undefined) {
+      return body;
+    }
+    // 泛型下成功臂载荷在编译期只是断言,形状真伪交 schema 运行时判定
+    const parsed = dataSchema.safeParse((body as { data: unknown }).data);
+    if (!parsed.success) {
+      console.error(parsed.error, "响应载荷偏离契约", url);
+      return { ok: false, error: fallbackCode(method) } as ApiResult<
+        TData,
+        TError
+      >;
+    }
+    return { ok: true, data: parsed.data } as ApiResult<TData, TError>;
   } catch (error) {
     console.error(error);
     return { ok: false, error: fallbackCode(method) } as ApiResult<

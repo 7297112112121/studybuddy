@@ -4,7 +4,7 @@ import {
   buildWeekDays,
   weekStartFor,
 } from "@/features/calendar/utils";
-import { isValidWeekStart } from "@/validation/calendar-validators";
+import { isValidWeekStart } from "@/validation/calendar-request";
 import { weekRange } from "@/modules/calendar/queries";
 
 /**
@@ -129,7 +129,7 @@ import {
   timeToMinutes,
   type WeekBlock,
 } from "@/features/calendar/utils";
-import type { CalendarEntryView } from "@/modules/calendar/queries";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 
 /** 构造带时间条目视图(startTime 恒非 null,全天条目不进 layoutDayBlocks)。 */
 function entry(

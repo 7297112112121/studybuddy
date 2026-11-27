@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-import type { CalendarEntryView } from "@/modules/calendar/queries";
+import type { CalendarEntryView } from "@/validation/calendar-response";
 
 import type { CalendarNavLinks } from "../routes";
 import { groupEntriesByDate, PX_PER_MINUTE, type WeekDay } from "../utils";
