@@ -5,11 +5,8 @@ import PasswordField from "./PasswordField";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
 import type { AuthFormErrors } from "@/app/api/auth/request";
-import type {
-  AuthFormValues,
-  AuthTopError,
-  AuthView,
-} from "../useClientScreen";
+import type { AuthFormValues, AuthTopError } from "../forms";
+import type { AuthView } from "../routes";
 
 type LoginFormValues = Pick<AuthFormValues, "account" | "password">;
 

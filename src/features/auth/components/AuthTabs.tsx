@@ -1,6 +1,6 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { AuthView } from "../useClientScreen";
+import type { AuthView } from "../routes";
 
 type AuthTabsProps = {
   active: AuthView;

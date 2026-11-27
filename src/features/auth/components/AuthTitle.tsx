@@ -1,5 +1,5 @@
 
-import type { AuthView } from "../useClientScreen";
+import type { AuthView } from "../routes";
 
 type AuthTitleProps = {
   view: AuthView;

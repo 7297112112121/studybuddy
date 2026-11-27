@@ -1,6 +1,9 @@
 "use client";
 
-import { useClientScreen, type AuthView } from "../useClientScreen";
+import { useState } from "react";
+
+import { useAuthForm } from "../forms";
+import { viewHref, type AuthView } from "../routes";
 import AuthTabs from "./AuthTabs";
 import AuthTitle from "./AuthTitle";
 import LoginForm from "./LoginForm";
@@ -11,7 +14,16 @@ type AuthCardProps = {
 };
 
 export default function AuthCard(props: AuthCardProps) {
-  const auth = useClientScreen(props.initialView);
+  const form = useAuthForm();
+  // 视图切换为屏内薄瞬态：URL 同步用 replaceState，不触发导航。
+  const [activeView, setActiveView] = useState<AuthView>(props.initialView);
+
+  /** 切换视图保留表单值、清空错误（含顶部错误），URL 同步但不导航。 */
+  function switchView(view: AuthView): void {
+    setActiveView(view);
+    form.clearFeedback();
+    window.history.replaceState(null, "", viewHref(view));
+  }
 
   return (
     <section className="relative order-1 lg:order-2">
@@ -25,42 +37,42 @@ export default function AuthCard(props: AuthCardProps) {
         className="absolute -bottom-10 -left-10 -z-10 size-40 rounded-full bg-aurora-aqua/25 blur-2xl"
       />
       <div className="glass-card mx-auto min-h-[34.5rem] w-full max-w-md rounded-4xl border border-border p-8 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-3 [animation-duration:600ms] [animation-fill-mode:both] motion-reduce:animate-none">
-        <AuthTitle view={auth.activeView} />
-        <AuthTabs active={auth.activeView} onSwitch={auth.switchView} />
+        <AuthTitle view={activeView} />
+        <AuthTabs active={activeView} onSwitch={switchView} />
 
         <div
-          key={auth.activeView}
+          key={activeView}
           className="animate-in fade-in slide-in-from-bottom-2 [animation-duration:300ms] [animation-fill-mode:both] motion-reduce:animate-none"
         >
-          {auth.activeView === "login" ? (
+          {activeView === "login" ? (
             <LoginForm
-              values={auth.values}
-              errors={auth.errors}
-              errorKey={auth.topError}
+              values={form.values}
+              errors={form.errors}
+              errorKey={form.topError}
               errorText={
-                auth.topError === null
+                form.topError === null
                   ? undefined
-                  : auth.errorText(auth.topError)
+                  : form.errorText(form.topError)
               }
-              submitting={auth.submitting}
-              onSubmit={auth.handleLoginSubmit}
-              onFieldChange={auth.updateValue}
-              onSwitchView={auth.switchView}
+              submitting={form.submitting}
+              onSubmit={form.handleLoginSubmit}
+              onFieldChange={form.updateValue}
+              onSwitchView={switchView}
             />
           ) : (
             <RegisterForm
-              values={auth.values}
-              errors={auth.errors}
-              errorKey={auth.topError}
+              values={form.values}
+              errors={form.errors}
+              errorKey={form.topError}
               errorText={
-                auth.topError === null
+                form.topError === null
                   ? undefined
-                  : auth.errorText(auth.topError)
+                  : form.errorText(form.topError)
               }
-              submitting={auth.submitting}
-              onSubmit={auth.handleRegisterSubmit}
-              onFieldChange={auth.updateValue}
-              onSwitchView={auth.switchView}
+              submitting={form.submitting}
+              onSubmit={form.handleRegisterSubmit}
+              onFieldChange={form.updateValue}
+              onSwitchView={switchView}
             />
           )}
         </div>

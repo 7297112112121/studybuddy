@@ -1,5 +1,5 @@
 /**
- * 规则浮层实时拆解（features/auth/useClientScreen.ts 模块作用域导出）。
+ * 规则浮层实时拆解（features/auth/utils.ts 模块作用域导出）。
  *
  * 规则拆解必须与登录表单 schema（loginFormSchema）严格同真同假：
  * 全部通过 ⇔ schema 对应字段通过。规则文案为页面静态文案（与 AccountField
@@ -12,7 +12,7 @@ import {
   accountRuleStates,
   confirmPasswordRuleStates,
   passwordRuleStates,
-} from "../../src/features/auth/useClientScreen";
+} from "../../src/features/auth/utils";
 
 /** 账户名规则全过 ⇔ 登录 schema 账户名字段通过（密码侧用合法固定值隔离）。 */
 function accountSchemaOk(account: string): boolean {

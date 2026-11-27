@@ -8,14 +8,13 @@ import ViewSwitchLink from "./ViewSwitchLink";
 import ErrorAlert from "./ErrorAlert";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/validation/auth";
 import type { AuthFormErrors } from "@/app/api/auth/request";
+import type { AuthFormValues, AuthTopError } from "../forms";
+import type { AuthView } from "../routes";
 import {
   accountRuleStates,
   confirmPasswordRuleStates,
   passwordRuleStates,
-  type AuthFormValues,
-  type AuthTopError,
-  type AuthView,
-} from "../useClientScreen";
+} from "../utils";
 
 type RegisterFormProps = {
   /** 表单值：状态机自有形状，跨视图保留由组合层持有。 */

@@ -5,7 +5,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { FieldRuleState } from "../useClientScreen";
+import type { FieldRuleState } from "../utils";
 import FieldRulesPopover from "./FieldRulesPopover";
 
 type PasswordFieldProps = {
@@ -17,7 +17,7 @@ type PasswordFieldProps = {
   hint?: string;
   autoComplete?: string;
   placeholder?: string;
-  /** 聚焦浮层的规则清单（useClientScreen 的 *RuleStates / 调用方补充规则）。 */
+  /** 聚焦浮层的规则清单（utils 的 *RuleStates / 调用方补充规则）。 */
   rules?: FieldRuleState[];
 };
 

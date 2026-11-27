@@ -1,9 +1,8 @@
-"use client";
-
 /**
- * 登录/注册屏的表单状态机与登录错误文案映射。提交链携带凭据，日志与失败文案不得泄露凭据细节。
- * 提交门校验用账户域请求契约的 schema（src/app/api/auth/request.ts），
- * 本文件只持规则浮层实时拆解与表单状态编排。
+ * 认证域写流程链：账户表单链（登录/注册共用一份表单态，两条提交分支）。
+ * 提交门校验用账户域请求契约的 schema（src/app/api/auth/request.ts），链内
+ * 只持表单态、校验分派与契约结果分支；登录经 Better Auth 托管端点，失败经
+ * mapSignInError 折算文案键。提交链携带凭据，日志与失败文案不得泄露凭据细节。
  */
 import { useState } from "react";
 import type { SubmitEvent } from "react";
@@ -30,8 +29,6 @@ import { toFieldErrors } from "@/common/error";
 import { ROUTES } from "@/common/routes";
 import { authClient } from "@/stores/auth-client";
 
-export type AuthView = "login" | "register";
-
 /** 表单值（login/register 共用一份，切换视图保留）。注册账户名复用 account。 */
 export type AuthFormValues = {
   account: string;
@@ -43,77 +40,10 @@ export type AuthFormValues = {
 /** 屏顶部错误键：登录失败经 mapSignInError 归一；注册账户名已存在固定为账户名已存在（usernameRegistered）。 */
 export type AuthTopError = SignInErrorKey | "auth.error.usernameRegistered";
 
-/**
- * 字段规则清单项（AXY-8 UI 优化：聚焦浮层实时侦测，自请求契约 auth-request.ts 迁入）。
- * label 为页面静态文案（与 AccountField 的 Label/hint 同约定，不入 auth.json）。
- */
-export type FieldRuleState = {
-  label: string;
-  passed: boolean;
-};
-
-/**
- * 账户名字符集（无长度量词）——仅供规则浮层做「字符集/长度」两条正交
- * 拆解；字符类括号表达式必须与 USERNAME_RE 逐字符一致（长度仅由
- * USERNAME_RE 的量词单一约束），改动任一处须同步。
- */
-const USERNAME_CHARSET_RE = /^[一-龥A-Za-z0-9_]+$/;
-
-/** 字母与数字同时存在（PASSWORD_RE 两段 look-ahead 的同源拆解）。 */
-const PASSWORD_MIX_RE = /^(?=.*[A-Za-z])(?=.*\d)/;
-
-/**
- * 账户名规则实时拆解。不变量：每条 passed 全真 ⇔ 登录表单 schema(loginFormSchema)
- * 通过（required 除外——空值时两条均为 false，由必填(required)文案兜底）。
- * 正则为全仓单一来源，勿在此处另写规则。
- */
-export function accountRuleStates(raw: string): FieldRuleState[] {
-  return [
-    {
-      label: `长度 ${USERNAME_MIN_LENGTH}—${USERNAME_MAX_LENGTH} 个字符`,
-      passed:
-        raw.length >= USERNAME_MIN_LENGTH && raw.length <= USERNAME_MAX_LENGTH,
-    },
-    {
-      label: "仅含中文、字母、数字或下划线",
-      passed: USERNAME_CHARSET_RE.test(raw),
-    },
-  ];
-}
-
-/** 密码规则实时拆解。不变量：每条 passed 全真 ⇔ 登录表单 schema(loginFormSchema) 通过（必填(required)除外）。 */
-export function passwordRuleStates(raw: string): FieldRuleState[] {
-  return [
-    {
-      label: `长度 ${PASSWORD_MIN_LENGTH}—${PASSWORD_MAX_LENGTH} 位`,
-      passed:
-        raw.length >= PASSWORD_MIN_LENGTH && raw.length <= PASSWORD_MAX_LENGTH,
-    },
-    { label: "需同时含字母与数字", passed: PASSWORD_MIX_RE.test(raw) },
-  ];
-}
-
-/**
- * 确认密码规则实时拆解。不变量：passed 等价于「非空且与 password 一致」，
- * 与注册表单 schema(registerFormSchema)的确认密码判定同语义（空值视为不一致）。
- */
-export function confirmPasswordRuleStates(
-  password: string,
-  confirmPassword: string,
-): FieldRuleState[] {
-  return [
-    {
-      label: "与第一次输入一致",
-      passed: confirmPassword !== "" && confirmPassword === password,
-    },
-  ];
-}
-
-/** 产出组合层渲染所需的全部状态与回调。 */
-export function useClientScreen(initialView: AuthView) {
+/** 账户表单链：表单态、字段错误即时呈现与登录/注册两条提交分支。表单组合层（AuthCard）的唯一链挂载点。 */
+export function useAuthForm() {
   const router = useRouter();
   const handleApiFailure = useApiFailureHandler();
-  const [activeView, setActiveView] = useState<AuthView>(initialView);
   const [values, setValues] = useState<AuthFormValues>({
     account: "",
     password: "",
@@ -146,16 +76,10 @@ export function useClientScreen(initialView: AuthView) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
-  /** 切换视图保留表单值、清空错误（含顶部错误），URL 同步但不导航。 */
-  function switchView(view: AuthView): void {
-    setActiveView(view);
+  /** 清空反馈（字段错误与顶部错误）：视图切换时由组合层调用。 */
+  function clearFeedback(): void {
     setErrors({});
     setTopError(null);
-    window.history.replaceState(
-      null,
-      "",
-      view === "login" ? ROUTES.login : ROUTES.register,
-    );
   }
 
   /** 登录/自动登录成功一律 replace 到工作台（不留登录页历史）。 */
@@ -253,14 +177,13 @@ export function useClientScreen(initialView: AuthView) {
   }
 
   return {
-    activeView,
     values,
     errors,
     submitting,
     topError,
     errorText,
     updateValue,
-    switchView,
+    clearFeedback,
     handleLoginSubmit,
     handleRegisterSubmit,
   };

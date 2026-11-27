@@ -1,7 +1,7 @@
 /**
  * 账户域请求(入参)wire 契约:注册 schema 为注册提交门与统一接口复验共用,
  * 登录 schema 仅客户端提交门(登录经 Better Auth 托管端点,无服务端复验);
- * 规则浮层实时拆解(纯 UI 呈现)居 features/auth/useClientScreen.ts,经导入
+ * 规则浮层实时拆解(纯 UI 呈现)居 features/auth/utils.ts,经导入
  * 同源衔接,勿回流本文件。校验规则在 src/validation/auth,本域无响应契约
  * 文件:统一接口收编范围仅注册端点且成功无载荷。
  */

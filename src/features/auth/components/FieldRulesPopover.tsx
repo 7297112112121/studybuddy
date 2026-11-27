@@ -2,7 +2,7 @@
  * 字段规则浮层：锚定输入框正下方的底层浮层容器，
  */
 import { CheckIcon, XIcon } from "lucide-react";
-import type { FieldRuleState } from "../useClientScreen";
+import type { FieldRuleState } from "../utils";
 
 type FieldRulesPopoverProps = {
   rules: FieldRuleState[];
