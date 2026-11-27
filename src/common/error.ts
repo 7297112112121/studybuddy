@@ -32,19 +32,25 @@ export class ApiError<TCode extends string = ApiErrorCode> extends Error {
 }
 
 /**
- * 统一接口响应体契约(以 body 判别,HTTP 状态码仅传输语义):
- * 写端点成功无载荷,读端点以数据载荷(data)携带返回值;
- * 字段级错误(fieldErrors)仅输入无效(INVALID_INPUT)时出现。
+ * 统一接口契约失败臂(ok:false 半边,判别联合):字段级错误(fieldErrors)
+ * 仅输入无效(INVALID_INPUT)时出现;ApiResult 的失败侧由此派生,单一来源。
  * 错误码键域经类型参数扩展(默认公共技术码),端点族域码以联合传入。
  */
-export type ApiResult<TData = undefined, TError extends string = ApiErrorCode> =
-  | ([TData] extends [undefined] ? { ok: true } : { ok: true; data: TData })
+export type ApiFailure<TError extends string = ApiErrorCode> =
   | {
       ok: false;
       error: typeof API_ERROR.INVALID_INPUT;
       fieldErrors: Record<string, string>;
     }
   | { ok: false; error: Exclude<TError, typeof API_ERROR.INVALID_INPUT> };
+
+/**
+ * 统一接口响应体契约(以 body 判别,HTTP 状态码仅传输语义):
+ * 写端点成功无载荷,读端点以数据载荷(data)携带返回值。
+ */
+export type ApiResult<TData = undefined, TError extends string = ApiErrorCode> =
+  | ([TData] extends [undefined] ? { ok: true } : { ok: true; data: TData })
+  | ApiFailure<TError>;
 
 /** 把 zod 校验错误折算成字段级错误;同字段只取首条,值为错误文案 key。 */
 export function toFieldErrors(error: z.ZodError): Record<string, string> {

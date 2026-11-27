@@ -1,16 +1,15 @@
 /**
- * 日历业务数据客户端持有层：导航周读域与今日读域独立持有（各自锚点与竞态
- * 守卫），读失败归一未授权（UNAUTHORIZED）或网络（NETWORK）；写统一走契约
- * 结果（ApiResult），成功后并行重取两读域失效。
+ * 日历业务数据客户端持有层:导航周读域与今日读域独立持有(各自锚点与竞态
+ * 守卫),读/写统一经统一接口客户端请求封装(api-client)产出契约结果
+ * (ApiResult);导航读域返回新鲜契约结果供调用侧分派,过期响应整体丢弃;
+ * 写成功后并行重取两读域失效。
  */
 import { create } from "zustand";
 
+import { requestContractResult } from "@/common/api-client";
 import { API_ERROR, type ApiResult } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import type { CalendarEntryInput } from "@/validation/calendar-validators";
-
-/** 读失败归一:未授权(UNAUTHORIZED)或技术异常(NETWORK,含读兜底码);两值同呈现失败态,仅作来源判别。 */
-export type CalendarLoadError = "UNAUTHORIZED" | "NETWORK";
 
 type CalendarState = {
   entries: CalendarEntryView[];
@@ -18,13 +17,13 @@ type CalendarState = {
   todayEntries: CalendarEntryView[];
   /** 今日读域锚点(周一):loadToday 记录,写后失效据此重取。 */
   todayScope: string | null;
-  /** 导航读域失败态:失败呈现与重试的依据。 */
-  loadError: CalendarLoadError | null;
+  /** 导航读域技术失败态:失败呈现与重试的依据;未授权(UNAUTHORIZED)不落本态,由失败分支策略跳登录。 */
+  loadError: boolean;
   /** 导航读域锚点(周一):null 即尚未装载。 */
   scope: string | null;
-  /** 加载导航读域条目(周锚),替换既有 entries。 */
-  load: (weekStart: string) => Promise<void>;
-  /** 加载今日读域条目(今天所在周,weekStart 由调用方锚定),替换 todayEntries。 */
+  /** 加载导航读域条目(周锚),替换既有 entries;返回新鲜契约结果(null 即过期丢弃),失败分支由调用侧经客户端失败分支策略分派。 */
+  load: (weekStart: string) => Promise<ApiResult<CalendarEntryView[]> | null>;
+  /** 加载今日读域条目(今天所在周,weekStart 由调用方锚定),替换 todayEntries。失败静默空:鉴权/技术异常由导航读域同一通道呈报,今日面板不为次要读域另设错误态。 */
   loadToday: (weekStart: string) => Promise<void>;
   /** 写路径:统一走契约结果(ApiResult)返回(fieldErrors 供表单定位)。 */
   createEntry: (input: CalendarEntryInput) => Promise<ApiResult>;
@@ -33,18 +32,9 @@ type CalendarState = {
     input: CalendarEntryInput,
   ) => Promise<ApiResult>;
   deleteEntry: (entryId: string) => Promise<ApiResult>;
-  /** 按当前读域重取(写后失效编排之外的显式重同步,如失败重试与未找到(NOT_FOUND)静默刷新)。 */
+  /** 按当前读域重取(写后失效编排之外的显式重同步,如未找到(NOT_FOUND)静默刷新)。 */
   resync: () => Promise<void>;
 };
-
-/** 写端点调用归一:body 即契约结果(ApiResult),网络异常不由本层吞。 */
-async function requestWrite(
-  url: string,
-  init: RequestInit,
-): Promise<ApiResult> {
-  const response = await fetch(url, init);
-  return (await response.json()) as ApiResult;
-}
 
 /** 写后失效编排:导航读域与今日读域并行重取(各自有锚点才取)。
     导航域即今天所在周时两读域同 URL,双请求为读域单一形状的代价。 */
@@ -65,57 +55,40 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
   entries: [],
   todayEntries: [],
   todayScope: null,
-  loadError: null,
+  loadError: false,
   scope: null,
 
   load: async (weekStart) => {
     const seq = ++navigationLoadSeq;
-    set({ scope: weekStart, loadError: null });
-    try {
-      const response = await fetch(
-        `/api/calendar/entries?week=${encodeURIComponent(weekStart)}`,
-      );
-      const data = (await response.json()) as ApiResult<CalendarEntryView[]>;
-      if (seq !== navigationLoadSeq) return;
-      if (data.ok) {
-        set({ entries: data.data });
-      } else {
-        set({
-          entries: [],
-          loadError:
-            data.error === API_ERROR.UNAUTHORIZED ? "UNAUTHORIZED" : "NETWORK",
-        });
-      }
-    } catch (error) {
-      if (seq !== navigationLoadSeq) return;
-      console.error(error);
-      set({ entries: [], loadError: "NETWORK" });
+    set({ scope: weekStart, loadError: false });
+    const data = await requestContractResult<CalendarEntryView[]>(
+      `/api/calendar/entries?week=${encodeURIComponent(weekStart)}`,
+    );
+    if (seq !== navigationLoadSeq) return null;
+    if (data.ok) {
+      set({ entries: data.data });
+    } else if (data.error === API_ERROR.UNAUTHORIZED) {
+      // 未授权跳登录由调用侧经失败分支策略分派,此处不落技术失败态
+      set({ entries: [] });
+    } else {
+      set({ entries: [], loadError: true });
     }
+    return data;
   },
 
-  /** 加载今日读域(今天所在周),替换 todayEntries。失败静默空:鉴权/网络
-      异常由导航读域同一通道呈报,今日面板不为次要读域另设错误态。 */
   loadToday: async (weekStart) => {
     const seq = ++todayLoadSeq;
     set({ todayScope: weekStart });
-    try {
-      const response = await fetch(
-        `/api/calendar/entries?week=${encodeURIComponent(weekStart)}`,
-      );
-      const data = (await response.json()) as ApiResult<CalendarEntryView[]>;
-      if (seq !== todayLoadSeq) return;
-      set({ todayEntries: data.ok ? data.data : [] });
-    } catch (error) {
-      if (seq !== todayLoadSeq) return;
-      console.error(error);
-      set({ todayEntries: [] });
-    }
+    const data = await requestContractResult<CalendarEntryView[]>(
+      `/api/calendar/entries?week=${encodeURIComponent(weekStart)}`,
+    );
+    if (seq !== todayLoadSeq) return;
+    set({ todayEntries: data.ok ? data.data : [] });
   },
 
   createEntry: async (input) => {
-    const result = await requestWrite("/api/calendar/entries", {
+    const result = await requestContractResult("/api/calendar/entries", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
     if (result.ok) await refreshAfterWrite(get);
@@ -123,11 +96,10 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
   },
 
   updateEntry: async (entryId, input) => {
-    const result = await requestWrite(
+    const result = await requestContractResult(
       `/api/calendar/entries/${encodeURIComponent(entryId)}`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
       },
     );
@@ -136,7 +108,7 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
   },
 
   deleteEntry: async (entryId) => {
-    const result = await requestWrite(
+    const result = await requestContractResult(
       `/api/calendar/entries/${encodeURIComponent(entryId)}`,
       { method: "DELETE" },
     );

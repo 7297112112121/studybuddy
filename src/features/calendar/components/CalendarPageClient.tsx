@@ -6,11 +6,13 @@
  * 与读域过滤；编辑卡开合（薄瞬态）内联本层。断点依内容：周网格 min-w-720
  * + 侧栏 360 → xl 起双栏，以下纵向堆叠。
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { useApiFailureHandler } from "@/common/api-failure";
 import { localToday } from "@/common/date";
+import type { ApiFailure } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import { useCalendarStore } from "@/stores/calendar";
 
@@ -54,16 +56,33 @@ export default function CalendarPageClient({
   const entries = useCalendarStore((s) => s.entries);
   const todayEntries = useCalendarStore((s) => s.todayEntries);
   const loadError = useCalendarStore((s) => s.loadError);
-  const resync = useCalendarStore((s) => s.resync);
+  const handleApiFailure = useApiFailureHandler();
 
   // params 由薄壳 page 传入：同一次导航内引用稳定；跨导航由 page 侧新
   // searchParams 触发重建。
   const weekStart = parseWeekParam(params, today);
 
+  // 读域契约失败分派:未授权(UNAUTHORIZED)跳登录由策略承接,
+  // 技术失败已落读域失败态(loadError),此处无呈现动作
+  const dispatchReadFailure = useCallback(
+    async (result: ApiFailure): Promise<void> => {
+      await handleApiFailure(result, { onFailure: () => {} });
+    },
+    [handleApiFailure],
+  );
+
+  // 导航域装载与失败重试共用同一链:load 返回新鲜契约结果(null 即过期丢弃)
+  const retry = useCallback(async (): Promise<void> => {
+    const data = await load(weekStart);
+    if (data !== null && !data.ok) {
+      await dispatchReadFailure(data);
+    }
+  }, [load, weekStart, dispatchReadFailure]);
+
   // 数据经 store 双读域装载：导航域随定位变化，今日域锚定今天所在周
   useEffect(() => {
-    void load(weekStart);
-  }, [load, weekStart]);
+    void retry();
+  }, [retry]);
   useEffect(() => {
     void loadToday(weekStartFor(today));
   }, [loadToday, today]);
@@ -122,8 +141,8 @@ export default function CalendarPageClient({
             days={days}
             entries={entries}
             nav={nav}
-            loadFailed={loadError !== null}
-            onRetry={() => void resync()}
+            loadFailed={loadError}
+            onRetry={() => void retry()}
             onCreate={openCreate}
             onEdit={openEdit}
           />
@@ -146,7 +165,7 @@ export default function CalendarPageClient({
           {/* 新建落点：今天在查看周落今天，否则落周一——新条目必落当前周，卡片立即可见 */}
           <UnscheduledPanel
             entries={weekUnscheduled}
-            loadFailed={loadError !== null}
+            loadFailed={loadError}
             onCreate={() =>
               openCreateUnscheduled(
                 days.some((day) => day.isToday) ? today : weekStart,

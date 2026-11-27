@@ -229,15 +229,6 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     expect(await screen.findByText("保存失败,请重试")).toBeTruthy();
   });
 
-  it("⑦' action 传输层异常（网络失败 reject）→ E-02 呈现且不抛", async () => {
-    createEntryActionMock.mockRejectedValue(new TypeError("Failed to fetch"));
-    renderForm();
-    fillTitle("高数复习");
-    submit();
-
-    expect(await screen.findByText("保存失败,请重试")).toBeTruthy();
-  });
-
   it("⑧ UNAUTHORIZED → router.replace('/login')", async () => {
     createEntryActionMock.mockResolvedValue({
       ok: false,

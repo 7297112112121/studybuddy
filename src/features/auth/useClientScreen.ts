@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import {
-  USERNAME_ALREADY_REGISTERED,
   mapSignInError,
   type SignInErrorKey,
 } from "@/auth/error";
@@ -26,7 +25,9 @@ import {
   type AuthFormErrors,
   type AuthMessageKey,
 } from "@/validation/auth-validators";
-import { API_ERROR, toFieldErrors } from "@/common/error";
+import { requestContractResult } from "@/common/api-client";
+import { useApiFailureHandler } from "@/common/api-failure";
+import { toFieldErrors } from "@/common/error";
 import { ROUTES } from "@/common/routes";
 import { authClient } from "@/stores/auth-client";
 import type { RegisterApiResult } from "@/app/api/auth/register/route";
@@ -113,6 +114,7 @@ export function confirmPasswordRuleStates(
 /** 产出组合层渲染所需的全部状态与回调。 */
 export function useClientScreen(initialView: AuthView) {
   const router = useRouter();
+  const handleApiFailure = useApiFailureHandler();
   const [activeView, setActiveView] = useState<AuthView>(initialView);
   const [values, setValues] = useState<AuthFormValues>({
     account: "",
@@ -188,7 +190,7 @@ export function useClientScreen(initialView: AuthView) {
     }
   }
 
-  /** 注册提交：POST 统一接口注册端点（评审裁决 5b），成功自动登录进工作台。 */
+  /** 注册提交：POST 统一接口注册端点，成功自动登录进工作台。 */
   async function submitRegister(): Promise<void> {
     if (submitting) {
       return;
@@ -196,29 +198,30 @@ export function useClientScreen(initialView: AuthView) {
     setSubmitting(true);
     setTopError(null);
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: values.account,
-          password: values.password,
-          confirmPassword: values.confirmPassword,
-          agreementAccepted: values.agreementAccepted,
-        }),
-      });
-      const result = (await response.json()) as RegisterApiResult;
+      const result: RegisterApiResult = await requestContractResult(
+        "/api/auth/register",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            username: values.account,
+            password: values.password,
+            confirmPassword: values.confirmPassword,
+            agreementAccepted: values.agreementAccepted,
+          }),
+        },
+      );
       if (!result.ok) {
-        if (result.error === USERNAME_ALREADY_REGISTERED) {
-          setTopError("auth.error.usernameRegistered");
-          return;
-        }
-        if (result.error === API_ERROR.INVALID_INPUT) {
-          setErrors(result.fieldErrors as AuthFormErrors);
-        }
+        await handleApiFailure(result, {
+          onInvalidInput: (fieldErrors) =>
+            setErrors(fieldErrors as AuthFormErrors),
+          onDomainCode: () => setTopError("auth.error.usernameRegistered"),
+          onFailure: () => setTopError("auth.error.unknown"),
+        });
         return;
       }
       await signInWithUsername();
     } catch {
+      // better-auth 客户端异常归一为未知（unknown）；统一接口请求封装不抛出
       setTopError("auth.error.unknown");
     } finally {
       setSubmitting(false);

@@ -45,7 +45,7 @@ const initialState = {
   entries: [],
   todayEntries: [],
   todayScope: null,
-  loadError: null,
+  loadError: false,
   scope: null,
 };
 
@@ -58,7 +58,7 @@ afterEach(() => {
 });
 
 describe("useCalendarStore load 竞态守卫", () => {
-  it("快速翻周:前序响应后到,不覆盖新读域", async () => {
+  it("快速翻周:前序响应后到,不覆盖新读域;新鲜结果原样返回、过期返回 null", async () => {
     const weekA = deferredBody();
     const weekB = deferredBody();
     vi.stubGlobal(
@@ -70,17 +70,19 @@ describe("useCalendarStore load 竞态守卫", () => {
     const loadB = useCalendarStore.getState().load("2026-11-23");
 
     weekB.resolve(okBody([entry("b1")]));
-    await loadB;
+    const resultB = await loadB;
+    expect(resultB).toEqual(okBody([entry("b1")]));
     expect(useCalendarStore.getState().entries).toEqual([entry("b1")]);
 
     weekA.resolve(okBody([entry("a1")]));
-    await loadA;
+    const resultA = await loadA;
+    expect(resultA).toBeNull();
     expect(useCalendarStore.getState().entries).toEqual([entry("b1")]);
     expect(useCalendarStore.getState().scope).toBe("2026-11-23");
-    expect(useCalendarStore.getState().loadError).toBeNull();
+    expect(useCalendarStore.getState().loadError).toBe(false);
   });
 
-  it("前序异常后到(fetch reject),丢弃且不误置失败态不留痕", async () => {
+  it("前序异常后到(fetch reject),丢弃且不误置失败态;留痕发生在请求封装归一点", async () => {
     const weekA = deferredBody();
     const weekB = deferredBody();
     vi.stubGlobal(
@@ -98,48 +100,53 @@ describe("useCalendarStore load 竞态守卫", () => {
     await loadA;
 
     expect(useCalendarStore.getState().entries).toEqual([entry("b1")]);
-    expect(useCalendarStore.getState().loadError).toBeNull();
-    expect(errorSpy).not.toHaveBeenCalled();
+    expect(useCalendarStore.getState().loadError).toBe(false);
+    expect(errorSpy).toHaveBeenCalledOnce();
     errorSpy.mockRestore();
   });
 });
 
 describe("useCalendarStore load 失败归一", () => {
-  it("读兜底码归一 NETWORK、未授权(UNAUTHORIZED)单列;成功清位", async () => {
+  it("技术失败落失败态;未授权(UNAUTHORIZED)不落失败态、新鲜结果原样返回供调用侧分派;成功清位", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(responseOf(errorBody(API_ERROR.LOAD_FAILED))),
     );
     await useCalendarStore.getState().load("2026-11-16");
-    expect(useCalendarStore.getState().loadError).toBe("NETWORK");
+    expect(useCalendarStore.getState().loadError).toBe(true);
     expect(useCalendarStore.getState().entries).toEqual([]);
 
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(responseOf(errorBody(API_ERROR.UNAUTHORIZED))),
     );
-    await useCalendarStore.getState().load("2026-11-16");
-    expect(useCalendarStore.getState().loadError).toBe("UNAUTHORIZED");
+    const unauthorized = await useCalendarStore
+      .getState()
+      .load("2026-11-16");
+    expect(unauthorized).toEqual(errorBody(API_ERROR.UNAUTHORIZED));
+    expect(useCalendarStore.getState().loadError).toBe(false);
+    expect(useCalendarStore.getState().entries).toEqual([]);
 
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(responseOf(okBody([entry("a1")]))),
     );
     await useCalendarStore.getState().load("2026-11-16");
-    expect(useCalendarStore.getState().loadError).toBeNull();
+    expect(useCalendarStore.getState().loadError).toBe(false);
     expect(useCalendarStore.getState().entries).toEqual([entry("a1")]);
   });
 
-  it("fetch reject 归一 NETWORK 并留痕", async () => {
+  it("fetch reject 由请求封装归一为读兜底码并留痕", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.stubGlobal(
       "fetch",
       vi.fn().mockRejectedValue(new TypeError("network down")),
     );
 
-    await useCalendarStore.getState().load("2026-11-16");
+    const result = await useCalendarStore.getState().load("2026-11-16");
 
-    expect(useCalendarStore.getState().loadError).toBe("NETWORK");
+    expect(result).toEqual(errorBody(API_ERROR.LOAD_FAILED));
+    expect(useCalendarStore.getState().loadError).toBe(true);
     expect(useCalendarStore.getState().entries).toEqual([]);
     expect(errorSpy).toHaveBeenCalledOnce();
     errorSpy.mockRestore();
@@ -180,10 +187,10 @@ describe("useCalendarStore resync 失败重试", () => {
     );
 
     await useCalendarStore.getState().load("2026-11-16");
-    expect(useCalendarStore.getState().loadError).toBe("NETWORK");
+    expect(useCalendarStore.getState().loadError).toBe(true);
 
     await useCalendarStore.getState().resync();
-    expect(useCalendarStore.getState().loadError).toBeNull();
+    expect(useCalendarStore.getState().loadError).toBe(false);
     expect(useCalendarStore.getState().entries).toEqual([entry("a1")]);
     expect(useCalendarStore.getState().scope).toBe("2026-11-16");
   });

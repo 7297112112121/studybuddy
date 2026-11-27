@@ -1,13 +1,14 @@
 /**
  * 日历域写流程链：条目表单保存链（字段态、校验提交门与契约结果分支）与
  * 删除确认链（确认层开合与删除契约结果分支）。校验提交门与统一接口复验
- * 共用同一 zod schema；契约失败分支统一经客户端失败策略（useApiFailureHandler），
- * fetch reject 由各链留痕归一为呈现文案，不向 React 边界抛裸异常。
+ * 共用同一 zod schema；契约失败分支统一经客户端失败分支策略
+ * （useApiFailureHandler），fetch reject 已由统一接口客户端请求封装
+ * （api-client）归一为契约码，链内无异常分支。
  */
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 
-import { useApiFailureHandler } from "@/common/api-result";
-import { toFieldErrors, type ApiResult } from "@/common/error";
+import { useApiFailureHandler } from "@/common/api-failure";
+import { toFieldErrors } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import {
   calendarEntryInputSchema,
@@ -104,19 +105,9 @@ export function useEntryForm(props: UseEntryFormProps) {
     setFieldErrors({});
     setFormError(false);
     setIsPending(true);
-    // 网络/服务异常：fetch reject 与服务端保存失败同归一为表单提示区文案，
-    // 不向 React 边界抛未捕获异常
-    let result: ApiResult;
-    try {
-      result = editing
-        ? await updateEntry(entry.id, parsed.data)
-        : await createEntry(parsed.data);
-    } catch (error) {
-      console.error(error);
-      setIsPending(false);
-      setFormError(true);
-      return;
-    }
+    const result = editing
+      ? await updateEntry(entry.id, parsed.data)
+      : await createEntry(parsed.data);
     setIsPending(false);
 
     if (result.ok) {
@@ -175,18 +166,7 @@ export function useEntryDeleteConfirm(onSettled?: () => void) {
 
   async function confirmDelete(entryId: string): Promise<void> {
     setIsDeleting(true);
-    // 网络/服务异常：fetch reject 与服务端删除失败同归一为删除失败文案，
-    // 不向 React 边界抛未捕获异常
-    let result: ApiResult;
-    try {
-      result = await deleteEntry(entryId);
-    } catch (error) {
-      console.error(error);
-      setIsDeleting(false);
-      setConfirmOpen(false);
-      setDeleteError(true);
-      return;
-    }
+    const result = await deleteEntry(entryId);
     setIsDeleting(false);
     setConfirmOpen(false);
 
