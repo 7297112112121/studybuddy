@@ -2,8 +2,8 @@
  * WeekEntryDialog 组件测试(AXY-23 tasks.md Task 7「失败测试」行)。
  *
  * 覆盖:create 预填(prefillStart→开始时间、prefillEnd→结束时间、日期锁定)、edit 预填
- * 原值、保存成功调 action 并 onClose、删除 AlertDialog 二次确认(确认调
- * deleteEntryAction / 取消不调)。action 经 vi.mock 桩接;文案用真实 calendar.json。
+ * 原值、保存成功调编排并 onClose、删除 AlertDialog 二次确认(确认调
+ * deleteEntryAction / 取消不调)。编排经 vi.mock 桩接;文案用真实 calendar.json。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -28,14 +28,11 @@ const resyncMock = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
 }));
-vi.mock("@/stores/calendar", () => ({
-  useCalendarStore: (selector: (state: Record<string, unknown>) => unknown) =>
-    selector({
-      createEntry: createEntryActionMock,
-      updateEntry: updateEntryActionMock,
-      deleteEntry: deleteEntryActionMock,
-      resync: resyncMock,
-    }),
+vi.mock("@/api/calendar-sync", () => ({
+  createEntry: createEntryActionMock,
+  updateEntry: updateEntryActionMock,
+  deleteEntry: deleteEntryActionMock,
+  resync: resyncMock,
 }));
 
 afterEach(cleanup);

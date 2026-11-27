@@ -1,9 +1,10 @@
 /**
- * useCalendarStore 读域单测:竞态守卫(过期响应整体丢弃)、失败归一与
+ * calendar-sync 读/写编排单测:竞态守卫(过期响应整体丢弃)、失败归一与
  * 失败重试。fetch 经 vi.stubGlobal 桩接;store 为模块单例,每例前重置状态。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { load, loadToday, resync } from "@/api/calendar-sync";
 import { API_ERROR } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import { useCalendarStore } from "@/stores/calendar";
@@ -27,7 +28,7 @@ function errorBody(error: string) {
   return { ok: false, error };
 }
 
-/** 已决响应桩:store 只消费 response.json()。 */
+/** 已决响应桩:编排只消费 response.json()。 */
 function responseOf(body: unknown) {
   return { json: async () => body };
 }
@@ -57,7 +58,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("useCalendarStore load 竞态守卫", () => {
+describe("calendar-sync load 竞态守卫", () => {
   it("快速翻周:前序响应后到,不覆盖新读域;新鲜结果原样返回、过期返回 null", async () => {
     const weekA = deferredBody();
     const weekB = deferredBody();
@@ -66,8 +67,8 @@ describe("useCalendarStore load 竞态守卫", () => {
       vi.fn().mockReturnValueOnce(weekA).mockReturnValueOnce(weekB),
     );
 
-    const loadA = useCalendarStore.getState().load("2026-11-16");
-    const loadB = useCalendarStore.getState().load("2026-11-23");
+    const loadA = load("2026-11-16");
+    const loadB = load("2026-11-23");
 
     weekB.resolve(okBody([entry("b1")]));
     const resultB = await loadB;
@@ -91,8 +92,8 @@ describe("useCalendarStore load 竞态守卫", () => {
     );
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const loadA = useCalendarStore.getState().load("2026-11-16");
-    const loadB = useCalendarStore.getState().load("2026-11-23");
+    const loadA = load("2026-11-16");
+    const loadB = load("2026-11-23");
 
     weekB.resolve(okBody([entry("b1")]));
     await loadB;
@@ -106,13 +107,13 @@ describe("useCalendarStore load 竞态守卫", () => {
   });
 });
 
-describe("useCalendarStore load 失败归一", () => {
+describe("calendar-sync load 失败归一", () => {
   it("技术失败落失败态;未授权(UNAUTHORIZED)不落失败态、新鲜结果原样返回供调用侧分派;成功清位", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(responseOf(errorBody(API_ERROR.LOAD_FAILED))),
     );
-    await useCalendarStore.getState().load("2026-11-16");
+    await load("2026-11-16");
     expect(useCalendarStore.getState().loadError).toBe(true);
     expect(useCalendarStore.getState().entries).toEqual([]);
 
@@ -120,9 +121,7 @@ describe("useCalendarStore load 失败归一", () => {
       "fetch",
       vi.fn().mockResolvedValue(responseOf(errorBody(API_ERROR.UNAUTHORIZED))),
     );
-    const unauthorized = await useCalendarStore
-      .getState()
-      .load("2026-11-16");
+    const unauthorized = await load("2026-11-16");
     expect(unauthorized).toEqual(errorBody(API_ERROR.UNAUTHORIZED));
     expect(useCalendarStore.getState().loadError).toBe(false);
     expect(useCalendarStore.getState().entries).toEqual([]);
@@ -131,7 +130,7 @@ describe("useCalendarStore load 失败归一", () => {
       "fetch",
       vi.fn().mockResolvedValue(responseOf(okBody([entry("a1")]))),
     );
-    await useCalendarStore.getState().load("2026-11-16");
+    await load("2026-11-16");
     expect(useCalendarStore.getState().loadError).toBe(false);
     expect(useCalendarStore.getState().entries).toEqual([entry("a1")]);
   });
@@ -143,7 +142,7 @@ describe("useCalendarStore load 失败归一", () => {
       vi.fn().mockRejectedValue(new TypeError("network down")),
     );
 
-    const result = await useCalendarStore.getState().load("2026-11-16");
+    const result = await load("2026-11-16");
 
     expect(result).toEqual(errorBody(API_ERROR.LOAD_FAILED));
     expect(useCalendarStore.getState().loadError).toBe(true);
@@ -153,7 +152,7 @@ describe("useCalendarStore load 失败归一", () => {
   });
 });
 
-describe("useCalendarStore loadToday 竞态守卫", () => {
+describe("calendar-sync loadToday 竞态守卫", () => {
   it("前序响应后到,不覆盖今日读域", async () => {
     const todayA = deferredBody();
     const todayB = deferredBody();
@@ -162,8 +161,8 @@ describe("useCalendarStore loadToday 竞态守卫", () => {
       vi.fn().mockReturnValueOnce(todayA).mockReturnValueOnce(todayB),
     );
 
-    const loadA = useCalendarStore.getState().loadToday("2026-11-16");
-    const loadB = useCalendarStore.getState().loadToday("2026-11-23");
+    const loadA = loadToday("2026-11-16");
+    const loadB = loadToday("2026-11-23");
 
     todayB.resolve(okBody([entry("b1")]));
     await loadB;
@@ -176,7 +175,7 @@ describe("useCalendarStore loadToday 竞态守卫", () => {
   });
 });
 
-describe("useCalendarStore resync 失败重试", () => {
+describe("calendar-sync resync 失败重试", () => {
   it("按当前 scope 重载,成功后清失败态", async () => {
     vi.stubGlobal(
       "fetch",
@@ -186,10 +185,10 @@ describe("useCalendarStore resync 失败重试", () => {
         .mockResolvedValueOnce(responseOf(okBody([entry("a1")]))),
     );
 
-    await useCalendarStore.getState().load("2026-11-16");
+    await load("2026-11-16");
     expect(useCalendarStore.getState().loadError).toBe(true);
 
-    await useCalendarStore.getState().resync();
+    await resync();
     expect(useCalendarStore.getState().loadError).toBe(false);
     expect(useCalendarStore.getState().entries).toEqual([entry("a1")]);
     expect(useCalendarStore.getState().scope).toBe("2026-11-16");

@@ -4,7 +4,7 @@
  * 写归保存失败(SAVE_FAILED))后返回,留痕 console.error;
  * 本封装不向调用侧抛出异常。
  */
-import { API_ERROR, type ApiErrorCode, type ApiResult } from "./error";
+import { API_ERROR, type ApiErrorCode, type ApiResult } from "@/common/error";
 
 /** 请求统一接口端点并产出契约结果:判别以响应体为准,传输层异常
     (网络失败、响应解析失败)归一为方向兜底码。 */

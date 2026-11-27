@@ -10,7 +10,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { useApiFailureHandler } from "@/common/api-failure";
+import { load, loadToday } from "@/api/calendar-sync";
+import { useApiFailureHandler } from "@/api/failure";
 import { localToday } from "@/common/date";
 import type { ApiFailure } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
@@ -51,8 +52,6 @@ export default function CalendarPageClient({
   const t = useTranslations("calendar");
   const router = useRouter();
   const today = useToday();
-  const load = useCalendarStore((s) => s.load);
-  const loadToday = useCalendarStore((s) => s.loadToday);
   const entries = useCalendarStore((s) => s.entries);
   const todayEntries = useCalendarStore((s) => s.todayEntries);
   const loadError = useCalendarStore((s) => s.loadError);
@@ -77,15 +76,15 @@ export default function CalendarPageClient({
     if (data !== null && !data.ok) {
       await dispatchReadFailure(data);
     }
-  }, [load, weekStart, dispatchReadFailure]);
+  }, [weekStart, dispatchReadFailure]);
 
-  // 数据经 store 双读域装载：导航域随定位变化，今日域锚定今天所在周
+  // 数据经读/写编排装载双读域：导航域随定位变化，今日域锚定今天所在周
   useEffect(() => {
     void retry();
   }, [retry]);
   useEffect(() => {
     void loadToday(weekStartFor(today));
-  }, [loadToday, today]);
+  }, [today]);
 
   // 两卡按有无开始时间二分：今日卡只收已安排时间，无时间归右栏未安排卡（互斥，交集恒空）
   const todaysSchedule = useMemo(

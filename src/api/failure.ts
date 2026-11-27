@@ -2,14 +2,14 @@
  * 统一接口契约结果的客户端失败分支策略:未授权跳登录、未找到交恢复回调、
  * 输入无效交字段回调(未接则按技术失败呈现)、技术失败交失败回调、
  * 端点族域码交域码回调(未接则按技术失败呈现)。
- * fetch reject 已由统一接口客户端请求封装(api-client)归一进契约码,
+ * fetch reject 已由统一接口客户端请求封装(request)归一进契约码,
  * 不再有调用侧异常分支。
  */
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import { API_ERROR, type ApiErrorCode, type ApiFailure } from "./error";
-import { ROUTES } from "./routes";
+import { API_ERROR, type ApiErrorCode, type ApiFailure } from "@/common/error";
+import { ROUTES } from "@/common/routes";
 
 /** 契约失败分支策略 hook:调用方在契约结果收缩为失败臂后传入分支回调;
     未授权内部跳登录,无需调用方感知路由。 */

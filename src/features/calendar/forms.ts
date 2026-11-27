@@ -3,11 +3,17 @@
  * 删除确认链（确认层开合与删除契约结果分支）。校验提交门与统一接口复验
  * 共用同一 zod schema；契约失败分支统一经客户端失败分支策略
  * （useApiFailureHandler），fetch reject 已由统一接口客户端请求封装
- * （api-client）归一为契约码，链内无异常分支。
+ * （request）归一为契约码，链内无异常分支。
  */
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 
-import { useApiFailureHandler } from "@/common/api-failure";
+import {
+  createEntry,
+  deleteEntry,
+  resync,
+  updateEntry,
+} from "@/api/calendar-sync";
+import { useApiFailureHandler } from "@/api/failure";
 import { toFieldErrors } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import {
@@ -15,8 +21,6 @@ import {
   type CalendarEntryInput,
   type CalendarFieldErrors,
 } from "@/validation/calendar-validators";
-import { useCalendarStore } from "@/stores/calendar";
-
 type UseEntryFormProps = {
   /** 提交日期（新建模式固定；编辑模式被表单内日期控件初值覆盖）。 */
   date: string;
@@ -34,9 +38,6 @@ type UseEntryFormProps = {
     复验同一 schema）与保存契约分支。表单组合层（EntryForm）的唯一链挂载点。 */
 export function useEntryForm(props: UseEntryFormProps) {
   const handleApiFailure = useApiFailureHandler();
-  const createEntry = useCalendarStore((s) => s.createEntry);
-  const updateEntry = useCalendarStore((s) => s.updateEntry);
-  const resync = useCalendarStore((s) => s.resync);
 
   const [title, setTitle] = useState(props.entry?.title ?? "");
   const [content, setContent] = useState(props.entry?.content ?? "");
@@ -149,8 +150,6 @@ export function useEntryForm(props: UseEntryFormProps) {
     供编辑卡删除成功后关闭弹窗。 */
 export function useEntryDeleteConfirm(onSettled?: () => void) {
   const handleApiFailure = useApiFailureHandler();
-  const deleteEntry = useCalendarStore((s) => s.deleteEntry);
-  const resync = useCalendarStore((s) => s.resync);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(false);

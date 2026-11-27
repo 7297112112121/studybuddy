@@ -4,15 +4,8 @@
  * (HTTP 409)。响应体即接口契约结果(ApiResult)形态,判别以 body 为准。
  */
 import { respondWith, withSessionlessApiContract } from "@/app/api/contract";
-import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
 import { registerWithUsername } from "@/auth/service";
 import { registerFormSchema } from "@/validation/auth-validators";
-import { type ApiErrorCode, type ApiResult } from "@/common/error";
-
-export type RegisterApiResult = ApiResult<
-  undefined,
-  ApiErrorCode | typeof USERNAME_ALREADY_REGISTERED
->;
 
 export async function POST(request: Request): Promise<Response> {
   let body: unknown = null;

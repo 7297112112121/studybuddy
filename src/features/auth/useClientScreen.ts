@@ -11,10 +11,7 @@ import type { SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import {
-  mapSignInError,
-  type SignInErrorKey,
-} from "@/auth/error";
+import { mapSignInError, type SignInErrorKey } from "@/auth/error";
 import {
   loginFormSchema,
   PASSWORD_MAX_LENGTH,
@@ -25,12 +22,11 @@ import {
   type AuthFormErrors,
   type AuthMessageKey,
 } from "@/validation/auth-validators";
-import { requestContractResult } from "@/common/api-client";
-import { useApiFailureHandler } from "@/common/api-failure";
+import { registerAccount } from "@/api/auth-api";
+import { useApiFailureHandler } from "@/api/failure";
 import { toFieldErrors } from "@/common/error";
 import { ROUTES } from "@/common/routes";
 import { authClient } from "@/stores/auth-client";
-import type { RegisterApiResult } from "@/app/api/auth/register/route";
 
 export type AuthView = "login" | "register";
 
@@ -198,18 +194,12 @@ export function useClientScreen(initialView: AuthView) {
     setSubmitting(true);
     setTopError(null);
     try {
-      const result: RegisterApiResult = await requestContractResult(
-        "/api/auth/register",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            username: values.account,
-            password: values.password,
-            confirmPassword: values.confirmPassword,
-            agreementAccepted: values.agreementAccepted,
-          }),
-        },
-      );
+      const result = await registerAccount({
+        username: values.account,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        agreementAccepted: values.agreementAccepted,
+      });
       if (!result.ok) {
         await handleApiFailure(result, {
           onInvalidInput: (fieldErrors) =>
