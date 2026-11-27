@@ -53,6 +53,7 @@ npm run dev:infra        # 启动本地基础设施(compose.dev.yaml:PostgreSQL 
 ## 测试规则
 
 - 禁止跑全量测试，包括但不限于单元测试、集成测试、端到端测试。
+- 测试编写、分层 mock 边界与统一接口端点壳纪律请看[docs\dev\测试纪律.md](docs\dev\测试纪律.md)
 
 ## 架构设计规则
 
