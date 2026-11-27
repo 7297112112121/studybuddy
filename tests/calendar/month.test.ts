@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildMonthGrid } from "@/features/calendar/utils";
 import { addMonths } from "@/features/calendar/utils";
 import { isValidDateString } from "@/validation/calendar";
-import { formatHhmm, monthRange } from "@/modules/calendar/queries";
+import { formatHhmm, monthRange } from "@/services/calendar/queries";
 
 /**
  * calendar 月视图纯函数单测（AXY-22 design「契约」节）。

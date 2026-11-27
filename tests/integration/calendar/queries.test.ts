@@ -8,8 +8,8 @@ import { z } from "zod";
 
 import { db } from "@/common/db";
 import { user } from "@/db/schema";
-import { createEntry } from "@/modules/calendar/service";
-import { listWeekEntries } from "@/modules/calendar/queries";
+import { createEntry } from "@/services/calendar/service";
+import { listWeekEntries } from "@/services/calendar/queries";
 import { calendarEntryViewSchema } from "@/app/api/calendar/response";
 
 afterAll(async () => {

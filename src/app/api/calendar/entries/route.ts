@@ -3,8 +3,8 @@
  * 会话守卫、入参复验与错误翻译均在切面内完成。
  */
 import { respondWith, withSessionApiContract } from "@/app/api/contract";
-import { listMonthEntries, listWeekEntries } from "@/modules/calendar/queries";
-import { createEntry } from "@/modules/calendar/service";
+import { listMonthEntries, listWeekEntries } from "@/services/calendar/queries";
+import { createEntry } from "@/services/calendar/service";
 import {
   calendarEntriesQuerySchema,
   calendarEntryInputSchema,

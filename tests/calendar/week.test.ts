@@ -5,7 +5,7 @@ import {
   weekStartFor,
 } from "@/features/calendar/utils";
 import { isValidWeekStart } from "@/validation/calendar";
-import { weekRange } from "@/modules/calendar/queries";
+import { weekRange } from "@/services/calendar/queries";
 
 /**
  * calendar 周视图纯函数单测(AXY-23 design「契约」节)。

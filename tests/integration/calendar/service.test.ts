@@ -13,8 +13,8 @@ import {
   createEntry,
   deleteEntry,
   updateEntry,
-} from "@/modules/calendar/service";
-import { listMonthEntries } from "@/modules/calendar/queries";
+} from "@/services/calendar/service";
+import { listMonthEntries } from "@/services/calendar/queries";
 
 afterAll(async () => {
   await db.$client.end();

@@ -19,7 +19,7 @@ import { user } from "@/db/schema";
 import { API_ERROR, type ApiResult } from "@/common/error";
 import { DELETE, PUT } from "../../../src/app/api/calendar/entries/[id]/route";
 import { GET, POST } from "../../../src/app/api/calendar/entries/route";
-import { listMonthEntries } from "@/modules/calendar/queries";
+import { listMonthEntries } from "@/services/calendar/queries";
 
 const BASE = "http://localhost/api/calendar/entries";
 
