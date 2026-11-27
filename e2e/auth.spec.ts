@@ -5,11 +5,8 @@ import {
   fillLoginForm,
   registerViaUI,
   signOut,
-  throttleSignIn,
   uniqueUsername,
 } from "./helpers/auth";
-
-
 
 test.describe("校验链（登录视图）", () => {
   test("R1: 空表单提交呈现账户名与密码必填错误态（红框无文案），不提交", async ({
@@ -228,7 +225,6 @@ test.describe("注册流程", () => {
     await fillLoginForm(page, username);
     // pending 态按钮文案变「登录中…」，name 用前缀匹配才能在两种形态间稳定定位
     const loginButton = page.getByRole("button", { name: /^登录/ });
-    await throttleSignIn();
     await loginButton.click();
     await expect(loginButton).toHaveText("登录中…");
     await expect(loginButton).toBeDisabled();
@@ -266,19 +262,6 @@ test.describe("登录流程", () => {
     await signOut(page);
 
     await fillLoginForm(page, username);
-    await throttleSignIn();
-    await page.getByRole("button", { name: "登录", exact: true }).click();
-    await expect(page).toHaveURL(/\/workbench$/);
-    await expect(page.getByTestId("session-account")).toHaveText(username);
-  });
-
-  test("R6: 账号二同链路行为一致", async ({ page }) => {
-    const username = uniqueUsername();
-    await registerViaUI(page, username);
-    await signOut(page);
-
-    await fillLoginForm(page, username);
-    await throttleSignIn();
     await page.getByRole("button", { name: "登录", exact: true }).click();
     await expect(page).toHaveURL(/\/workbench$/);
     await expect(page.getByTestId("session-account")).toHaveText(username);
@@ -306,7 +289,6 @@ test.describe("会话与守卫", () => {
 
     // 重新登录同号 → /workbench 且账户名一致（数据完好）
     await fillLoginForm(page, username);
-    await throttleSignIn();
     await page.getByRole("button", { name: "登录", exact: true }).click();
     await expect(page).toHaveURL(/\/workbench$/);
     await expect(page.getByTestId("session-account")).toHaveText(username);
