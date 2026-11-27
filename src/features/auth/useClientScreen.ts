@@ -22,8 +22,8 @@ import {
   type AuthFormErrors,
   type AuthMessageKey,
 } from "@/validation/auth-validators";
-import { registerAccount } from "@/api/auth-api";
-import { useApiFailureHandler } from "@/api/failure";
+import { registerAccount } from "@/api/auth";
+import { useApiFailureHandler } from "@/api/contract";
 import { toFieldErrors } from "@/common/error";
 import { ROUTES } from "@/common/routes";
 import { authClient } from "@/stores/auth-client";

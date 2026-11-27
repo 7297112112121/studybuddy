@@ -2,7 +2,7 @@
  * 日历域统一接口端点词汇:读/写端点的 URL、方法与请求体组装单一来源,
  * 供各域 store 读/写编排调用;本文件不触碰状态,不依赖 stores。
  */
-import { requestContractResult } from "@/api/request";
+import { requestContractResult } from "@/api/contract";
 import type { ApiErrorCode, ApiResult } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import type { CalendarEntryInput } from "@/validation/calendar-validators";

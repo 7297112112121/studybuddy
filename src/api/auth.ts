@@ -5,7 +5,7 @@
  */
 import type { z } from "zod";
 
-import { requestContractResult } from "@/api/request";
+import { requestContractResult } from "@/api/contract";
 import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
 import type { ApiErrorCode, ApiResult } from "@/common/error";
 import { registerFormSchema } from "@/validation/auth-validators";

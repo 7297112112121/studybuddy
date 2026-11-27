@@ -1,15 +1,44 @@
 /**
- * 统一接口契约结果的客户端失败分支策略:未授权跳登录、未找到交恢复回调、
- * 输入无效交字段回调(未接则按技术失败呈现)、技术失败交失败回调、
- * 端点族域码交域码回调(未接则按技术失败呈现)。
- * fetch reject 已由统一接口客户端请求封装(request)归一进契约码,
- * 不再有调用侧异常分支。
+ * 统一接口客户端契约切面:请求封装把请求发起与响应解析归一为契约结果
+ * (ApiResult),传输层异常按方向归一为兜底码并留痕;失败分支策略把收缩为
+ * 失败臂的契约结果按码分派(未授权跳登录,其余交调用侧分支回调)。
+ * 本切面不向调用侧抛出异常,不触碰状态,不依赖 stores。
  */
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import { API_ERROR, type ApiErrorCode, type ApiFailure } from "@/common/error";
+import {
+  API_ERROR,
+  type ApiErrorCode,
+  type ApiFailure,
+  type ApiResult,
+} from "@/common/error";
 import { ROUTES } from "@/common/routes";
+
+/** 请求统一接口端点并产出契约结果:判别以响应体为准,传输层异常
+    (网络失败、响应解析失败)归一为方向兜底码。 */
+export async function requestContractResult<
+  TData = undefined,
+  TError extends string = ApiErrorCode,
+>(url: string, init?: RequestInit): Promise<ApiResult<TData, TError>> {
+  const method = init?.method ?? "GET";
+  try {
+    const response = await fetch(url, {
+      ...init,
+      headers:
+        init?.body === undefined
+          ? init?.headers
+          : { "Content-Type": "application/json", ...init?.headers },
+    });
+    return (await response.json()) as ApiResult<TData, TError>;
+  } catch (error) {
+    console.error(error);
+    return { ok: false, error: fallbackCode(method) } as ApiResult<
+      TData,
+      TError
+    >;
+  }
+}
 
 /** 契约失败分支策略 hook:调用方在契约结果收缩为失败臂后传入分支回调;
     未授权内部跳登录,无需调用方感知路由。 */
@@ -55,6 +84,13 @@ export function useApiFailureHandler() {
     },
     [router],
   );
+}
+
+/** 按方向取兜底码:与服务端契约切面同规则,方向由请求方法推导(GET 归读)。 */
+function fallbackCode(
+  method: string,
+): Exclude<ApiErrorCode, typeof API_ERROR.INVALID_INPUT> {
+  return method === "GET" ? API_ERROR.LOAD_FAILED : API_ERROR.SAVE_FAILED;
 }
 
 type ApiFailureHandlers<TError extends string> = {

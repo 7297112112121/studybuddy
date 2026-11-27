@@ -1,8 +1,8 @@
 /**
  * 日历业务数据客户端持有层:纯状态、收窄迁移函数与读/写编排;编排 action
- * 调用统一接口客户端请求层(calendar-api)发起请求,竞态守卫、失败落态
+ * 调用统一接口客户端端点词汇(calendar)发起请求,竞态守卫、失败落态
  * 判别与写后失效内化本文件,本 store 是自身状态的唯一写手,组件只订阅读取。
- * fetch reject 已由统一接口客户端请求封装(request)归一进契约码,编排内
+ * fetch reject 已由统一接口客户端契约切面(contract)归一进契约码,编排内
  * 无异常分支。
  */
 import { create } from "zustand";
@@ -12,7 +12,7 @@ import {
   deleteCalendarEntry,
   fetchCalendarEntries,
   updateCalendarEntry,
-} from "@/api/calendar-api";
+} from "@/api/calendar";
 import { API_ERROR, type ApiResult } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import type { CalendarEntryInput } from "@/validation/calendar-validators";
@@ -43,7 +43,7 @@ type CalendarState = {
   applyTodayLoad: (todayScope: string) => void;
   /** 今日读域结果落定:条目写入,今日域无失败态。 */
   applyTodayEntries: (entries: CalendarEntryView[]) => void;
-  /** 加载导航读域条目(周锚),替换既有 entries;返回新鲜契约结果(null 即过期丢弃),失败分支由调用侧经客户端失败分支策略(failure)分派。 */
+  /** 加载导航读域条目(周锚),替换既有 entries;返回新鲜契约结果(null 即过期丢弃),失败分支由调用侧经客户端失败分支策略(contract)分派。 */
   load: (weekStart: string) => Promise<ApiResult<CalendarEntryView[]> | null>;
   /** 加载今日读域条目(今天所在周,weekStart 由调用方锚定),替换 todayEntries。失败静默空:鉴权/技术异常由导航读域同一通道呈报,今日面板不为次要读域另设错误态。 */
   loadToday: (weekStart: string) => Promise<void>;

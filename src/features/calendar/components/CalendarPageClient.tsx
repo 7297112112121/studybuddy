@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { useApiFailureHandler } from "@/api/failure";
+import { useApiFailureHandler } from "@/api/contract";
 import { localToday } from "@/common/date";
 import type { ApiFailure } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";

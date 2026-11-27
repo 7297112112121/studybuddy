@@ -24,7 +24,7 @@ import {
 import { NextIntlClientProvider } from "next-intl";
 import AuthCard from "../../../src/features/auth/components/AuthCard";
 import authMessages from "../../../src/locales/zh-CN/auth.json";
-import type { RegisterApiResult } from "@/api/auth-api";
+import type { RegisterApiResult } from "@/api/auth";
 
 const routerReplace = vi.hoisted(() => vi.fn());
 // signIn.username 经 hoisted 桩注入拦截（沿用 T8 validation.test 形态），

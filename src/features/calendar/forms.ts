@@ -2,12 +2,12 @@
  * 日历域写流程链：条目表单保存链（字段态、校验提交门与契约结果分支）与
  * 删除确认链（确认层开合与删除契约结果分支）。校验提交门与统一接口复验
  * 共用同一 zod schema；契约失败分支统一经客户端失败分支策略
- * （useApiFailureHandler），fetch reject 已由统一接口客户端请求封装
- * （request）归一为契约码，链内无异常分支。
+ * （useApiFailureHandler），fetch reject 已由统一接口客户端契约切面
+ * （contract）归一为契约码，链内无异常分支。
  */
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 
-import { useApiFailureHandler } from "@/api/failure";
+import { useApiFailureHandler } from "@/api/contract";
 import { toFieldErrors } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import { useCalendarStore } from "@/stores/calendar";
