@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-import { weekdayKeyOf } from "../dates";
+import { weekdayKeyOf } from "../utils";
 import EntryRow from "./EntryRow";
 
 type UnscheduledPanelProps = {

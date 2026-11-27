@@ -1,22 +1,45 @@
 "use client";
 
 /**
- * 日历页组合层：接屏状态机（useCalendarScreen），接线标题、周视图主区与
- * 右栏（迷你月历 + 今日日程 + 未安排时间）双栏布局、页面级编辑卡；自身零状态。
- * 断点依内容：周网格 min-w-720 + 侧栏 360 → xl 起双栏，以下纵向堆叠。
+ * 日历页组合层：订阅日历 store 双读域（导航域随 URL 周锚装载、今日域锚定
+ * 今天所在周，失败态与重试接线周视图），接路由词汇与日期工具派生导航链接
+ * 与读域过滤；编辑卡开合（薄瞬态）内联本层。断点依内容：周网格 min-w-720
+ * + 侧栏 360 → xl 起双栏，以下纵向堆叠。
  */
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { buildWeekDays } from "../dates";
+import { localToday } from "@/common/date";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
+import { useCalendarStore } from "@/stores/calendar";
+
 import {
-  useCalendarScreen,
+  parseWeekParam,
+  weekHref,
+  weekNavLinks,
   type CalendarPageParams,
-} from "../useCalendarScreen";
+} from "../routes";
+import {
+  buildWeekDays,
+  selectTodaysSchedule,
+  selectWeekUnscheduled,
+  slotPrefillEnd,
+  slotPrefillStart,
+  weekStartFor,
+} from "../utils";
+import type { WeekEntryDialogState } from "./WeekEntryDialog";
 import MiniMonthCard from "./MiniMonthCard";
 import TodayPanel from "./TodayPanel";
 import UnscheduledPanel from "./UnscheduledPanel";
 import WeekEntryDialog from "./WeekEntryDialog";
 import WeekView from "./WeekView";
+
+/** 本地今天（"YYYY-MM-DD"）：mount 期定格一次，避免逐渲染漂移。 */
+function useToday(): string {
+  const [today] = useState(localToday);
+  return today;
+}
 
 export default function CalendarPageClient({
   params,
@@ -24,22 +47,70 @@ export default function CalendarPageClient({
   params: CalendarPageParams;
 }) {
   const t = useTranslations("calendar");
-  const {
-    weekStart,
-    today,
-    entries,
-    todaysSchedule,
-    weekUnscheduled,
-    loadError,
-    retryLoad,
-    nav,
-    selectDate,
-    dialogState,
-    openCreate,
-    openCreateUnscheduled,
-    openEdit,
-    closeDialog,
-  } = useCalendarScreen(params);
+  const router = useRouter();
+  const today = useToday();
+  const load = useCalendarStore((s) => s.load);
+  const loadToday = useCalendarStore((s) => s.loadToday);
+  const entries = useCalendarStore((s) => s.entries);
+  const todayEntries = useCalendarStore((s) => s.todayEntries);
+  const loadError = useCalendarStore((s) => s.loadError);
+  const resync = useCalendarStore((s) => s.resync);
+
+  // params 由薄壳 page 传入：同一次导航内引用稳定；跨导航由 page 侧新
+  // searchParams 触发重建。
+  const weekStart = parseWeekParam(params, today);
+
+  // 数据经 store 双读域装载：导航域随定位变化，今日域锚定今天所在周
+  useEffect(() => {
+    void load(weekStart);
+  }, [load, weekStart]);
+  useEffect(() => {
+    void loadToday(weekStartFor(today));
+  }, [loadToday, today]);
+
+  // 两卡按有无开始时间二分：今日卡只收已安排时间，无时间归右栏未安排卡（互斥，交集恒空）
+  const todaysSchedule = useMemo(
+    () => selectTodaysSchedule(todayEntries, today),
+    [todayEntries, today],
+  );
+  const weekUnscheduled = useMemo(
+    () => selectWeekUnscheduled(entries),
+    [entries],
+  );
+
+  // 迷你月历点日 → 跳该日所在周（周一锚），周视图与迷你月历高亮随之联动
+  const selectDate = (date: string) => {
+    router.push(weekHref(date));
+  };
+
+  const nav = weekNavLinks(weekStart, today);
+
+  // 编辑卡开合：create 模式带日期与槽预填（双预填空串即不预填，右栏未安排
+  // 卡新建），edit 模式带原条目；周网格与今日日程共用同一开合态。
+  const [dialogState, setDialogState] = useState<WeekEntryDialogState | null>(
+    null,
+  );
+  const openCreate = (date: string, slotMinutes: number) => {
+    setDialogState({
+      mode: "create",
+      date,
+      prefillStart: slotPrefillStart(slotMinutes),
+      prefillEnd: slotPrefillEnd(slotMinutes),
+    });
+  };
+  const openCreateUnscheduled = (date: string) => {
+    setDialogState({
+      mode: "create",
+      date,
+      prefillStart: "",
+      prefillEnd: "",
+    });
+  };
+  const openEdit = (entry: CalendarEntryView) => {
+    setDialogState({ mode: "edit", entry });
+  };
+  const closeDialog = () => setDialogState(null);
+
   const days = buildWeekDays(weekStart, today);
 
   return (
@@ -52,7 +123,7 @@ export default function CalendarPageClient({
             entries={entries}
             nav={nav}
             loadFailed={loadError !== null}
-            onRetry={retryLoad}
+            onRetry={() => void resync()}
             onCreate={openCreate}
             onEdit={openEdit}
           />

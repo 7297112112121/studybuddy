@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "cn";
 
-import type { WeekDay } from "../dates";
+import type { WeekDay } from "../utils";
 
 type WeekHeaderProps = {
   days: WeekDay[];

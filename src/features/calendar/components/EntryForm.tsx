@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * 条目表单组合层：接表单状态机（useEntryForm，字段态/校验/保存链全部在
- * hook），排版字段与错误呈现；WeekEntryDialog 唯一挂载点。
+ * 条目表单组合层：接条目表单保存链（useEntryForm，字段态/校验/保存全部在
+ * 链内），排版字段与错误呈现；WeekEntryDialog 唯一挂载点。
  */
 import { useTranslations } from "next-intl";
 
@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-import { useEntryForm } from "../useEntryForm";
+import { useEntryForm } from "../forms";
 import EntryFieldRow from "./EntryFieldRow";
 
 type EntryFormProps = {

@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * 条目行组合层：行文案与操作按钮接线；删除走共享删除确认状态机
- * （useEntryDelete），确认层无额外输入。
+ * 条目行组合层：行文案与操作按钮接线；删除走删除确认链
+ * （useEntryDeleteConfirm），确认层无额外输入。
  */
 import { useTranslations } from "next-intl";
 
@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-import { timePrefix } from "../dates";
-import { useEntryDelete } from "../useEntryDelete";
+import { timePrefix } from "../utils";
+import { useEntryDeleteConfirm } from "../forms";
 import EntryDeleteConfirm from "./EntryDeleteConfirm";
 
 type EntryRowProps = {
@@ -34,7 +34,7 @@ export default function EntryRow({
     isDeleting,
     deleteError,
     confirmDelete,
-  } = useEntryDelete();
+  } = useEntryDeleteConfirm();
 
   const time = leadingText ?? timePrefix(entry);
 

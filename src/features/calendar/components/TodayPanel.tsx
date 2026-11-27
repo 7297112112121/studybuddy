@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-import { formatMonthDay } from "../dates";
+import { formatMonthDay } from "../utils";
 import EntryRow from "./EntryRow";
 
 type TodayPanelProps = {

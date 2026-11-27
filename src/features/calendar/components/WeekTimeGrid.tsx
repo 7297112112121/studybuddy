@@ -12,11 +12,9 @@ import type { CalendarEntryView } from "@/modules/calendar/queries";
 
 import {
   PX_PER_MINUTE,
-  SLOT_MINUTES,
-  SLOTS_PER_DAY,
   minutesToHhmm,
   type WeekDay,
-} from "../dates";
+} from "../utils";
 import WeekDayColumn from "./WeekDayColumn";
 
 type WeekTimeGridProps = {

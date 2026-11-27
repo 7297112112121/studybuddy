@@ -1,12 +1,13 @@
 "use client";
 
 /**
- * 迷你月历卡组合层：接月历屏状态机（useMiniMonth），接线迷你月历与翻月/
- * 跳周回调；自身零状态。显示月重置语义由父级 key 承担——key 绑 URL 周
- * 所在月，跨月翻周/点日跳周即重挂载回落，同月内手动翻月态保留。
+ * 迷你月历卡组合层：翻月显示月（薄瞬态 useState）内联本层，接线迷你月历
+ * 与翻月/跳周回调。显示月重置语义由父级 key 承担——key 绑 URL 周所在月，
+ * 跨月翻周/点日跳周即重挂载回落，同月内手动翻月态保留。
  */
-import type { WeekDay } from "../dates";
-import { useMiniMonth } from "../useMiniMonth";
+import { useState } from "react";
+
+import { monthOf, addMonths, type WeekDay } from "../utils";
 import MiniMonth from "./MiniMonth";
 
 type MiniMonthCardProps = {
@@ -24,7 +25,7 @@ export default function MiniMonthCard({
   weekDates,
   onSelect,
 }: MiniMonthCardProps) {
-  const { shown, onPrev, onNext } = useMiniMonth(weekStart);
+  const [shown, setShown] = useState(() => monthOf(weekStart));
 
   return (
     <MiniMonth
@@ -32,8 +33,8 @@ export default function MiniMonthCard({
       month={shown.month}
       today={today}
       weekDates={weekDates}
-      onPrevMonth={onPrev}
-      onNextMonth={onNext}
+      onPrevMonth={() => setShown((m) => addMonths(m.year, m.month, -1))}
+      onNextMonth={() => setShown((m) => addMonths(m.year, m.month, 1))}
       onSelect={onSelect}
     />
   );

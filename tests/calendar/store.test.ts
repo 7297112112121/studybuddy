@@ -66,12 +66,8 @@ describe("useCalendarStore load 竞态守卫", () => {
       vi.fn().mockReturnValueOnce(weekA).mockReturnValueOnce(weekB),
     );
 
-    const loadA = useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-16" });
-    const loadB = useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-23" });
+    const loadA = useCalendarStore.getState().load("2026-11-16");
+    const loadB = useCalendarStore.getState().load("2026-11-23");
 
     weekB.resolve(okBody([entry("b1")]));
     await loadB;
@@ -80,10 +76,7 @@ describe("useCalendarStore load 竞态守卫", () => {
     weekA.resolve(okBody([entry("a1")]));
     await loadA;
     expect(useCalendarStore.getState().entries).toEqual([entry("b1")]);
-    expect(useCalendarStore.getState().scope).toEqual({
-      view: "week",
-      weekStart: "2026-11-23",
-    });
+    expect(useCalendarStore.getState().scope).toBe("2026-11-23");
     expect(useCalendarStore.getState().loadError).toBeNull();
   });
 
@@ -96,12 +89,8 @@ describe("useCalendarStore load 竞态守卫", () => {
     );
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const loadA = useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-16" });
-    const loadB = useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-23" });
+    const loadA = useCalendarStore.getState().load("2026-11-16");
+    const loadB = useCalendarStore.getState().load("2026-11-23");
 
     weekB.resolve(okBody([entry("b1")]));
     await loadB;
@@ -121,9 +110,7 @@ describe("useCalendarStore load 失败归一", () => {
       "fetch",
       vi.fn().mockResolvedValue(responseOf(errorBody(API_ERROR.LOAD_FAILED))),
     );
-    await useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-16" });
+    await useCalendarStore.getState().load("2026-11-16");
     expect(useCalendarStore.getState().loadError).toBe("NETWORK");
     expect(useCalendarStore.getState().entries).toEqual([]);
 
@@ -131,18 +118,14 @@ describe("useCalendarStore load 失败归一", () => {
       "fetch",
       vi.fn().mockResolvedValue(responseOf(errorBody(API_ERROR.UNAUTHORIZED))),
     );
-    await useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-16" });
+    await useCalendarStore.getState().load("2026-11-16");
     expect(useCalendarStore.getState().loadError).toBe("UNAUTHORIZED");
 
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(responseOf(okBody([entry("a1")]))),
     );
-    await useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-16" });
+    await useCalendarStore.getState().load("2026-11-16");
     expect(useCalendarStore.getState().loadError).toBeNull();
     expect(useCalendarStore.getState().entries).toEqual([entry("a1")]);
   });
@@ -154,9 +137,7 @@ describe("useCalendarStore load 失败归一", () => {
       vi.fn().mockRejectedValue(new TypeError("network down")),
     );
 
-    await useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-16" });
+    await useCalendarStore.getState().load("2026-11-16");
 
     expect(useCalendarStore.getState().loadError).toBe("NETWORK");
     expect(useCalendarStore.getState().entries).toEqual([]);
@@ -198,17 +179,12 @@ describe("useCalendarStore resync 失败重试", () => {
         .mockResolvedValueOnce(responseOf(okBody([entry("a1")]))),
     );
 
-    await useCalendarStore
-      .getState()
-      .load({ view: "week", weekStart: "2026-11-16" });
+    await useCalendarStore.getState().load("2026-11-16");
     expect(useCalendarStore.getState().loadError).toBe("NETWORK");
 
     await useCalendarStore.getState().resync();
     expect(useCalendarStore.getState().loadError).toBeNull();
     expect(useCalendarStore.getState().entries).toEqual([entry("a1")]);
-    expect(useCalendarStore.getState().scope).toEqual({
-      view: "week",
-      weekStart: "2026-11-16",
-    });
+    expect(useCalendarStore.getState().scope).toBe("2026-11-16");
   });
 });

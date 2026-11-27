@@ -3,9 +3,8 @@
 /**
  * 周视图编辑卡组合层：Dialog 承载表单（EntryForm 双挂载点之一）——create
  * 模式日期锁定所在列、预填槽起点与默认终点、无删除；edit 模式预填原值 +
- * 删除（共享删除确认状态机 useEntryDelete，确认层无额外输入，落定后关闭
- * 弹窗）。两模式均不渲染所属日期控件（编辑卡仅文字+时间两字段，改期仍在
- * 月视图表单）。
+ * 删除（删除确认链 useEntryDeleteConfirm，确认层无额外输入，落定后关闭
+ * 弹窗）。两模式均不渲染所属日期控件（编辑卡仅文字+时间两字段）。
  */
 import { useTranslations } from "next-intl";
 
@@ -17,10 +16,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { useEntryDelete } from "../useEntryDelete";
-import type { WeekEntryDialogState } from "../useCalendarScreen";
+import type { CalendarEntryView } from "@/modules/calendar/queries";
+
+import { useEntryDeleteConfirm } from "../forms";
 import EntryDeleteConfirm from "./EntryDeleteConfirm";
 import EntryForm from "./EntryForm";
+
+/** 编辑卡开合态：create 模式带日期，双预填空串即不预填（右栏未安排卡新建），edit 模式带原条目。 */
+export type WeekEntryDialogState =
+  | {
+      mode: "create";
+      date: string;
+      prefillStart: string;
+      prefillEnd: string;
+    }
+  | { mode: "edit"; entry: CalendarEntryView };
 
 export type WeekEntryDialogProps = {
   state: WeekEntryDialogState | null;
@@ -39,7 +49,7 @@ export default function WeekEntryDialog({
     isDeleting,
     deleteError,
     confirmDelete,
-  } = useEntryDelete(onClose);
+  } = useEntryDeleteConfirm(onClose);
 
   if (state === null) {
     return null;

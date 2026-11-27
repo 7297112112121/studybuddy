@@ -7,6 +7,7 @@ import { formatUtcDate, MS_PER_DAY } from "@/common/date";
 import {
   TIME_HHMM_RE,
   isValidDateString,
+  parseYearMonth,
 } from "@/validation/calendar-validators";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
@@ -226,3 +227,31 @@ const WEEKDAY_KEYS: WeekdayKey[] = [
   "sat",
   "sun",
 ];
+
+/** 日期所在年月解析："YYYY-MM-DD" 经年月 wire 收口折算；输入恒为上游
+    已验合法日期，非法输入抛 RangeError（与 weekStartFor 同语义）。 */
+export function monthOf(date: string): { year: number; month: number } {
+  const parsed = parseYearMonth(date.slice(0, 7));
+  if (parsed === null) {
+    throw new RangeError(`invalid date: ${date}`);
+  }
+  return parsed;
+}
+
+/** 今日日程读域派生：今天当天已安排时间的条目（无时间条目归未安排卡，
+    两卡按有无开始时间互斥，交集恒空）。 */
+export function selectTodaysSchedule(
+  entries: CalendarEntryView[],
+  today: string,
+): CalendarEntryView[] {
+  return entries.filter(
+    (entry) => entry.date === today && entry.startTime !== null,
+  );
+}
+
+/** 未安排读域派生：无开始时间的条目，右栏未安排卡数据源。 */
+export function selectWeekUnscheduled(
+  entries: CalendarEntryView[],
+): CalendarEntryView[] {
+  return entries.filter((entry) => entry.startTime === null);
+}

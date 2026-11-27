@@ -3,7 +3,7 @@
 /**
  * 迷你月历（纯展示）：右栏周导航副件——今日章常亮、URL 所示周整周高亮、
  * 翻月与点日跳周全由 props 回调承接；不带条目摘要（侧栏宽度内容适配裁决，
- * 条目看周网格与今日日程）。显示月由页面级 useMiniMonth 持有。
+ * 条目看周网格与今日日程）。显示月由迷你月历卡组合层持有。
  */
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 
 import { cn } from "cn";
 
-import { buildMonthGrid } from "../dates";
+import { buildMonthGrid } from "../utils";
 
 type MiniMonthProps = {
   year: number;

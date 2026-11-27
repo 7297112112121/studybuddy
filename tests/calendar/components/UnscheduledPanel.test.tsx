@@ -1,8 +1,8 @@
 /**
  * UnscheduledPanel 组件测试。
  *
- * 覆盖:标题与空态、无时间条目全量渲染(周读域过滤派生已上移屏状态机
- * useCalendarScreen)、行首周几、新建回调、编辑回调带条目;删除确认层
+ * 覆盖:标题与空态、无时间条目全量渲染(周读域过滤派生在域 selector
+ * selectWeekUnscheduled)、行首周几、新建回调、编辑回调带条目;删除确认层
  * 复用面已在 TodayPanel 测试覆盖,此处不重复。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

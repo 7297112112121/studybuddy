@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import MiniMonth from "@/features/calendar/components/MiniMonth";
-import { buildWeekDays } from "@/features/calendar/dates";
+import { buildWeekDays } from "@/features/calendar/utils";
 import calendarMessages from "@/locales/zh-CN/calendar.json";
 
 afterEach(cleanup);

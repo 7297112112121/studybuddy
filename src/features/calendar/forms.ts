@@ -1,13 +1,13 @@
 /**
- * 条目表单屏状态机：五字段态、校验提交门（与统一接口复验同一 schema）与
- * 保存链（统一接口判别联合按码分支）。表单组合层（EntryForm）的唯一状态
- * 来源，WeekEntryDialog 唯一挂载点。
+ * 日历域写流程链：条目表单保存链（字段态、校验提交门与契约结果分支）与
+ * 删除确认链（确认层开合与删除契约结果分支）。校验提交门与统一接口复验
+ * 共用同一 zod schema；契约失败分支统一经客户端失败策略（useApiFailureHandler），
+ * fetch reject 由各链留痕归一为呈现文案，不向 React 边界抛裸异常。
  */
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
-import { useRouter } from "next/navigation";
 
-import { API_ERROR, toFieldErrors, type ApiResult } from "@/common/error";
-import { ROUTES } from "@/common/routes";
+import { useApiFailureHandler } from "@/common/api-result";
+import { toFieldErrors, type ApiResult } from "@/common/error";
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 import {
   calendarEntryInputSchema,
@@ -29,8 +29,10 @@ type UseEntryFormProps = {
   initialEndTime?: string;
 };
 
+/** 条目表单保存链：五字段态、字段错误即时消除、校验提交门（与统一接口
+    复验同一 schema）与保存契约分支。表单组合层（EntryForm）的唯一链挂载点。 */
 export function useEntryForm(props: UseEntryFormProps) {
-  const router = useRouter();
+  const handleApiFailure = useApiFailureHandler();
   const createEntry = useCalendarStore((s) => s.createEntry);
   const updateEntry = useCalendarStore((s) => s.updateEntry);
   const resync = useCalendarStore((s) => s.resync);
@@ -109,7 +111,8 @@ export function useEntryForm(props: UseEntryFormProps) {
       result = editing
         ? await updateEntry(entry.id, parsed.data)
         : await createEntry(parsed.data);
-    } catch {
+    } catch (error) {
+      console.error(error);
       setIsPending(false);
       setFormError(true);
       return;
@@ -124,23 +127,11 @@ export function useEntryForm(props: UseEntryFormProps) {
       props.onSaved?.();
       return;
     }
-    switch (result.error) {
-      case API_ERROR.INVALID_INPUT:
-        setFieldErrors(result.fieldErrors);
-        return;
-      case API_ERROR.UNAUTHORIZED:
-        router.replace(ROUTES.login);
-        return;
-      case API_ERROR.NOT_FOUND:
-        // 条目已被他端删除等场景：按当前读域静默重取（写后失效编排）
-        void resync();
-        return;
-      case API_ERROR.SAVE_FAILED:
-      case API_ERROR.LOAD_FAILED:
-        // 写端点不产出读兜底码，穷尽分支与保存失败同呈现
-        setFormError(true);
-        return;
-    }
+    await handleApiFailure(result, {
+      onInvalidInput: setFieldErrors,
+      onNotFound: () => void resync(),
+      onFailure: () => setFormError(true),
+    });
   }
 
   return {
@@ -159,5 +150,65 @@ export function useEntryForm(props: UseEntryFormProps) {
     onEndTimeChange,
     onDateChange,
     handleSubmit,
+  };
+}
+
+/** 删除确认链（条目行与周视图编辑卡共用，各自实例挂载）：确认层开合 +
+    删除契约分支。未找到（NOT_FOUND）按当前读域静默重取后落定；落定回调
+    供编辑卡删除成功后关闭弹窗。 */
+export function useEntryDeleteConfirm(onSettled?: () => void) {
+  const handleApiFailure = useApiFailureHandler();
+  const deleteEntry = useCalendarStore((s) => s.deleteEntry);
+  const resync = useCalendarStore((s) => s.resync);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
+
+  function openConfirm(): void {
+    setDeleteError(false);
+    setConfirmOpen(true);
+  }
+
+  function closeConfirm(): void {
+    setConfirmOpen(false);
+  }
+
+  async function confirmDelete(entryId: string): Promise<void> {
+    setIsDeleting(true);
+    // 网络/服务异常：fetch reject 与服务端删除失败同归一为删除失败文案，
+    // 不向 React 边界抛未捕获异常
+    let result: ApiResult;
+    try {
+      result = await deleteEntry(entryId);
+    } catch (error) {
+      console.error(error);
+      setIsDeleting(false);
+      setConfirmOpen(false);
+      setDeleteError(true);
+      return;
+    }
+    setIsDeleting(false);
+    setConfirmOpen(false);
+
+    if (result.ok) {
+      onSettled?.();
+      return;
+    }
+    await handleApiFailure(result, {
+      onNotFound: async () => {
+        await resync();
+        onSettled?.();
+      },
+      onFailure: () => setDeleteError(true),
+    });
+  }
+
+  return {
+    confirmOpen,
+    openConfirm,
+    closeConfirm,
+    isDeleting,
+    deleteError,
+    confirmDelete,
   };
 }

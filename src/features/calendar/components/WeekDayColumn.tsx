@@ -13,7 +13,7 @@ import {
   minutesToHhmm,
   timePrefix,
   type WeekDay,
-} from "../dates";
+} from "../utils";
 
 type WeekDayColumnProps = {
   day: WeekDay;
