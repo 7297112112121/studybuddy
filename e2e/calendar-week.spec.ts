@@ -1,12 +1,4 @@
-/**
- * /calendar 周视图全流程 E2E(AXY-23 Task 10,proposal R1–R6、R8、R10、R11;
- * 演示态 1–5)。
- *
- * 对生产构建跑(webServer 自动 build && start);每次注册独立账号
- * (registerViaUI),用例间无状态耦合。日期取相对值(测试机=服务器时区,
- * AXY-22 design 开放问题 #2 单时区假设)。R10 断言口径:URL 全程停留
- * /calendar 路径,searchParams 变化不算离开。
- */
+
 import { expect, test, type Page } from "@playwright/test";
 
 import { E2E_PASSWORD, registerViaUI, uniqueUsername } from "./helpers/auth";

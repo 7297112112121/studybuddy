@@ -1,11 +1,4 @@
-/**
- * /calendar 全流程 E2E（AXY-22 Task 8，proposal R1–R6、R8–R12；演示态 1–5）。
- *
- * 对生产构建跑（webServer 自动 build && start）；每次注册独立账号
- * （registerViaUI 含节流与自动登录），用例间无状态耦合。日期取相对值
- * （测试机=服务器时区，design 开放问题 #2 单时区假设），不硬编码
- * proposal 示例日。定位器用字段 id（#calendar-entry-*）——沿 auth 先例。
- */
+
 import { expect, test, type Page } from "@playwright/test";
 
 import {
