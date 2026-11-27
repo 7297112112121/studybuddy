@@ -10,7 +10,7 @@ import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   type AuthFormErrors,
-} from "@/validation/auth-validators";
+} from "@/validation/auth-request";
 import {
   accountRuleStates,
   confirmPasswordRuleStates,
@@ -23,7 +23,7 @@ import {
 type RegisterFormProps = {
   /** 表单值：状态机自有形状，跨视图保留由组合层持有。 */
   values: AuthFormValues;
-  /** 字段校验错误：键归 validators，红框判定在本表单内派生。 */
+  /** 字段校验错误：键归请求契约(auth-request)，红框判定在本表单内派生。 */
   errors: AuthFormErrors;
   /** 顶部错误键：提交失败的状态机归一产物，null 表示无。 */
   errorKey: AuthTopError | null;

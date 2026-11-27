@@ -8,7 +8,7 @@ import type { z } from "zod";
 import { requestContractResult } from "@/api/contract";
 import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
 import type { ApiErrorCode, ApiResult } from "@/common/error";
-import { registerFormSchema } from "@/validation/auth-validators";
+import { registerFormSchema } from "@/validation/auth-request";
 
 /** 注册端点契约结果:公共技术码之外含认证域码(账户名已存在)。 */
 export type RegisterApiResult = ApiResult<

@@ -25,7 +25,7 @@ import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_RE,
-} from "@/validation/auth-validators";
+} from "@/validation/auth-request";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -40,7 +40,7 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    // 密码长度界限引用 validators 单一来源，禁止复写字面值
+    // 密码长度界限引用请求契约(auth-request)单一来源，禁止复写字面值
     minPasswordLength: PASSWORD_MIN_LENGTH,
     maxPasswordLength: PASSWORD_MAX_LENGTH,
   },

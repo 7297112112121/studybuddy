@@ -2,7 +2,7 @@
 
 /**
  * 登录/注册屏的表单状态机与登录错误文案映射。提交链携带凭据，日志与失败文案不得泄露凭据细节。
- * 提交门校验用校验契约层的 schema（src/validation/auth-validators.ts），
+ * 提交门校验用校验契约层的 schema（src/validation/auth-request.ts），
  * 本文件只持规则浮层实时拆解与表单状态编排。
  */
 import { useState } from "react";
@@ -21,7 +21,7 @@ import {
   USERNAME_MIN_LENGTH,
   type AuthFormErrors,
   type AuthMessageKey,
-} from "@/validation/auth-validators";
+} from "@/validation/auth-request";
 import { registerAccount } from "@/api/auth";
 import { useApiFailureHandler } from "@/api/contract";
 import { toFieldErrors } from "@/common/error";
@@ -42,7 +42,7 @@ export type AuthFormValues = {
 export type AuthTopError = SignInErrorKey | "auth.error.usernameRegistered";
 
 /**
- * 字段规则清单项（AXY-8 UI 优化：聚焦浮层实时侦测，自 validators.ts 迁入）。
+ * 字段规则清单项（AXY-8 UI 优化：聚焦浮层实时侦测，自请求契约 auth-request.ts 迁入）。
  * label 为页面静态文案（与 AccountField 的 Label/hint 同约定，不入 auth.json）。
  */
 export type FieldRuleState = {
@@ -126,7 +126,7 @@ export function useClientScreen(initialView: AuthView) {
 
   /**
    * 渲染文案：去掉 "auth." 命名空间前缀后交给 useTranslations。
-   * 规则界限经插值注入，文案模板的数字与 validators 常量单一来源衔接。
+   * 规则界限经插值注入，文案模板的数字与请求契约常量单一来源衔接。
    */
   function errorText(key: AuthMessageKey | AuthTopError): string {
     return t(key.slice("auth.".length), {

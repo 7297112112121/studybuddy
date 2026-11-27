@@ -25,7 +25,7 @@ export function isValidDateString(value: string): value is string {
 export function isValidWeekStart(value: string): value is string {
   if (!isValidDateString(value)) return false;
   const [y, m, d] = value.split("-").map(Number);
-  // 该日星期(周日为 0),周一为 1;不经 weekStartFor 判定以免 validators↔service 成环
+  // 该日星期(周日为 0),周一为 1;不经 weekStartFor 判定以免请求契约↔service 成环
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 1;
 }
 

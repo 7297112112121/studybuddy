@@ -5,7 +5,7 @@
  */
 import { respondWith, withSessionlessApiContract } from "@/app/api/contract";
 import { registerWithUsername } from "@/auth/service";
-import { registerFormSchema } from "@/validation/auth-validators";
+import { registerFormSchema } from "@/validation/auth-request";
 
 export async function POST(request: Request): Promise<Response> {
   let body: unknown = null;

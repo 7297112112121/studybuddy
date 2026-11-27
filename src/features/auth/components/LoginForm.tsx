@@ -4,7 +4,7 @@ import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";
 import SubmitButton from "./SubmitButton";
 import ViewSwitchLink from "./ViewSwitchLink";
-import type { AuthFormErrors } from "@/validation/auth-validators";
+import type { AuthFormErrors } from "@/validation/auth-request";
 import type {
   AuthFormValues,
   AuthTopError,
@@ -16,7 +16,7 @@ type LoginFormValues = Pick<AuthFormValues, "account" | "password">;
 type LoginFormProps = {
   /** 表单值：状态机自有形状，跨视图保留由组合层持有。 */
   values: LoginFormValues;
-  /** 字段校验错误：键归 validators，红框判定在本表单内派生。 */
+  /** 字段校验错误：键归请求契约(auth-request)，红框判定在本表单内派生。 */
   errors: AuthFormErrors;
   /** 提交失败顶部错误键：凭据不匹配时密码框报红，null 表示无。 */
   errorKey: AuthTopError | null;

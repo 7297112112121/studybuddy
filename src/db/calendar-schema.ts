@@ -1,5 +1,5 @@
 /**
- * 文件作用:日历域的 drizzle 表定义;入参与载荷的 zod 契约在 validators.ts(校验单一真源)。
+ * 文件作用:日历域的 drizzle 表定义;入参契约在 calendar-request.ts,响应契约在 calendar-response.ts(校验单一真源)。
  */
 import {
   date,
