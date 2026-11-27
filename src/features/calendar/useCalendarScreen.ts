@@ -11,7 +11,12 @@ import { useCalendarStore } from "@/stores/calendar";
 
 import type { CalendarEntryView } from "@/modules/calendar/queries";
 
-import { addWeeks, slotPrefillStart, weekStartFor } from "./dates";
+import {
+  addWeeks,
+  slotPrefillEnd,
+  slotPrefillStart,
+  weekStartFor,
+} from "./dates";
 
 /** searchParams wire 形状（与 /calendar?week= 一致）。 */
 export type CalendarPageParams = { week?: string };
@@ -23,9 +28,14 @@ export type CalendarNavLinks = {
   nextHref: string;
 };
 
-/** 周编辑卡开合态：create 模式带日期，槽起点预填空串即不预填（右栏未安排卡新建），edit 模式带原条目。 */
+/** 周编辑卡开合态：create 模式带日期，双预填空串即不预填（右栏未安排卡新建），edit 模式带原条目。 */
 export type WeekEntryDialogState =
-  | { mode: "create"; date: string; prefillStart: string }
+  | {
+      mode: "create";
+      date: string;
+      prefillStart: string;
+      prefillEnd: string;
+    }
   | { mode: "edit"; entry: CalendarEntryView };
 
 /** 数字 → "M"/"MM" 零填充。 */
@@ -106,10 +116,16 @@ export function useCalendarScreen(params: CalendarPageParams) {
         mode: "create",
         date,
         prefillStart: slotPrefillStart(slotMinutes),
+        prefillEnd: slotPrefillEnd(slotMinutes),
       });
     },
     openCreateUnscheduled: (date: string) => {
-      setDialogState({ mode: "create", date, prefillStart: "" });
+      setDialogState({
+        mode: "create",
+        date,
+        prefillStart: "",
+        prefillEnd: "",
+      });
     },
     openEdit: (entry: CalendarEntryView) => {
       setDialogState({ mode: "edit", entry });

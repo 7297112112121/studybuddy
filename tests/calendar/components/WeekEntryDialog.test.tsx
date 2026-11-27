@@ -1,7 +1,7 @@
 /**
  * WeekEntryDialog 组件测试(AXY-23 tasks.md Task 7「失败测试」行)。
  *
- * 覆盖:create 预填(prefillStart→开始时间、结束留空、日期锁定)、edit 预填
+ * 覆盖:create 预填(prefillStart→开始时间、prefillEnd→结束时间、日期锁定)、edit 预填
  * 原值、保存成功调 action 并 onClose、删除 AlertDialog 二次确认(确认调
  * deleteEntryAction / 取消不调)。action 经 vi.mock 桩接;文案用真实 calendar.json。
  */
@@ -62,6 +62,7 @@ function renderDialog(props: Partial<WeekEntryDialogProps>) {
             mode: "create",
             date: "2026-11-18",
             prefillStart: "14:30",
+            prefillEnd: "15:30",
           }
         }
         onClose={props.onClose ?? vi.fn()}
@@ -71,7 +72,7 @@ function renderDialog(props: Partial<WeekEntryDialogProps>) {
 }
 
 describe("WeekEntryDialog(AXY-23 Task 7)", () => {
-  it("create 模式:开始时间预填 prefillStart、结束留空、日期锁定(日期控件不渲染)", () => {
+  it("create 模式:开始时间预填 prefillStart、结束时间预填 prefillEnd、日期锁定(日期控件不渲染)", () => {
     renderDialog({});
 
     expect((screen.getByLabelText("事项") as HTMLInputElement).value).toBe("");
@@ -79,7 +80,7 @@ describe("WeekEntryDialog(AXY-23 Task 7)", () => {
       "14:30",
     );
     expect((screen.getByLabelText("结束时间") as HTMLInputElement).value).toBe(
-      "",
+      "15:30",
     );
     expect(screen.queryByLabelText("所属日期")).toBeNull();
   });
@@ -114,7 +115,7 @@ describe("WeekEntryDialog(AXY-23 Task 7)", () => {
       title: "组会",
       content: null,
       startTime: "14:30",
-      endTime: null,
+      endTime: "15:30",
     });
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });

@@ -43,7 +43,7 @@
     "cancel": "取消"
   },
   "unscheduled": {
-    "title": "未安排时间",
+    "title": "本周未安排时间事项",
     "create": "新建",
     "empty": "本周没有未安排时间的事项"
   },

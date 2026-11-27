@@ -100,7 +100,7 @@ test.describe("AXY-23 日程周视图", () => {
     await context.close();
   });
 
-  test("R4 演示态 2:点槽创建 → 开始时间预填 14:30,保存后色块出现", async ({
+  test("R4 演示态 2:点槽创建 → 开始预填 14:30、终点默认 +1 小时,保存后色块出现", async ({
     page,
   }) => {
     await registerAndOpenWeek(page);
@@ -113,7 +113,7 @@ test.describe("AXY-23 日程周视图", () => {
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("新建条目")).toBeVisible();
     await expect(dialog.locator("#calendar-entry-start")).toHaveValue("14:30");
-    await expect(dialog.locator("#calendar-entry-end")).toHaveValue("");
+    await expect(dialog.locator("#calendar-entry-end")).toHaveValue("15:30");
 
     await dialog.locator("#calendar-entry-title").fill("组会");
     await dialog.getByRole("button", { name: "添加" }).click();

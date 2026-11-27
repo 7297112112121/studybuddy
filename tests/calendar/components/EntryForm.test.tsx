@@ -108,6 +108,16 @@ describe("EntryForm（tests/calendar/components/EntryForm）", () => {
     expect(end.disabled).toBe(false);
   });
 
+  it("③' 槽位预填:initialStartTime/initialEndTime 双初值(起点+默认 1 小时),结束控件可输", () => {
+    renderForm({ initialStartTime: "15:00", initialEndTime: "16:00" });
+    expect((screen.getByLabelText("开始时间") as HTMLInputElement).value).toBe(
+      "15:00",
+    );
+    const end = screen.getByLabelText("结束时间") as HTMLInputElement;
+    expect(end.value).toBe("16:00");
+    expect(end.disabled).toBe(false);
+  });
+
   it("④ 开始 14:00 结束空提交 → action 以时间点形态被调（endTime null）", async () => {
     createEntryActionMock.mockResolvedValue({ ok: true });
     renderForm();

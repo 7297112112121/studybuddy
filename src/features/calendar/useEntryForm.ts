@@ -25,6 +25,8 @@ type UseEntryFormProps = {
   onSaved?: () => void;
   /** 新建模式开始时间初值（周视图点击槽预填槽起点）。 */
   initialStartTime?: string;
+  /** 新建模式结束时间初值（周视图点击槽预填起点 + 默认 1 小时）。 */
+  initialEndTime?: string;
 };
 
 export function useEntryForm(props: UseEntryFormProps) {
@@ -38,7 +40,9 @@ export function useEntryForm(props: UseEntryFormProps) {
   const [startTime, setStartTime] = useState(
     props.entry?.startTime ?? props.initialStartTime ?? "",
   );
-  const [endTime, setEndTime] = useState(props.entry?.endTime ?? "");
+  const [endTime, setEndTime] = useState(
+    props.entry?.endTime ?? props.initialEndTime ?? "",
+  );
   const [entryDate, setEntryDate] = useState(props.entry?.date ?? props.date);
   const [fieldErrors, setFieldErrors] = useState<CalendarFieldErrors>({});
   const [formError, setFormError] = useState(false);

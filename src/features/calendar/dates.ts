@@ -63,6 +63,17 @@ export function slotPrefillStart(minutes: number): string {
   return minutesToHhmm(Math.floor(minutes / SLOT_MINUTES) * SLOT_MINUTES);
 }
 
+/** 周视图槽位新建默认时长（分钟）——预填终点 = 起点 + 此值（业务规则：默认 1 小时）。 */
+export const CREATE_DEFAULT_DURATION_MINUTES = 60;
+
+/** 槽起点 + 默认时长的预填终点；跨过 24:00 的槽（23:00/23:30）返回空串，回退「有起点无终点」形态。 */
+export function slotPrefillEnd(minutes: number): string {
+  const endMinutes =
+    Math.floor(minutes / SLOT_MINUTES) * SLOT_MINUTES +
+    CREATE_DEFAULT_DURATION_MINUTES;
+  return endMinutes < 24 * 60 ? minutesToHhmm(endMinutes) : "";
+}
+
 /** 条目时间前缀：双时间「HH:MM–HH:MM」、仅开始「HH:MM」、无时间 null。 */
 export function timePrefix(entry: CalendarEntryView): string | null {
   if (entry.startTime === null) return null;

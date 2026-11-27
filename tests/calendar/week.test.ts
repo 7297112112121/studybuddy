@@ -124,6 +124,7 @@ describe("isValidWeekStart:合法日期且确为周一", () => {
 
 import {
   layoutDayBlocks,
+  slotPrefillEnd,
   slotPrefillStart,
   timeToMinutes,
   type WeekBlock,
@@ -168,6 +169,19 @@ describe("slotPrefillStart:点击分钟 → 30 分钟槽起点(F-05 向下取整
 
   it("整点恒等:07:00(420 分) → '07:00'", () => {
     expect(slotPrefillStart(420)).toBe("07:00");
+  });
+});
+
+describe("slotPrefillEnd:槽起点 + 默认 1 小时的预填终点", () => {
+  it("14:20 → '15:00'; 14:30 → '15:30'; 22:30 → '23:30'", () => {
+    expect(slotPrefillEnd(timeToMinutes("14:20"))).toBe("15:00");
+    expect(slotPrefillEnd(timeToMinutes("14:30"))).toBe("15:30");
+    expect(slotPrefillEnd(timeToMinutes("22:30"))).toBe("23:30");
+  });
+
+  it("跨过 24:00 的槽 → 空串(回退有起点无终点形态)", () => {
+    expect(slotPrefillEnd(timeToMinutes("23:00"))).toBe("");
+    expect(slotPrefillEnd(1439)).toBe("");
   });
 });
 

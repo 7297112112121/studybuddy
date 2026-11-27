@@ -26,6 +26,8 @@ type EntryFormProps = {
   showDateField?: boolean;
   /** 新建模式开始时间初值（周视图点击槽预填槽起点）。 */
   initialStartTime?: string;
+  /** 新建模式结束时间初值（周视图点击槽预填起点 + 默认 1 小时）。 */
+  initialEndTime?: string;
 };
 
 export default function EntryForm({
@@ -34,9 +36,16 @@ export default function EntryForm({
   onSaved,
   showDateField = true,
   initialStartTime = "",
+  initialEndTime = "",
 }: EntryFormProps) {
   const t = useTranslations("calendar");
-  const form = useEntryForm({ date, entry, onSaved, initialStartTime });
+  const form = useEntryForm({
+    date,
+    entry,
+    onSaved,
+    initialStartTime,
+    initialEndTime,
+  });
 
   return (
     <form

@@ -2,7 +2,7 @@
 
 /**
  * 周视图编辑卡组合层：Dialog 承载表单（EntryForm 双挂载点之一）——create
- * 模式日期锁定所在列、开始时间预填槽起点、无删除；edit 模式预填原值 +
+ * 模式日期锁定所在列、预填槽起点与默认终点、无删除；edit 模式预填原值 +
  * 删除（共享删除确认状态机 useEntryDelete，确认层无额外输入，落定后关闭
  * 弹窗）。两模式均不渲染所属日期控件（编辑卡仅文字+时间两字段，改期仍在
  * 月视图表单）。
@@ -62,6 +62,7 @@ export default function WeekEntryDialog({
               date={state.date}
               showDateField={false}
               initialStartTime={state.prefillStart}
+              initialEndTime={state.prefillEnd}
               onSaved={onClose}
             />
           )}
