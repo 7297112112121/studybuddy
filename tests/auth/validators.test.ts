@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   loginFormSchema,
   registerFormSchema,
-} from "../../src/app/api/auth/request";
+} from "@/app/api/auth/request";
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -12,7 +12,7 @@ import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_RE,
-} from "../../src/validation/auth";
+} from "@/validation/auth";
 
 /** 取 safeParse 失败 issues 的快捷断言（zod message 即 i18n key）。 */
 function issuesOf(schema: z.ZodType, input: unknown) {

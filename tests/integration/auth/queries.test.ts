@@ -23,9 +23,10 @@ vi.mock("next/headers", () => ({
   headers: async () => headerStore.current,
 }));
 
-import { signInAndGetCookie, uniqueUsername } from "../helpers";
-import { registerWithUsername } from "../../../src/auth/service";
-import { getCurrentSession } from "../../../src/auth/queries";
+import { signInAndGetCookie } from "../helpers";
+import { uniqueUsername } from "../../support/username";
+import { registerWithUsername } from "@/auth/service";
+import { getCurrentSession } from "@/auth/queries";
 
 const PASSWORD = "abcdefg1"; // 与 service.test.ts 一致（PASSWORD_RE：字母+数字，8..20）
 

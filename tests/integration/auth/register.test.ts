@@ -15,8 +15,8 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/common/db";
 import { account, user } from "@/db/schema";
-import { uniqueUsername } from "../helpers";
-import { POST } from "../../../src/app/api/auth/register/route";
+import { uniqueUsername } from "../../support/username";
+import { POST } from "@/app/api/auth/register/route";
 
 const PASSWORD = "abcdefg1"; // 与 service.test.ts 一致（PASSWORD_RE：字母+数字，8..20）
 

@@ -1,6 +1,7 @@
 /**
- * 集成测试共享 helper（Task 5 起步，Task 6 增端点辅助，Task 7 删手机号
- * 造号 helper——手机号换装账户名后最后一个消费者消失）。
+ * 集成测试共享 helper（Task 5 起步，Task 6 增端点辅助）。造号唯一实现
+ * 已上收 tests/support/username（测试纪律:测试共享件唯一实现），本文件
+ * 只留认证直调基座。
  */
 
 import { auth } from "@/auth/better-auth.server";
@@ -61,20 +62,3 @@ export async function signInAndGetCookie(
   return cookie;
 }
 
-let uniqueUsernameSeq = 0;
-
-/**
- * 每次调用返回不重复且 F-01 合法（/^[一-龥A-Za-z0-9_]{1,16}$/）的账户名
- * （14 位 ≤ 16）。
- *
- * user_username 唯一索引跨测试运行持久化（compose 卷）——时间戳主干（36
- * 进制）保证跨运行不重复，模内计数器保证同毫秒内连续调用不重复，随机尾
- * 进一步防并行 worker 同毫秒同计数器碰撞，从源头防唯一冲突串扰。全字符
- * 落在 [0-9a-z]，uppercase() 后仍是 F-01 合法变体（大小写测试用）。
- */
-export function uniqueUsername(): string {
-  uniqueUsernameSeq = (uniqueUsernameSeq + 1) % 10;
-  const stem = Date.now().toString(36).slice(-8).padStart(8, "0");
-  const tail = crypto.randomUUID().replace(/-/g, "").slice(0, 4);
-  return `u${stem}${tail}${uniqueUsernameSeq}`;
-}

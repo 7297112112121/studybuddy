@@ -14,8 +14,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import AuthCard from "../../../src/features/auth/components/AuthCard";
-import authMessages from "../../../src/locales/zh-CN/auth.json";
+import AuthCard from "@/features/auth/components/AuthCard";
+import authMessages from "@/locales/zh-CN/auth.json";
 
 const routerReplace = vi.hoisted(() => vi.fn());
 

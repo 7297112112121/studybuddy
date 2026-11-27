@@ -25,8 +25,9 @@ import { db } from "@/common/db";
 import { session, user } from "@/db/schema";
 import { auth } from "@/auth/better-auth.server";
 import { redis } from "@/common/redis";
-import { directPost, signInAndGetCookie, uniqueUsername } from "../helpers";
-import { registerWithUsername } from "../../../src/auth/service";
+import { directPost, signInAndGetCookie } from "../helpers";
+import { uniqueUsername } from "../../support/username";
+import { registerWithUsername } from "@/auth/service";
 
 /** 注册测试账号并回读 user id(注册成功无载荷,userId 由库内取)。 */
 async function registerTestUser(input: {

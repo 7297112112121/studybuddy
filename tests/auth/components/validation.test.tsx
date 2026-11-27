@@ -14,8 +14,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import AuthCard from "../../../src/features/auth/components/AuthCard";
-import authMessages from "../../../src/locales/zh-CN/auth.json";
+import AuthCard from "@/features/auth/components/AuthCard";
+import authMessages from "@/locales/zh-CN/auth.json";
 
 const routerReplace = vi.hoisted(() => vi.fn());
 // authClient.signIn.username 经 hoisted 桩注入拦截，默认 resolve
@@ -30,7 +30,7 @@ const fetchMock = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: routerReplace }),
 }));
-vi.mock("../../../src/stores/auth-client", () => ({
+vi.mock("@/stores/auth-client", () => ({
   authClient: {
     signIn: { username: signInMock },
     signOut: vi.fn(),

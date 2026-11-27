@@ -22,8 +22,8 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import AuthCard from "../../../src/features/auth/components/AuthCard";
-import authMessages from "../../../src/locales/zh-CN/auth.json";
+import AuthCard from "@/features/auth/components/AuthCard";
+import authMessages from "@/locales/zh-CN/auth.json";
 import type { RegisterApiResult } from "@/api/auth";
 
 const routerReplace = vi.hoisted(() => vi.fn());
@@ -36,7 +36,7 @@ const fetchMock = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: routerReplace }),
 }));
-vi.mock("../../../src/stores/auth-client", () => ({
+vi.mock("@/stores/auth-client", () => ({
   authClient: {
     signIn: { username: signInMock },
     signOut: vi.fn(),

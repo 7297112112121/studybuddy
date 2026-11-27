@@ -7,12 +7,12 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { loginFormSchema } from "../../src/app/api/auth/request";
+import { loginFormSchema } from "@/app/api/auth/request";
 import {
   accountRuleStates,
   confirmPasswordRuleStates,
   passwordRuleStates,
-} from "../../src/features/auth/utils";
+} from "@/features/auth/utils";
 
 /** 账户名规则全过 ⇔ 登录 schema 账户名字段通过（密码侧用合法固定值隔离）。 */
 function accountSchemaOk(account: string): boolean {

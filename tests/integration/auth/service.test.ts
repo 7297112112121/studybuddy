@@ -14,11 +14,11 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/common/db";
 import { account, user } from "@/db/schema";
-import { uniqueUsername } from "../helpers";
+import { uniqueUsername } from "../../support/username";
 import {
   registerWithUsername,
   usernameToPlaceholderEmail,
-} from "../../../src/auth/service";
+} from "@/auth/service";
 
 afterAll(async () => {
   await db.$client.end();
