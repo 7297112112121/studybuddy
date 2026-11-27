@@ -176,10 +176,10 @@ jobs:
       - name: Unit tests (Vitest)
         run: npm run test
 
-      # P2 测试层：Vitest 集成测试（真实 PG/Redis services），
+      # P2 测试层：Vitest 接口测试（端点直调+落库断言，真实 PG/Redis services），
       # 迁移由其 globalSetup 自理（drizzle migrator 应用 src/db/migrations）
-      - name: Integration tests (Vitest)
-        run: npm run test:integration
+      - name: Endpoint tests (Vitest)
+        run: npm run test:endpoint
 
       # E2E 需要 Chromium 二进制，runner 预装环境不含 Playwright 浏览器，需单独安装。
       # --with-deps 在 runner 上缺的仅字体/xfonts 包（~22MB），但 runner 到 ubuntu

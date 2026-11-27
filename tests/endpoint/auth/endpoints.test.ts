@@ -1,5 +1,5 @@
 /**
- * Better Auth 端点集成测试（Task 7，design「Review Focus #1/#2」）。
+ * Better Auth 端点接口测试（design「Review Focus #1/#2」）。
  *
  * 覆盖：
  * 1. R7 三情形同文案（Review Focus #1）：/sign-in/username 对
@@ -12,11 +12,13 @@
  *    直连 /update-user 被拒（4xx），库内 username 不变（负空间无改名语义）；
  * 4. 登录成功双写（B5）：PG session 行 + Redis（secondaryStorage）会话键；
  * 5. 退出失效（R11 服务端半边）：sign-out 后旧 cookie get-session 无用户、
- *    Redis 会话键与 PG session 行均删。
+ *    Redis 会话键与 PG session 行均删；
+ * 6. 会话链路正读（接替 queries.test.ts 直测面，形状映射归单测 toAuthSession）：
+ *    登录后 get-session 返回会话用户。
  *
  * 各用例独立 uniqueUsername() 造号。限流说明：内置 specialRule
  * （/sign-in 前缀 3 次/10 秒）默认仅 production 启用
- * （rateLimit.enabled ?? isProduction，vitest 环境为 test），集成测试不触发。
+ * （rateLimit.enabled ?? isProduction，vitest 环境为 test），接口测试不触发。
  */
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
@@ -214,5 +216,24 @@ describe("退出失效（R11 服务端半边）", () => {
       .from(session)
       .where(eq(session.userId, userId));
     expect(rowsAfter).toHaveLength(0);
+  });
+});
+
+describe("会话链路正读（queries.test.ts 直测面并轨，形状映射归单测 toAuthSession）", () => {
+  it("登录后 get-session → user.username=账户名，expiresAt 晚于当前", async () => {
+    const username = uniqueUsername();
+    await registerTestUser({ username, password: PASSWORD });
+    const cookie = await signInAndGetCookie(username, PASSWORD);
+
+    const sessionRes = await directGetSession(cookie);
+    expect(sessionRes.status).toBe(200);
+    const body = (await sessionRes.json()) as {
+      user: { username: string | null };
+      session: { expiresAt: string };
+    };
+    expect(body.user?.username).toBe(username);
+    expect(new Date(body.session.expiresAt).getTime()).toBeGreaterThan(
+      Date.now(),
+    );
   });
 });

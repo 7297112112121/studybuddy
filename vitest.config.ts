@@ -13,8 +13,9 @@ import tsconfigPaths from "vite-tsconfig-paths";
  *   免去为全局注入单独维护 ESLint 配置；
  * - include 锁定 tests/**：Playwright 的 e2e/*.spec.ts 同样命中 vitest 默认
  *   include 模式，不显式收窄会把 E2E 文件误当单测跑；
- * - exclude 掉 tests/integration/**：集成测试走 vitest.config.integration.ts
- *   分轨（真实 PG，Task 5）——CI 无数据库服务上下文，`npm test` 不得触达。
+ * - exclude 掉 tests/endpoint/** 与 tests/migrations/**：接口测试走
+ *   vitest.config.endpoint.ts 分轨（端点直调 + 落库断言，真实 PG）——
+ *   CI 无数据库服务上下文，`npm test` 不得触达。
  */
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
@@ -49,6 +50,6 @@ export default defineConfig({
       },
     },
     include: ["tests/**/*.test.{ts,tsx}"],
-    exclude: ["tests/integration/**", "**/node_modules/**"],
+    exclude: ["tests/endpoint/**", "tests/migrations/**", "**/node_modules/**"],
   },
 });

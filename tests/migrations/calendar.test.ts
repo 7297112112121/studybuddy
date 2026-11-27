@@ -16,7 +16,7 @@ afterAll(async () => {
   await db.$client.end();
 });
 
-describe("calendar_entry 迁移落库（tests/integration/calendar/migration）", () => {
+describe("calendar_entry 迁移落库（tests/migrations/calendar）", () => {
   it("9 列名集恰等，关键列类型与可空性正确", async () => {
     const rows = await db.execute<{
       column_name: string;

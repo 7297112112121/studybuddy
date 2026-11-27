@@ -10,10 +10,15 @@ export type AuthSession = {
   session: { id: string; userId: string; expiresAt: Date };
 };
 
-/** 未登录返回 null;查询异常向上抛;本函数不记录任何请求内容(R13 纪律) */
-export async function getCurrentSession(): Promise<AuthSession | null> {
-  const headersList = await headers();
-  const raw = await auth.api.getSession({ headers: headersList });
+/** Better Auth getSession 原始载荷类型(toAuthSession 入参与单测构造共用)。 */
+type RawSession = Awaited<ReturnType<typeof auth.api.getSession>>;
+
+/**
+ * 纯映射:原始载荷 → AuthSession 的字段拣选与归一,null 透传。
+ * username 可空归一空串(Better Auth 类型标可空,注册路径恒有值);
+ * expiresAt 归一 Date 实例。
+ */
+export function toAuthSession(raw: RawSession): AuthSession | null {
   if (!raw) {
     return null;
   }
@@ -21,7 +26,6 @@ export async function getCurrentSession(): Promise<AuthSession | null> {
     user: {
       id: raw.user.id,
       name: raw.user.name,
-      // Better Auth 的 user.username 类型标注可空,注册路径恒有值
       username: raw.user.username ?? "",
     },
     session: {
@@ -30,4 +34,10 @@ export async function getCurrentSession(): Promise<AuthSession | null> {
       expiresAt: new Date(raw.session.expiresAt),
     },
   };
+}
+
+/** 未登录返回 null;查询异常向上抛;本函数不记录任何请求 */
+export async function getCurrentSession(): Promise<AuthSession | null> {
+  const headersList = await headers();
+  return toAuthSession(await auth.api.getSession({ headers: headersList }));
 }

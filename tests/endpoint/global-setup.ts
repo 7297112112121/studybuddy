@@ -1,8 +1,8 @@
 /**
- * 集成测试 globalSetup：以 drizzle migrator 应用 src/db/migrations（Task 5）。
+ * 接口测试 globalSetup：以 drizzle migrator 应用 src/db/migrations。
  *
  * 说明：`test.env` 不作用于 globalSetup（其在 env 注入前执行），故此处
- * DATABASE_URL 的兜底值与 vitest.config.integration.ts 保持一致。
+ * DATABASE_URL 的兜底值与 vitest.config.endpoint.ts 保持一致。
  * migrate 路径以本文件位置锚定（相对 cwd 易受启动目录影响）。
  */
 import path from "node:path";

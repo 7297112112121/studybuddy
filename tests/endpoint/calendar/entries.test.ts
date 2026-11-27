@@ -1,10 +1,12 @@
 /**
- * /api/calendar/entries 端点集成测试:直接调用 route handler
+ * /api/calendar/entries 端点接口测试:直接调用 route handler
  * (Request → Response),真实 Postgres(compose.dev.yaml)。
- * getCurrentSession 依赖请求上下文,集成环境以 vi.mock 桩接
- * (返回可配置会话或 null)。断言以 HTTP 状态码 + body 判别。
+ * getCurrentSession 依赖请求上下文,以 vi.mock 桩接(返回可配置会话或 null)。
+ * 断言以 HTTP 状态码 + body 判别,落库/读回断言复用 queries 作 oracle;
+ * service/queries 层直调用例已并入本文件,覆盖无差。
  */
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 const { getCurrentSessionMock } = vi.hoisted(() => ({
   getCurrentSessionMock: vi.fn(),
@@ -20,6 +22,7 @@ import { API_ERROR, type ApiResult } from "@/common/error";
 import { DELETE, PUT } from "@/app/api/calendar/entries/[id]/route";
 import { GET, POST } from "@/app/api/calendar/entries/route";
 import { listMonthEntries } from "@/services/calendar/queries";
+import { calendarEntryViewSchema } from "@/app/api/calendar/response";
 
 const BASE = "http://localhost/api/calendar/entries";
 
@@ -88,7 +91,7 @@ function del(id: string): Promise<Response> {
   });
 }
 
-describe("/api/calendar/entries（tests/integration/calendar/entries）", () => {
+describe("/api/calendar/entries（tests/endpoint/calendar/entries）", () => {
   it("① 无会话：GET/POST/PUT/DELETE 各归一 UNAUTHORIZED（401）", async () => {
     getCurrentSessionMock.mockResolvedValue(null);
     const getResponse = await GET(new Request(`${BASE}?week=2026-11-16`));
@@ -231,5 +234,151 @@ describe("/api/calendar/entries（tests/integration/calendar/entries）", () => 
   it("⑦ SAVE_FAILED 分支存在性（类型面，运行时注入不强制造库故障）", () => {
     const saveFailed: ApiResult = { ok: false, error: API_ERROR.SAVE_FAILED };
     expect(saveFailed).toEqual({ ok: false, error: "SAVE_FAILED" });
+  });
+
+  it("⑧ R4 重叠并存：同账号同日两时段重叠条目均写入成功", async () => {
+    const userId = await makeUser("overlap");
+    signIn(userId);
+
+    expect(
+      (await postJson(input("2026-11-17", "高数复习", "14:00", "15:30")))
+        .status,
+    ).toBe(200);
+    expect(
+      (await postJson(input("2026-11-17", "英语听力", "14:30", "15:00")))
+        .status,
+    ).toBe(200);
+
+    expect(await listMonthEntries(userId, 2026, 11)).toHaveLength(2);
+  });
+
+  it("⑨ R6/R7 月读隔离：甲乙各建一条，GET 月读各仅见己", async () => {
+    const [userA, userB] = await Promise.all([
+      makeUser("iso-a"),
+      makeUser("iso-b"),
+    ]);
+    signIn(userA);
+    await postJson(input("2026-11-17", "甲的条目", null, null));
+    signIn(userB);
+    await postJson(input("2026-11-17", "乙的条目", null, null));
+
+    signIn(userA);
+    const bodyA = (await (
+      await GET(new Request(`${BASE}?view=month&month=2026-11`))
+    ).json()) as { ok: boolean; data: { title: string }[] };
+    expect(bodyA.data.map((r) => r.title)).toEqual(["甲的条目"]);
+
+    signIn(userB);
+    const bodyB = (await (
+      await GET(new Request(`${BASE}?view=month&month=2026-11`))
+    ).json()) as { ok: boolean; data: { title: string }[] };
+    expect(bodyB.data.map((r) => r.title)).toEqual(["乙的条目"]);
+  });
+
+  it("⑩ R5 过去日期：'2026-01-01' 可写可查", async () => {
+    const userId = await makeUser("past");
+    signIn(userId);
+
+    const postResponse = await postJson(input("2026-01-01", "元旦补记", null, null));
+    expect(postResponse.status).toBe(200);
+
+    const body = (await (
+      await GET(new Request(`${BASE}?view=month&month=2026-01`))
+    ).json()) as { ok: boolean; data: { title: string }[] };
+    expect(body.data.map((r) => r.title)).toEqual(["元旦补记"]);
+  });
+
+  it("⑪ 区间边界：条目仅落所选月，邻月不串月", async () => {
+    const userId = await makeUser("range");
+    signIn(userId);
+    await postJson(input("2026-11-30", "本月末", null, null));
+    await postJson(input("2026-12-01", "次月初", null, null));
+
+    const nov = (await (
+      await GET(new Request(`${BASE}?view=month&month=2026-11`))
+    ).json()) as { data: { title: string }[] };
+    const dec = (await (
+      await GET(new Request(`${BASE}?view=month&month=2026-12`))
+    ).json()) as { data: { title: string }[] };
+    expect(nov.data.map((r) => r.title)).toEqual(["本月末"]);
+    expect(dec.data.map((r) => r.title)).toEqual(["次月初"]);
+  });
+
+  it("⑫ 周读区间过滤：仅返回该周（周一..周日），邻周条目不出现", async () => {
+    const userId = await makeUser("wk-range");
+    signIn(userId);
+    await postJson(input("2026-11-16", "周一安排", null, null));
+    await postJson(input("2026-11-22", "周日安排", null, null));
+    await postJson(input("2026-11-15", "上周条目", null, null));
+    await postJson(input("2026-11-23", "下周条目", null, null));
+
+    const body = (await (
+      await GET(new Request(`${BASE}?week=2026-11-16`))
+    ).json()) as { ok: boolean; data: { title: string }[] };
+    expect(body.data.map((r) => r.title)).toEqual(["周一安排", "周日安排"]);
+  });
+
+  it("⑬ 跨月周：'2026-11-30' 锚点同时取到 11-30 与 12-01（Review Focus 3）", async () => {
+    const userId = await makeUser("wk-cross");
+    signIn(userId);
+    await postJson(input("2026-11-30", "月末条目", null, null));
+    await postJson(input("2026-12-01", "月初条目", null, null));
+
+    const body = (await (
+      await GET(new Request(`${BASE}?week=2026-11-30`))
+    ).json()) as { ok: boolean; data: { title: string }[] };
+    expect(body.data.map((r) => r.title)).toEqual(["月末条目", "月初条目"]);
+  });
+
+  it("⑭ 周读隔离与空周：乙的周查询不含甲条目，空周返回空数组", async () => {
+    const [userA, userB] = await Promise.all([
+      makeUser("wk-a"),
+      makeUser("wk-b"),
+    ]);
+    signIn(userA);
+    await postJson(input("2026-11-18", "甲的条目", "09:00", "10:00"));
+
+    signIn(userB);
+    const bodyB = (await (
+      await GET(new Request(`${BASE}?week=2026-11-16`))
+    ).json()) as { ok: boolean; data: unknown[] };
+    expect(bodyB.data).toEqual([]);
+
+    signIn(userA);
+    const bodyA = (await (
+      await GET(new Request(`${BASE}?week=2026-11-16`))
+    ).json()) as { ok: boolean; data: { title: string }[] };
+    expect(bodyA.data).toHaveLength(1);
+    expect(bodyA.data[0]?.title).toBe("甲的条目");
+  });
+
+  it("⑮ 周读排序与契约形状：无时间在前、按开始时间升序；结果过 calendarEntryViewSchema", async () => {
+    const userId = await makeUser("wk-order");
+    signIn(userId);
+    await postJson(input("2026-11-18", "下午条目", "14:00", "15:00"));
+    await postJson(input("2026-11-18", "全天条目", null, null));
+    await postJson(input("2026-11-18", "上午条目", "09:00", "10:00"));
+    await postJson(input("2026-11-17", "前一天条目", null, null));
+    await postJson(input("2026-11-18", "契约条目", "09:30", "10:00", "备注"));
+
+    const body = (await (
+      await GET(new Request(`${BASE}?week=2026-11-16`))
+    ).json()) as { ok: boolean; data: unknown[] };
+
+    const parsed = z.array(calendarEntryViewSchema).parse(body.data);
+    expect(parsed.map((r) => r.title)).toEqual([
+      "前一天条目",
+      "全天条目",
+      "上午条目",
+      "契约条目",
+      "下午条目",
+    ]);
+    const contract = parsed.find((r) => r.title === "契约条目")!;
+    expect(contract).toMatchObject({
+      date: "2026-11-18",
+      content: "备注",
+      startTime: "09:30",
+      endTime: "10:00",
+    });
   });
 });

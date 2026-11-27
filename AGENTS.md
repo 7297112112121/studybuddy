@@ -17,7 +17,7 @@ npm run build            # 生产构建
 npm run start            # 运行生产构建产物
 npm run lint             # ESLint 检查(Flat Config,含 eslint-config-next/core-web-vitals 与 /typescript)
 npm run test             # Vitest 单测
-npm run test:integration # Vitest 集成测试(真实 PG/Redis,globalSetup 自理迁移)
+npm run test:endpoint   # Vitest 接口测试(端点直调+落库断言,真实 PG/Redis,globalSetup 自理迁移)
 npm run test:e2e         # Playwright E2E(对生产构建产物跑,webServer 自动 build && start)
 npm run db:generate      # Drizzle 生成数据库迁移
 npm run db:migrate       # Drizzle 应用数据库迁移

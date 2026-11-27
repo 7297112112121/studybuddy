@@ -19,7 +19,7 @@ afterAll(async () => {
   await db.$client.end();
 });
 
-describe("username 迁移落库（tests/integration/auth/migration）", () => {
+describe("username 迁移落库（tests/migrations/auth）", () => {
   it("user 表存在唯一索引 user_username", async () => {
     const rows = await db.execute<{
       indexname: string;

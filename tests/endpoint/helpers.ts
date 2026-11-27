@@ -1,6 +1,6 @@
 /**
- * 集成测试共享 helper（Task 5 起步，Task 6 增端点辅助）。造号唯一实现
- * 已上收 tests/support/username（测试纪律:测试共享件唯一实现），本文件
+ * 接口测试共享 helper（端点直调基座）。造号唯一实现已上收
+ * tests/support/username（测试纪律:测试共享件唯一实现），本文件
  * 只留认证直调基座。
  */
 
