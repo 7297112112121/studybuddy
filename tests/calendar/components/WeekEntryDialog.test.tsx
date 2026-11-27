@@ -3,7 +3,8 @@
  *
  * 覆盖:create 预填(prefillStart→开始时间、prefillEnd→结束时间、日期锁定)、edit 预填
  * 原值、保存成功调编排并 onClose、删除 AlertDialog 二次确认(确认调
- * deleteEntryAction / 取消不调)。编排经 vi.mock 桩接;文案用真实 calendar.json。
+ * deleteEntryAction / 取消不调)。编排 mock 在 store 边界(测试纪律:分层
+ * mock 边界,链经 useCalendarStore.getState 调编排);文案用真实 calendar.json。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -28,11 +29,15 @@ const resyncMock = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
 }));
-vi.mock("@/api/calendar-sync", () => ({
-  createEntry: createEntryActionMock,
-  updateEntry: updateEntryActionMock,
-  deleteEntry: deleteEntryActionMock,
-  resync: resyncMock,
+vi.mock("@/stores/calendar", () => ({
+  useCalendarStore: {
+    getState: () => ({
+      createEntry: createEntryActionMock,
+      updateEntry: updateEntryActionMock,
+      deleteEntry: deleteEntryActionMock,
+      resync: resyncMock,
+    }),
+  },
 }));
 
 afterEach(cleanup);

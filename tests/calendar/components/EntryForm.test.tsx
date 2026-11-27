@@ -4,7 +4,8 @@
  * 覆盖 tasks.md Task 5「失败测试」行：E-01/E-03 即地呈现且不调 action、
  * 开始留空结束禁用、不带时间提交形态、编辑预填、isPending 防重复、
  * SAVE_FAILED/UNAUTHORIZED/NOT_FOUND 分流、成功复位 + onSaved。
- * 编排经 vi.mock 桩接（组件边界，不触 DB）；文案以真实 calendar.json
+ * 编排 mock 在 store 边界(测试纪律:分层 mock 边界,链经
+ * useCalendarStore.getState 调编排),不触 DB;文案以真实 calendar.json
  * 经 NextIntlClientProvider 渲染。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -32,11 +33,15 @@ const resyncMock = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
 }));
-vi.mock("@/api/calendar-sync", () => ({
-  createEntry: createEntryActionMock,
-  updateEntry: updateEntryActionMock,
-  deleteEntry: vi.fn(),
-  resync: resyncMock,
+vi.mock("@/stores/calendar", () => ({
+  useCalendarStore: {
+    getState: () => ({
+      createEntry: createEntryActionMock,
+      updateEntry: updateEntryActionMock,
+      deleteEntry: vi.fn(),
+      resync: resyncMock,
+    }),
+  },
 }));
 
 afterEach(cleanup);

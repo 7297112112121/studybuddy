@@ -25,11 +25,15 @@ const resyncMock = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
 }));
-vi.mock("@/api/calendar-sync", () => ({
-  createEntry: vi.fn(),
-  updateEntry: vi.fn(),
-  deleteEntry: deleteEntryMock,
-  resync: resyncMock,
+vi.mock("@/stores/calendar", () => ({
+  useCalendarStore: {
+    getState: () => ({
+      createEntry: vi.fn(),
+      updateEntry: vi.fn(),
+      deleteEntry: deleteEntryMock,
+      resync: resyncMock,
+    }),
+  },
 }));
 
 afterEach(cleanup);
