@@ -49,7 +49,7 @@ function entry(id: string): CalendarEntryView {
 }
 
 function okVoid(): ApiResult {
-  return { ok: true, data: undefined };
+  return { ok: true };
 }
 
 function okRows(data: CalendarEntryView[]): ApiResult<CalendarEntryView[]> {
