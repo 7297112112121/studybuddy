@@ -26,8 +26,8 @@ import { afterAll, describe, expect, it } from "vitest";
 import { db } from "@/common/db";
 import { session, user } from "@/db/schema";
 import { redis } from "@/common/redis";
-import { directGet, directPost, signInAndGetCookie } from "../helpers";
-import { uniqueUsername } from "../../support/username";
+import { directGet, directPost, signInAndGetCookie } from "./helpers";
+import { uniqueUsername } from "../support/username";
 import { registerWithUsername } from "@/auth/service";
 
 /** 注册测试账号并回读 user id(注册成功无载荷,userId 由库内取)。 */

@@ -21,7 +21,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { db } from "@/common/db";
 import { account, user } from "@/db/schema";
-import { uniqueUsername } from "../../support/username";
+import { uniqueUsername } from "../support/username";
 import { POST } from "@/app/api/auth/register/route";
 import { API_ROUTES } from "@/app/api/routes";
 
