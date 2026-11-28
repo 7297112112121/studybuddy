@@ -1,6 +1,6 @@
 /**
  * 接口测试共享 helper（端点直调基座）。造号唯一实现已上收
- * tests/support/username（测试纪律:测试共享件唯一实现），本文件
+ * tests/support/username（跨轨共享件唯一实现,归 e2e 测试纪律共享基座），本文件
  * 只留认证直调基座。
  */
 
@@ -76,4 +76,3 @@ export async function signInAndGetCookie(
   }
   return cookie;
 }
-

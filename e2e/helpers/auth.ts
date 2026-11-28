@@ -2,7 +2,8 @@ import { expect, type Page } from "@playwright/test";
 
 import { uniqueUsername } from "../../tests/support/username";
 
-// 造号唯一实现在 tests/support/username(测试纪律:测试共享件唯一实现),
+// 造号唯一实现在 tests/support/username(跨轨共享件唯一实现,e2e 测试
+// 纪律:共享基座),
 // 此处转发以保持 spec 的 "./helpers/auth" 导入不变。
 export { uniqueUsername };
 

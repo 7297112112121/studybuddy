@@ -3,8 +3,8 @@
  *
  * 覆盖:create 预填(prefillStart→开始时间、prefillEnd→结束时间、日期锁定)、edit 预填
  * 原值、保存成功调编排并 onClose、删除 AlertDialog 二次确认(确认调
- * deleteEntryAction / 取消不调)。编排 mock 在 store 边界(测试纪律:分层
- * mock 边界,链经 useCalendarStore.getState 调编排);文案用真实 calendar.json。
+ * deleteEntryAction / 取消不调)。编排 mock 在 store 边界(单元测试纪律:
+ * 分层 mock 边界,链经 useCalendarStore.getState 调编排);文案用真实 calendar.json。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {

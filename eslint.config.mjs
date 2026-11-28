@@ -17,7 +17,7 @@ const eslintConfig = defineConfig([
     // 开发服务器遗留空目录,不属于项目:
     "my-website/**",
   ]),
-  // 测试寻址纪律(测试纪律):tests 内引用 src 一律 @/ 别名,禁相对路径跨入 src。
+  // 测试寻址纪律(单元测试纪律):tests 内引用 src 一律 @/ 别名,禁相对路径跨入 src。
   {
     files: ["tests/**/*.{ts,tsx}"],
     rules: {

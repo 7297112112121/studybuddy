@@ -1,5 +1,5 @@
 /**
- * vi.mock 目标存在性门禁(测试纪律)。
+ * vi.mock 目标存在性门禁(单元测试纪律)。
  *
  * 扫描 tests 下所有 *.test.ts / *.test.tsx 中 vi.mock("<target>", …) 的目标:凡 "@/…"
  * 别名目标或含 "/src/" 段的相对目标,校验其在 src/ 下真实存在
@@ -30,13 +30,21 @@ const testFiles = walkTests(path.join(root, "tests"), []);
 
 /** 模块路径(.ts/.tsx)到实际文件的候选展开。 */
 function candidates(base) {
-  return [base, `${base}.ts`, `${base}.tsx`, path.join(base, "index.ts"), path.join(base, "index.tsx")];
+  return [
+    base,
+    `${base}.ts`,
+    `${base}.tsx`,
+    path.join(base, "index.ts"),
+    path.join(base, "index.tsx"),
+  ];
 }
 
 const broken = [];
 for (const file of testFiles) {
   const content = readFileSync(file, "utf8");
-  const targets = [...content.matchAll(/vi\.mock\(\s*["']([^"']+)["']/g)].map((m) => m[1]);
+  const targets = [...content.matchAll(/vi\.mock\(\s*["']([^"']+)["']/g)].map(
+    (m) => m[1],
+  );
   for (const target of targets) {
     let base = null;
     if (target.startsWith("@/")) {
