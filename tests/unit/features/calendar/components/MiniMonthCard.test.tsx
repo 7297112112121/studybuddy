@@ -45,6 +45,14 @@ describe("MiniMonthCard", () => {
     expect(screen.getByText("2026年12月")).toBeTruthy();
   });
 
+  it("翻月接线：上一月 → 2026年10月", () => {
+    render(<Card weekStart="2026-11-16" />);
+    fireEvent.click(
+      screen.getByRole("button", { name: calendarMessages.page.prevMonth }),
+    );
+    expect(screen.getByText("2026年10月")).toBeTruthy();
+  });
+
   it("key 重挂载语义：同月翻周翻月态保留，跨月跳周回落所在月", () => {
     const { rerender } = render(<Card key="2026-11" weekStart="2026-11-16" />);
     fireEvent.click(screen.getByRole("button", { name: "下一月" }));

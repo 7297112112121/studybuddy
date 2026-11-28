@@ -17,7 +17,11 @@ afterEach(cleanup);
 const WEEK_START = "2026-11-16";
 const TODAY = "2026-11-18";
 
-function Header({ days }: { days?: React.ComponentProps<typeof WeekHeader>["days"] }) {
+function Header({
+  days,
+}: {
+  days?: React.ComponentProps<typeof WeekHeader>["days"];
+}) {
   return (
     <NextIntlClientProvider
       locale="zh-CN"
