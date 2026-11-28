@@ -38,6 +38,7 @@ sidebar_position: 1
 | [0033](store-centric-data-layer) | 2026-11-24 | 客户端数据层：store 居中 + 统一 HTTP 接口（取代 0025；修订 0009 条款——服务端数据入 store） | 已接受 |
 | [0034](ai-persistence-boundary) | 2026-11-24 | AI 服务持久化边界：python 服务无持久层，持久化归 Next 业务逻辑层（修订 0029/0032 条款） | 已接受 |
 | [0035](pino-logging) | 2026-11-25 | 服务端日志：pino（JSON 行写 stdout；技术报错归一前留痕；客户端不引入） | 已接受 |
+| [0036](unit-test-coverage) | 2026-11-28 | 单测覆盖率：Vitest v8 provider（钉同版本；分母 src/** 减白名单；Job Summary 内嵌零外发；只报告不设阈值） | 已接受 |
 
 ## 现行技术栈速查
 
@@ -69,3 +70,4 @@ sidebar_position: 1
 | [0031](ai-sdk-ui) | AI SDK | AI SDK 代码以随包安装、版本完全匹配的文档与源码为真源，禁止凭训练记忆书写；transport 指向自有 Route Handler，不用自带服务端实现；版本钉 minor，major 升级逐次评估；不引入第二套聊天组件库 | 写 AI SDK 代码、升级 major 或新增消息部件类型时 |
 | [0032](agent-memory-mem0-pgvector) | AgentScope 记忆：Mem0 OSS | 记忆经内建 Mem0Middleware 承载 mem0 OSS 计算引擎，向量与历史存取经 Next 内网 API 落自有 PostgreSQL（python 无持久层）；不用托管平台，不引 ReMe/文件式与独立向量库；embedding 用智谱 Embedding-3（经 OpenAI 兼容端点，凭据走环境变量） | 记忆抽取/检索质量不足、存储适配层覆盖面存疑或 mem0 依赖升级时 |
 | [0035](pino-logging) | pino | 服务端留痕唯一载体：JSON 行写 stdout，级别经 LOG_LEVEL 调节；不启用 transport/pretty；客户端留痕仍 console.error | 改日志形态、接观测平台或日志收集时 |
+| [0036](unit-test-coverage) | Vitest coverage-v8 | provider 与 vitest 钉同版本；范围仅单测轨，分母 src/** 减白名单；指标零外发只报告、不设阈值门禁；升级 vitest 必须同步升级 provider | 改 include 白名单、设阈值门禁或升级 vitest 时 |

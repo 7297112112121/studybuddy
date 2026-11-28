@@ -51,5 +51,18 @@ export default defineConfig({
     },
     include: ["tests/**/*.test.{ts,tsx}"],
     exclude: ["tests/endpoint/**", "tests/migrations/**", "**/node_modules/**"],
+    /**
+     * 覆盖率（ADR-0036）：默认关闭，`npm run test:report` 经 --coverage 开启。
+     * 分母 src/** 减白名单（迁移生成物、shadcn 复制件、类型声明）；reporters
+     * 三件套分别供终端摘要（text）、CI Job Summary 渲染（json-summary）、
+     * 本地 HTML 临时报告（html，落 gitignored coverage/）消费。
+     */
+    coverage: {
+      provider: "v8",
+      enabled: false,
+      include: ["src/**"],
+      exclude: ["src/db/migrations/**", "src/components/ui/**", "**/*.d.ts"],
+      reporter: ["text", "json-summary", "html"],
+    },
   },
 });

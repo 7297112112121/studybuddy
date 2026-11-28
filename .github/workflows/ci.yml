@@ -1,5 +1,6 @@
 # PR 校验流水线(ADR-0018 第一层触发晋升;变更裁剪见 ADR-0026)
-# 范围:lint + type-check + Vitest 单测(ADR-0012)+ Vitest 集成测试(真实 PG/Redis)
+# 范围:lint + type-check + Vitest 单测(ADR-0012)+ 单测覆盖率摘要(ADR-0036)
+# + Vitest 集成测试(真实 PG/Redis)
 # + Playwright E2E 冒烟(ADR-0017)+ 生产构建。
 # 不推镜像、不部署、零机密接触(ADR-0022 分界):services 凭据与 BETTER_AUTH_SECRET
 # 均为 CI 专用占位值(同 compose.dev.yaml 本地开发凭据),不引用任何 environment secret;
@@ -172,9 +173,21 @@ jobs:
       - name: Build
         run: npm run build
 
-      # P2 测试层：Vitest 单测（ADR-0012）
+      # P2 测试层：Vitest 单测（ADR-0012）+ 覆盖率与用例指标产物（ADR-0036）。
+      # reportOnFailure 保证用例失败时仍产出覆盖率与结果 json，供下方 Summary 渲染
       - name: Unit tests (Vitest)
-        run: npm run test
+        run: >-
+          npm run test:report
+          -- --coverage.reportOnFailure
+          --reporter=default --reporter=json
+          --outputFile.json=coverage/unit-results.json
+
+      # ADR-0036：覆盖率四指标与用例通过/失败/跳过、失败清单渲染进 job summary；
+      # always 保证用例失败时也渲染；continue-on-error 保证渲染故障不反转测试结论
+      - name: Render unit test summary
+        if: always()
+        continue-on-error: true
+        run: node scripts/render-test-summary.mjs
 
       # P2 测试层：Vitest 接口测试（端点直调+落库断言，真实 PG/Redis services），
       # 迁移由其 globalSetup 自理（drizzle migrator 应用 src/db/migrations）
