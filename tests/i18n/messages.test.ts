@@ -83,10 +83,11 @@ describe("calendar.json 文案与 design 键表逐字一致（AXY-22）", () => 
     expect(calendar.entryPoint).toBe("日程日历");
   });
 
-  it("结构：error 七键齐全，无残留手机号时代占位键", () => {
+  it("结构：error 八键齐全，无残留手机号时代占位键", () => {
     expect(Object.keys(calendar.error).sort()).toEqual(
       [
         "contentTooLong",
+        "deleteFailed",
         "endTimeAfterStart",
         "invalidDate",
         "invalidTime",
