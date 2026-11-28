@@ -1,4 +1,3 @@
-
 import type { AuthView } from "../routes";
 
 type AuthTitleProps = {

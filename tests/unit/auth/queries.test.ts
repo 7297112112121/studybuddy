@@ -20,7 +20,10 @@ function rawSession(overrides?: {
       email: "alice@placeholder.invalid",
       emailVerified: false,
       image: null,
-      username: overrides && overrides.username !== undefined ? overrides.username : "alice",
+      username:
+        overrides && overrides.username !== undefined
+          ? overrides.username
+          : "alice",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
       updatedAt: new Date("2026-01-01T00:00:00.000Z"),
     },
@@ -34,7 +37,7 @@ function rawSession(overrides?: {
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
       updatedAt: new Date("2026-01-01T00:00:00.000Z"),
     },
-  // expiresAt 以字符串注入钉住运行时防御分支;声明类型标 Date,需经 unknown 中转
+    // expiresAt 以字符串注入钉住运行时防御分支;声明类型标 Date,需经 unknown 中转
   } as unknown as Parameters<typeof toAuthSession>[0];
 }
 

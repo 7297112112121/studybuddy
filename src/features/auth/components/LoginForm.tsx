@@ -1,4 +1,3 @@
-
 import type { SubmitEvent } from "react";
 import AccountField from "./AccountField";
 import PasswordField from "./PasswordField";

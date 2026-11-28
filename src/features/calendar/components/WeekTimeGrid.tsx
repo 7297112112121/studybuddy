@@ -10,11 +10,7 @@ import { cn } from "cn";
 
 import type { CalendarEntryView } from "@/app/api/calendar/response";
 
-import {
-  PX_PER_MINUTE,
-  minutesToHhmm,
-  type WeekDay,
-} from "../utils";
+import { PX_PER_MINUTE, minutesToHhmm, type WeekDay } from "../utils";
 import WeekDayColumn from "./WeekDayColumn";
 
 type WeekTimeGridProps = {
