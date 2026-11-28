@@ -186,8 +186,9 @@ describe("slotPrefillEnd:槽起点 + 默认 1 小时的预填终点", () => {
 });
 
 describe("layoutDayBlocks:重叠簇并列均分(proposal 边界 #2 / D-12)", () => {
-  it("时间点条目(仅开始时间)durationMinutes=30", () => {
-    const blocks = layoutDayBlocks([entry("a", "10:00", null)]);
+  it("时间点条目(仅开始时间)durationMinutes=30,块携带原条目引用", () => {
+    const source = entry("a", "10:00", null);
+    const blocks = layoutDayBlocks([source]);
     expect(blocks).toHaveLength(1);
     expect(blocks[0]).toMatchObject({
       entryId: "a",
@@ -196,6 +197,7 @@ describe("layoutDayBlocks:重叠簇并列均分(proposal 边界 #2 / D-12)", () 
       leftPercent: 0,
       widthPercent: 100,
     });
+    expect(blocks[0]?.entry).toBe(source);
   });
 
   it("无重叠两块各满列宽", () => {

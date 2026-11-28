@@ -2,12 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CalendarEntryView } from "@/app/api/calendar/response";
 import { db } from "@/common/db";
+import { calendarEntry } from "@/db/schema";
 
 import { listMonthEntries, listWeekEntries } from "@/services/calendar/queries";
 
 /**
  * calendar 读路径查询单测（归属单测轨）：桩接相邻层 @/common/db 后，
- * 只证行的时间归一（"HH:MM"）与同日排序；区间过滤语义归 SQL，由接口轨真依赖直调承接。
+ * 只证行的时间归一（"HH:MM"）、同日排序与 select 投影形状；区间过滤
+ * 语义归 SQL，由接口轨真依赖直调承接。
+ * 幸存变异体口径：排序比较器在 V8（n<64 仅按 <0 分支）下的 0↔1 返回值
+ * 差异不可观测，已论证等价，不为杀变异体造数。
  */
 vi.mock("@/common/db", () => ({
   db: { select: vi.fn() },
@@ -34,6 +38,30 @@ function entry(
 
 beforeEach(() => {
   selectMock.mockReset();
+});
+
+describe("listMonthEntries：select 投影形状（响应契约六列来源）", () => {
+  it("投影恰六列且各列锚定 calendarEntry 同名字段", async () => {
+    stubRows([]);
+
+    await listMonthEntries("user-1", 2026, 12);
+
+    const projection = selectMock.mock.calls[0][0] as Record<string, unknown>;
+    expect(Object.keys(projection).sort()).toEqual([
+      "content",
+      "date",
+      "endTime",
+      "id",
+      "startTime",
+      "title",
+    ]);
+    expect(projection.id).toBe(calendarEntry.id);
+    expect(projection.date).toBe(calendarEntry.entryDate);
+    expect(projection.title).toBe(calendarEntry.title);
+    expect(projection.content).toBe(calendarEntry.content);
+    expect(projection.startTime).toBe(calendarEntry.startTime);
+    expect(projection.endTime).toBe(calendarEntry.endTime);
+  });
 });
 
 describe("listMonthEntries：查询行按日期升序输出", () => {

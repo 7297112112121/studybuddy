@@ -101,7 +101,12 @@ export function groupEntriesByDate(
 
 /** 把单日带时间条目布局成周网格块，重叠条目在列内并列均分。 */
 export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
-  type Item = { id: string; start: number; end: number };
+  type Item = {
+    id: string;
+    start: number;
+    end: number;
+    entry: CalendarEntryView;
+  };
   const items: Item[] = dayEntries
     .filter((entry) => entry.startTime !== null)
     .map((entry) => ({
@@ -111,6 +116,7 @@ export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
         entry.endTime === null
           ? timeToMinutes(entry.startTime as string) + SLOT_MINUTES // 无结束时间按单槽时长计
           : timeToMinutes(entry.endTime),
+      entry,
     }))
     .sort((a, b) => a.start - b.start || a.id.localeCompare(b.id));
 
@@ -129,6 +135,7 @@ export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
       else lanes[laneIndex] = item.end;
       blocks.push({
         entryId: item.id,
+        entry: item.entry,
         leftPercent: laneIndex * width,
         widthPercent: width,
         startMinutes: item.start,
@@ -153,6 +160,8 @@ export function layoutDayBlocks(dayEntries: CalendarEntryView[]): WeekBlock[] {
 
 export type WeekBlock = {
   entryId: string;
+  /** 块对应原条目引用（与 entryId 同源产出），渲染直取，勿再按 id 回查。 */
+  entry: CalendarEntryView;
   leftPercent: number;
   widthPercent: number;
   startMinutes: number;

@@ -50,33 +50,29 @@ export default function WeekDayColumn({
           }}
         />
       ))}
-      {/* 色块：重叠簇并列均分，点击编辑 */}
-      {blocks.map((block) => {
-        const entryData = entries.find((entry) => entry.id === block.entryId);
-        if (entryData === undefined) return null;
-        return (
-          <button
-            key={block.entryId}
-            type="button"
-            data-testid={`week-block-${block.entryId}`}
-            onClick={() => onEdit(entryData)}
-            className="absolute z-10 flex flex-col overflow-hidden rounded-lg border-l-2 border-primary bg-primary/15 px-1.5 text-left ring-1 ring-primary/40 hover:bg-primary/25 hover:ring-primary/60"
-            style={{
-              top: block.startMinutes * PX_PER_MINUTE,
-              height: block.durationMinutes * PX_PER_MINUTE,
-              left: `${block.leftPercent}%`,
-              width: `${block.widthPercent}%`,
-            }}
-          >
-            <span className="text-[11px] tabular-nums text-primary">
-              {timePrefix(entryData)}
-            </span>
-            <span className="truncate text-xs font-medium">
-              {entryData.title}
-            </span>
-          </button>
-        );
-      })}
+      {/* 色块：重叠簇并列均分，点击编辑（块自带原条目引用，无需按 id 回查） */}
+      {blocks.map((block) => (
+        <button
+          key={block.entryId}
+          type="button"
+          data-testid={`week-block-${block.entryId}`}
+          onClick={() => onEdit(block.entry)}
+          className="absolute z-10 flex flex-col overflow-hidden rounded-lg border-l-2 border-primary bg-primary/15 px-1.5 text-left ring-1 ring-primary/40 hover:bg-primary/25 hover:ring-primary/60"
+          style={{
+            top: block.startMinutes * PX_PER_MINUTE,
+            height: block.durationMinutes * PX_PER_MINUTE,
+            left: `${block.leftPercent}%`,
+            width: `${block.widthPercent}%`,
+          }}
+        >
+          <span className="text-[11px] tabular-nums text-primary">
+            {timePrefix(block.entry)}
+          </span>
+          <span className="truncate text-xs font-medium">
+            {block.entry.title}
+          </span>
+        </button>
+      ))}
     </div>
   );
 }

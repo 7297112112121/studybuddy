@@ -177,6 +177,19 @@ describe("store loadToday 竞态守卫", () => {
   });
 });
 
+describe("store loadToday 失败归一", () => {
+  it("读取失败 → todayEntries 归一空数组", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(responseOf(errorBody(API_ERROR.LOAD_FAILED))),
+    );
+
+    await loadToday("2026-11-16");
+
+    expect(useCalendarStore.getState().todayEntries).toEqual([]);
+  });
+});
+
 describe("store resync 失败重试", () => {
   it("按当前 scope 重载,成功后清失败态", async () => {
     vi.stubGlobal(

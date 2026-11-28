@@ -51,3 +51,54 @@ describe("服务端规则配置收敛", () => {
     expect(usernameOptions?.maxUsernameLength).toBe(USERNAME_MAX_LENGTH);
   });
 });
+
+describe("rateLimit 开关（E2E 限流门控）", () => {
+  it("E2E_RATE_LIMIT=off → rateLimit.enabled 为 false", async () => {
+    vi.stubEnv("E2E_RATE_LIMIT", "off");
+
+    const { auth } = await import("@/auth/better-auth.server");
+
+    expect(auth.options.rateLimit?.enabled).toBe(false);
+  });
+
+  it("E2E_RATE_LIMIT 非 off → enabled 保持 undefined（走 better-auth 默认）", async () => {
+    vi.stubEnv("E2E_RATE_LIMIT", "");
+
+    const { auth } = await import("@/auth/better-auth.server");
+
+    expect(auth.options.rateLimit?.enabled).toBeUndefined();
+  });
+});
+
+describe("禁用端点守卫（hooks.before）", () => {
+  /** better-call createMiddleware 返回物即 handler 本体（.options 附挂），运行体只读 ctx.path。 */
+  async function beforeHandler(): Promise<
+    (ctx: { path: string }) => Promise<void>
+  > {
+    const { auth } = await import("@/auth/better-auth.server");
+    const before = (
+      auth.options.hooks as {
+        before?: (ctx: { path: string }) => Promise<void>;
+      }
+    ).before;
+    expect(before).toBeTypeOf("function");
+    return before!;
+  }
+
+  it.each([["/sign-up/email"], ["/sign-in/email"], ["/is-username-available"]])(
+    "%s → 拒约 FORBIDDEN（自写段已由 routes.ts 端点承载）",
+    async (path) => {
+      const handler = await beforeHandler();
+
+      await expect(handler({ path })).rejects.toMatchObject({
+        status: "FORBIDDEN",
+      });
+    },
+  );
+
+  it("非禁用路径（/get-session）→ 放行", async () => {
+    const handler = await beforeHandler();
+
+    await expect(handler({ path: "/get-session" })).resolves.toBeUndefined();
+  });
+});

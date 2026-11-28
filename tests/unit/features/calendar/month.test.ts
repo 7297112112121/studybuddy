@@ -45,6 +45,13 @@ describe("monthRange：该月日期闭区间", () => {
   it("闰月 2028-02 → end 为 '2028-02-29'", () => {
     expect(monthRange(2028, 2).end).toBe("2028-02-29");
   });
+
+  it("个位月 2026-03 → start/end 零填充两位", () => {
+    expect(monthRange(2026, 3)).toEqual({
+      start: "2026-03-01",
+      end: "2026-03-31",
+    });
+  });
 });
 
 describe("addMonths：month 1–12 自动进退位", () => {
