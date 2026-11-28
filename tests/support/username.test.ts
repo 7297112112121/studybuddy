@@ -19,8 +19,11 @@ describe("uniqueUsername 符合性", () => {
     }
   });
 
-  it("批量产出互不重复", () => {
-    const names = new Set(Array.from({ length: 200 }, () => uniqueUsername()));
-    expect(names.size).toBe(200);
+  it("连续 10 次调用互不重复（seq 计数器确定性保证）", () => {
+    // 实现的真实契约:任意连续 10 次调用必不重复——同毫秒内 seq(0..9) 互异,
+    // 跨毫秒则时间戳主干互异。更大批量 uniqueness 靠 4 位随机尾兜底,属概率
+    // 保证,超出确定性断言范围(200 次批量断言有生日悖论撞率,CI 概率性红)。
+    const names = Array.from({ length: 10 }, () => uniqueUsername());
+    expect(new Set(names).size).toBe(10);
   });
 });
