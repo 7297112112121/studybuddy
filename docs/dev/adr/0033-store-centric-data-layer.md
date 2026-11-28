@@ -24,7 +24,7 @@ description: 服务端数据的客户端持有层为 zustand store，业务组�
 
 客户端数据层采用 store 居中与统一 HTTP 接口：
 
-1. 数据流单线：业务组件（src/features/）只订阅 store；store 经 fetch 调用统一接口读写服务端数据，统一接口路由到业务逻辑层（src/modules/ 的 queries/service）后落数据库；禁止组件绕过 store 直连服务端数据；
+1. 数据流单线：业务组件（src/features/）只订阅 store；store 经 fetch 调用统一接口读写服务端数据，统一接口路由到业务逻辑层（src/services/ 的 queries/service）后落数据库；禁止组件绕过 store 直连服务端数据；
 2. 统一接口为自写 Route Handler（物理落点 src/app/api/）：每端点强制会话校验、zod 复验、错误归一，共享胶水保持单一来源；
 3. 服务端数据的客户端持有层为 zustand（状态库职责重新划定：服务端数据入 store）：store 按业务域切片，写入经 store action 更新本地状态并发起请求，失效编排（登出、过期、写后重取）由 store 层承担；
 4. RSC 不做数据获取：页面为客户端薄壳；服务端守卫相应转为客户端会话判断（会话态经 Better Auth 客户端内建响应式 store 订阅），安全边界完全落在统一接口逐端点会话校验上；

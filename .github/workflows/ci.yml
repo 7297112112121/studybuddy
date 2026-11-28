@@ -1,5 +1,7 @@
 # PR 校验流水线(ADR-0018 第一层触发晋升;变更裁剪见 ADR-0026)
-# 范围:lint + type-check + Vitest 单测(ADR-0012)+ Vitest 集成测试(真实 PG/Redis)
+# 范围:lint + type-check + Vitest 单测(ADR-0012)+ 单测覆盖率摘要(ADR-0036)
+# + Stryker 变异测试独立 job(ADR-0037)
+# + Vitest 集成测试(真实 PG/Redis)
 # + Playwright E2E 冒烟(ADR-0017)+ 生产构建。
 # 不推镜像、不部署、零机密接触(ADR-0022 分界):services 凭据与 BETTER_AUTH_SECRET
 # 均为 CI 专用占位值(同 compose.dev.yaml 本地开发凭据),不引用任何 environment secret;
@@ -123,6 +125,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        # 增量口径需 base 分支历史(git diff origin/base...HEAD 求 merge-base),浅克隆不可用
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -172,14 +177,49 @@ jobs:
       - name: Build
         run: npm run build
 
-      # P2 测试层：Vitest 单测（ADR-0012）
-      - name: Unit tests (Vitest)
-        run: npm run test
+      # 增量口径(单元测试纪律 指标合格率):PR 相对 base 的变更 src 文件为
+      # 覆盖率/变异分母。--diff-filter=d 排除已删文件,test -f 兜底现存性。
+      - name: Resolve changed src files
+        id: changed-src
+        run: |
+          files="$(git diff --name-only --diff-filter=d "origin/${{ github.base_ref }}...HEAD" -- src/ | grep -E '\.(ts|tsx)$' | while IFS= read -r f; do [ -f "$f" ] && echo "$f"; done)"
+          {
+            echo "files<<EOF"
+            echo "$files"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
-      # P2 测试层：Vitest 集成测试（真实 PG/Redis services），
+      # P2 测试层：Vitest 单测（ADR-0012）+ 覆盖率与用例指标产物（ADR-0036）。
+      # 增量门禁:变更集非空 → 覆盖率分母=变更文件(重复 --coverage.include 取并集,
+      # thresholds.branches=60 即增量合格线);空集 → 纯单测无覆盖率无门禁。
+      # reportOnFailure 保证用例失败时仍产出覆盖率与结果 json，供下方 Summary 渲染
+      - name: Unit tests (Vitest)
+        env:
+          CHANGED_SRC: ${{ steps.changed-src.outputs.files }}
+        run: |
+          if [ -z "$CHANGED_SRC" ]; then
+            echo "无 src 变更:退化纯单测,不跑覆盖率门禁"
+            npm run test -- --reporter=default --reporter=json --outputFile.json=coverage/unit-results.json
+          else
+            args=""
+            for f in $CHANGED_SRC; do args="$args --coverage.include $f"; done
+            npm run test:report -- $args \
+              --coverage.reportOnFailure \
+              --reporter=default --reporter=json \
+              --outputFile.json=coverage/unit-results.json
+          fi
+
+      # ADR-0036：覆盖率四指标与用例通过/失败/跳过、失败清单渲染进 job summary；
+      # always 保证用例失败时也渲染；continue-on-error 保证渲染故障不反转测试结论
+      - name: Render unit test summary
+        if: always()
+        continue-on-error: true
+        run: node scripts/render-test-summary.mjs
+
+      # P2 测试层：Vitest 接口测试（端点直调+落库断言，真实 PG/Redis services），
       # 迁移由其 globalSetup 自理（drizzle migrator 应用 src/db/migrations）
-      - name: Integration tests (Vitest)
-        run: npm run test:integration
+      - name: Endpoint tests (Vitest)
+        run: npm run test:endpoint
 
       # E2E 需要 Chromium 二进制，runner 预装环境不含 Playwright 浏览器，需单独安装。
       # --with-deps 在 runner 上缺的仅字体/xfonts 包（~22MB），但 runner 到 ubuntu
@@ -217,6 +257,81 @@ jobs:
       # P2 测试层：Playwright E2E 冒烟（ADR-0017），对生产构建产物跑（webServer 自动 build && start）
       - name: Playwright E2E
         run: npm run test:e2e
+
+  # 变异测试独立 job(ADR-0037):杀死率 ≥70 经 stryker thresholds.break 门禁,
+  # PR 阶段为增量口径(分母=变更 src 文件,见单元测试纪律 指标合格率)。
+  # 与单测 job 分离——变异运行以数量级慢于单测,独立并行不阻塞 verify;
+  # 只跑单测轨,无需 services 容器与端点/E2E 上下文。
+  mutation:
+    name: Mutation tests (Stryker)
+    needs: changes
+    # ADR-0026:与 verify 同判定,docs-only 变更跳过(断言质量与 docs 无关)
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    # 与 verify 同款 job 级 env:单测轨上下文对齐,免沙箱内外环境分叉
+    env:
+      BETTER_AUTH_SECRET: ci-only-a3f8e21c94b7d60518e2f4a9c3b1d7e8065f2c4a9b8d3e1f7a5c0b9d8e2f4a31
+      BETTER_AUTH_URL: http://localhost:3000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        # 增量口径需 base 分支历史,同 verify
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+
+      # node_modules 缓存块与 verify 同款(key 同源,命中互认)
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci --no-audit --prefer-offline
+
+      - name: Save node_modules cache
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # 增量口径:变异分母=变更 src 文件(逗号串覆盖 stryker.config 缺省 src/services);
+      # 空集打点跳过(job 仍绿);低于 thresholds.break(70)时 Stryker 非零退出,job 红
+      - name: Resolve changed src files
+        id: changed-src
+        run: |
+          files="$(git diff --name-only --diff-filter=d "origin/${{ github.base_ref }}...HEAD" -- src/ | grep -E '\.(ts|tsx)$' | while IFS= read -r f; do [ -f "$f" ] && echo "$f"; done)"
+          {
+            echo "files<<EOF"
+            echo "$files"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Mutation tests (Stryker)
+        env:
+          CHANGED_SRC: ${{ steps.changed-src.outputs.files }}
+        run: |
+          if [ -z "$CHANGED_SRC" ]; then
+            echo "无 src 变更:跳过变异测试"
+            exit 0
+          fi
+          mutate="$(echo "$CHANGED_SRC" | tr '\n' ',' | sed 's/,$//')"
+          npm run test:mutation -- --mutate "$mutate"
+
+      # ADR-0037:杀死率与幸存变异体渲染进 job summary;always 保证变异失败时
+      # 也渲染;continue-on-error 保证渲染故障不反转变异测试结论
+      - name: Render mutation test summary
+        if: always()
+        continue-on-error: true
+        run: node scripts/render-mutation-summary.mjs
 
   # 镜像可构建性校验（CI/CD 阶段 1，ADR-0016 standalone 镜像）：
   # 只构建不推送、零机密接触，与 verify 并行互不阻塞。

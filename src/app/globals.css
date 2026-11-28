@@ -131,9 +131,6 @@
     0 30px 80px -20px oklch(0 0 0 / 75%);
 }
 
-/* auth 页 aurora 纱幕(仅 AuthScreen 内使用,纯装饰):aqua/magenta 双色
-   细网格 + 前景细颗粒点阵,椭圆 mask 自中心向边缘衰减。(原挂
-   .aurora-theme 作用域下,随 ADR-0027 全局化后直接以类名消费。) */
 .aurora-veil {
   background-image:
     linear-gradient(
@@ -166,11 +163,6 @@
   );
 }
 
-/* 细滚动条(全站,ADR-0027):thumb 半透明白与卡面描边(border-white/25)
-   同一视觉语言,hover 提亮;轨道全透明。仅用 ::-webkit-scrollbar
-   (Chrome/Edge);不设 scrollbar-color 标准属性——Chromium 121+ 一旦设置
-   它即忽略 webkit 定制回退原生带箭头渲染。Firefox 不支持 webkit 伪元素,
-   由系统深色原生滚动条兜底。 */
 *::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -186,9 +178,6 @@
   background-color: oklch(1 0 0 / 35%);
 }
 
-/* 全站深空星层(StarsBackground 组件专用,根布局挂载,ADR-0027;组件头注
-   见组件文件):ink 深空底 + 底部 indigo-deep 氛围椭圆;星点白,三层视差
-   漂移,reduced-motion 时保留静态星点。 */
 .stars-sky {
   background: radial-gradient(
     ellipse at 50% 115%,

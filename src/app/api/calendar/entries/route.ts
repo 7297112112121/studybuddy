@@ -1,0 +1,45 @@
+/**
+ * 日历条目集合端点:读(GET)与写(POST)共用同一契约切面,
+ * 会话守卫、入参复验与错误翻译均在切面内完成。
+ */
+import { respondWith, withSessionApiContract } from "@/app/api/contract";
+import { listMonthEntries, listWeekEntries } from "@/services/calendar/queries";
+import { createEntry } from "@/services/calendar/service";
+import {
+  calendarEntriesQuerySchema,
+  calendarEntryInputSchema,
+} from "@/app/api/calendar/request";
+
+/** 条目集合读端点:?week=周一锚点读一周区间,?view=month&month=YYYY-MM 读月度区间。 */
+export async function GET(request: Request): Promise<Response> {
+  const query = Object.fromEntries(new URL(request.url).searchParams);
+  const result = await withSessionApiContract(
+    request,
+    query,
+    calendarEntriesQuerySchema,
+    async (userId, q) => {
+      if ("week" in q) {
+        return listWeekEntries(userId, q.week);
+      }
+      return listMonthEntries(userId, q.month.year, q.month.month);
+    },
+  );
+  return respondWith(result);
+}
+
+/** 条目写端点:新增一条日历条目。 */
+export async function POST(request: Request): Promise<Response> {
+  let body: unknown = null;
+  try {
+    body = await request.json();
+  } catch {
+    body = null;
+  }
+  const result = await withSessionApiContract(
+    request,
+    body,
+    calendarEntryInputSchema,
+    (userId, input) => createEntry(userId, input),
+  );
+  return respondWith(result);
+}

@@ -21,6 +21,7 @@
   "error": {
     "titleRequired": "请填写事项内容",
     "saveFailed": "保存失败,请重试",
+    "deleteFailed": "删除失败,请重试",
     "endTimeAfterStart": "结束时间需晚于开始时间",
     "titleTooLong": "事项内容不能超过 50 字",
     "contentTooLong": "具体内容不能超过 2000 字",
@@ -42,13 +43,15 @@
     "confirmTitle": "确定删除这条安排吗？",
     "cancel": "取消"
   },
+  "unscheduled": {
+    "title": "本周未安排时间事项",
+    "create": "新建",
+    "empty": "本周没有未安排时间的事项"
+  },
   "week": {
-    "viewWeek": "周",
-    "viewMonth": "月",
     "prevWeek": "上一周",
     "nextWeek": "下一周",
     "today": "今天",
-    "allDay": "全天",
     "emptyWeek": "这周还没有安排",
     "loadFailed": "加载失败,请重试",
     "retry": "重试",

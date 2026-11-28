@@ -5,34 +5,8 @@ import {
   fillLoginForm,
   registerViaUI,
   signOut,
-  throttleSignIn,
   uniqueUsername,
 } from "./helpers/auth";
-
-/**
- * 登录注册全流程 E2E（Task 11，CR-20261116-1 凭据换装：手机号→账户名+密码，
- * R1–R6、R8–R12、R16–R17 的浏览器级验证；R7 双半边证据在集成侧 T7/T9）。
- *
- * 限流约束（Task 12 实测，沿用）：生产构建下 Better Auth 限流默认开启，
- * 登录类请求的实际规则是 /sign-in/* 特殊规则「3 次/10 秒」。全 spec 的真实
- * sign-in 次数收敛在 10 次以内（登录端点 /api/auth/sign-in/username），
- * 并经 throttleSignIn（helpers）保持 ≥3.5s 间距；校验链/视图切换用例全部
- * 走纯前端校验（不发请求），注册类用例每个账号只产生「注册自动登录 +
- * 显式登录」的必要调用。config workers: 1 保证节流时间戳全局生效。
- *
- * 文案断言逐字对齐 src/locales/zh-CN/auth.json 与组件渲染文案
- * （em-dash「8—20」与「1—16」、省略号「登录中…」）。
- *
- * Task 11 首跑实测的两处胶水修正：
- * 1. 节流打点——注册自动登录的实际请求在 registerAction 往返后才发出，
- *    打点须在请求完成后重置（见 helpers throttleSignIn 注释），否则真实
- *    间隔缩水致第 4 发登录吃 429；
- * 2. 定位器作用域——Next 16 客户端导航经 React Activity 隐藏保留离开页
- *    的 DOM（display:none，表单值随之保留），残留 /register 页树与当前
- *    视图共用 label「账户名」，getByLabel 双匹配；字段填充一律用
- *    字段 id（#login-account、#register-account 等，表单契约唯一锚点，
- *    产品代码不动）。
- */
 
 test.describe("校验链（登录视图）", () => {
   test("R1: 空表单提交呈现账户名与密码必填错误态（红框无文案），不提交", async ({
@@ -251,7 +225,6 @@ test.describe("注册流程", () => {
     await fillLoginForm(page, username);
     // pending 态按钮文案变「登录中…」，name 用前缀匹配才能在两种形态间稳定定位
     const loginButton = page.getByRole("button", { name: /^登录/ });
-    await throttleSignIn();
     await loginButton.click();
     await expect(loginButton).toHaveText("登录中…");
     await expect(loginButton).toBeDisabled();
@@ -289,19 +262,6 @@ test.describe("登录流程", () => {
     await signOut(page);
 
     await fillLoginForm(page, username);
-    await throttleSignIn();
-    await page.getByRole("button", { name: "登录", exact: true }).click();
-    await expect(page).toHaveURL(/\/workbench$/);
-    await expect(page.getByTestId("session-account")).toHaveText(username);
-  });
-
-  test("R6: 账号二同链路行为一致", async ({ page }) => {
-    const username = uniqueUsername();
-    await registerViaUI(page, username);
-    await signOut(page);
-
-    await fillLoginForm(page, username);
-    await throttleSignIn();
     await page.getByRole("button", { name: "登录", exact: true }).click();
     await expect(page).toHaveURL(/\/workbench$/);
     await expect(page.getByTestId("session-account")).toHaveText(username);
@@ -329,7 +289,6 @@ test.describe("会话与守卫", () => {
 
     // 重新登录同号 → /workbench 且账户名一致（数据完好）
     await fillLoginForm(page, username);
-    await throttleSignIn();
     await page.getByRole("button", { name: "登录", exact: true }).click();
     await expect(page).toHaveURL(/\/workbench$/);
     await expect(page.getByTestId("session-account")).toHaveText(username);

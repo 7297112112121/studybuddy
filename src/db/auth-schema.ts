@@ -1,0 +1,94 @@
+/**
+ * 认证域 drizzle 表定义（design「数据模型」节）。
+ *
+ * 放置约定（本设计立样板）：模块属主文件；`src/db/schema.ts` 为公共契约 barrel
+ * re-export 此处全部产物。列属性名使用 Better Auth 字段名（camelCase），
+ * DB 列名经 `snakeCase.table`（drizzle-orm 1.0 RC 将 casing 从运行时 client
+ * 选项改为表定义时烘焙）转换为 snake_case。唯一索引显式命名
+ * `user_username`：后续 service 层以 23505 错误码判定账户名冲突时
+ * 依赖该稳定名称（R14）。
+ */
+import {
+  boolean,
+  snakeCase,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+
+const pgTable = snakeCase.table;
+
+/** 账户名唯一索引名:service 层唯一冲突判定与 schema 测试引用同一常量,防漂移。 */
+export const USER_USERNAME_INDEX_NAME = "user_username";
+/** 邮箱唯一约束名:PG 默认命名(表_列_key),service 层唯一冲突判定引用同一常量。 */
+export const USER_EMAIL_UNIQUE_NAME = "user_email_key";
+
+/**
+ * user 表。username 为登录凭据（CR-20261116-1：手机号→账户名+密码）。
+ * email 为 Better Auth 核心必填列，本产品无邮箱账号，
+ * 存确定性占位邮箱（Task 4 service 产出），UI 永不展示。
+ * agreementVersion/agreedAt 对应 R15 协议同意留痕。
+ */
+export const user = pgTable(
+  "user",
+  {
+    id: text().primaryKey(),
+    name: text().notNull(),
+    email: text().notNull().unique(),
+    emailVerified: boolean().notNull().default(false),
+    image: text(),
+    username: text().notNull(),
+    agreementVersion: text().notNull(),
+    agreedAt: timestamp({ withTimezone: true }).notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex(USER_USERNAME_INDEX_NAME).on(t.username)],
+);
+
+/**
+ * account 表。credential 记录持密码 scrypt 摘要（R13：永不存明文）；
+ * access_token 等列仅 OAuth 场景使用，本期恒空。
+ */
+export const account = pgTable("account", {
+  id: text().primaryKey(),
+  accountId: text().notNull(),
+  providerId: text().notNull(),
+  userId: text()
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  password: text(),
+  accessToken: text(),
+  refreshToken: text(),
+  idToken: text(),
+  tokenType: text(),
+  scope: text(),
+  accessTokenExpiresAt: timestamp({ withTimezone: true }),
+  refreshTokenExpiresAt: timestamp({ withTimezone: true }),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/** session 表。token 同名为 Redis 键（secondaryStorage 双写，ADR-0013）。 */
+export const session = pgTable("session", {
+  id: text().primaryKey(),
+  token: text().notNull().unique(),
+  userId: text()
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  expiresAt: timestamp({ withTimezone: true }).notNull(),
+  ipAddress: text(),
+  userAgent: text(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/** verification 表。OTP 通道就绪前为空表，结构齐备（design「数据模型」节）。 */
+export const verification = pgTable("verification", {
+  id: text().primaryKey(),
+  identifier: text().notNull(),
+  value: text().notNull(),
+  expiresAt: timestamp({ withTimezone: true }).notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});

@@ -8,3 +8,6 @@ test-results/
 
 AGENTS.md
 .agents/skills/
+.vscode/
+.agents/
+agent-service/.venv/
