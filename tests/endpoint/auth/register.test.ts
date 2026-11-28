@@ -23,13 +23,14 @@ import { db } from "@/common/db";
 import { account, user } from "@/db/schema";
 import { uniqueUsername } from "../../support/username";
 import { POST } from "@/app/api/auth/register/route";
+import { API_ROUTES } from "@/app/api/routes";
 
 const PASSWORD = "abcdefg1"; // 合法测试密码（PASSWORD_RE：字母+数字，8..20）
 
 /** 组装注册 POST 请求并直调 handler。 */
 function postRegister(body: unknown): Promise<Response> {
   return POST(
-    new Request("http://localhost/api/auth/register", {
+    new Request(`http://localhost${API_ROUTES.authRegister}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -87,7 +88,10 @@ describe("POST /api/auth/register（tests/endpoint/auth/register）", () => {
     expect(acc.password).toMatch(/^\S+:\S+$/);
     expect(acc.password).not.toContain(PASSWORD);
     expect(
-      await verifyPassword({ hash: acc.password as string, password: PASSWORD }),
+      await verifyPassword({
+        hash: acc.password as string,
+        password: PASSWORD,
+      }),
     ).toBe(true);
   });
 

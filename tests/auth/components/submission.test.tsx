@@ -25,6 +25,7 @@ import { NextIntlClientProvider } from "next-intl";
 import AuthCard from "@/features/auth/components/AuthCard";
 import authMessages from "@/locales/zh-CN/auth.json";
 import type { RegisterApiResult } from "@/api/auth";
+import { API_ROUTES } from "@/app/api/routes";
 
 const routerReplace = vi.hoisted(() => vi.fn());
 // signIn.username 经 hoisted 桩注入拦截（沿用 T8 validation.test 形态），
@@ -115,7 +116,7 @@ describe("R9 注册成功链", () => {
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/auth/register",
+      API_ROUTES.authRegister,
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({

@@ -8,6 +8,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  // 静态类型化路由：从 app/ 目录结构生成路由联合（.next/types/routes.d.ts，
+  // 含 API route handlers），端点路径字面量经 next 的 Route 类型在编译期校验
+  typedRoutes: true,
   // 自托管部署形态（ADR-0016）：standalone 输出最小 server.js 运行产物，
   // 供多阶段 Dockerfile 打包；构建期不注入环境变量，运行时注入实现单镜像多环境
   output: "standalone",

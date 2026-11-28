@@ -9,6 +9,7 @@ import { requestContractResult } from "@/api/contract";
 import { USERNAME_ALREADY_REGISTERED } from "@/auth/error";
 import type { ApiErrorCode, ApiResult } from "@/common/error";
 import { registerFormSchema } from "@/app/api/auth/request";
+import { API_ROUTES } from "@/app/api/routes";
 
 /** 注册端点契约结果:公共技术码之外含认证域码(账户名已存在)。 */
 export type RegisterApiResult = ApiResult<
@@ -20,7 +21,7 @@ export type RegisterApiResult = ApiResult<
 export function registerAccount(
   input: z.infer<typeof registerFormSchema>,
 ): Promise<RegisterApiResult> {
-  return requestContractResult("/api/auth/register", {
+  return requestContractResult(API_ROUTES.authRegister, {
     method: "POST",
     body: JSON.stringify(input),
   });

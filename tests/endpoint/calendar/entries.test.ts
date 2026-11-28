@@ -21,11 +21,13 @@ vi.mock("@/auth", () => ({
 import { DELETE, PUT } from "@/app/api/calendar/entries/[id]/route";
 import { GET, POST } from "@/app/api/calendar/entries/route";
 import { calendarEntryViewSchema } from "@/app/api/calendar/response";
+import { API_ROUTES, apiCalendarEntry } from "@/app/api/routes";
 import type { AuthSession } from "@/auth/queries";
 import { db } from "@/common/db";
 import { calendarEntry, user } from "@/db/schema";
 
-const BASE = "http://localhost/api/calendar/entries";
+const BASE = `http://localhost${API_ROUTES.calendarEntries}`;
+const ORIGIN = "http://localhost";
 
 afterAll(async () => {
   await db.$client.end();
@@ -84,9 +86,13 @@ function postJson(body: unknown): Promise<Response> {
   );
 }
 
+function entryUrl(id: string): string {
+  return `${ORIGIN}${apiCalendarEntry(id)}`;
+}
+
 function putJson(id: string, body: unknown): Promise<Response> {
   return PUT(
-    new Request(`${BASE}/${id}`, {
+    new Request(entryUrl(id), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -96,7 +102,7 @@ function putJson(id: string, body: unknown): Promise<Response> {
 }
 
 function del(id: string): Promise<Response> {
-  return DELETE(new Request(`${BASE}/${id}`, { method: "DELETE" }), {
+  return DELETE(new Request(entryUrl(id), { method: "DELETE" }), {
     params: Promise.resolve({ id }),
   });
 }
@@ -230,7 +236,10 @@ describe("/api/calendar/entries（tests/endpoint/calendar/entries）", () => {
 
     const weekResponse = await GET(new Request(`${BASE}?week=2026-11-16`));
     expect(weekResponse.status).toBe(200);
-    const weekBody = (await weekResponse.json()) as { ok: boolean; data: unknown[] };
+    const weekBody = (await weekResponse.json()) as {
+      ok: boolean;
+      data: unknown[];
+    };
     expect(weekBody.ok).toBe(true);
     expect(weekBody.data).toHaveLength(1);
   });
@@ -314,7 +323,9 @@ describe("/api/calendar/entries（tests/endpoint/calendar/entries）", () => {
     const userId = await makeUser("past");
     signIn(userId);
 
-    const postResponse = await postJson(input("2026-01-01", "元旦补记", null, null));
+    const postResponse = await postJson(
+      input("2026-01-01", "元旦补记", null, null),
+    );
     expect(postResponse.status).toBe(200);
 
     const body = (await (

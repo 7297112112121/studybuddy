@@ -11,6 +11,8 @@
  * 本组件：统一接口逐端点会话校验才是硬约束，本门只做路由级分流。
  */
 import { useEffect, type ReactNode } from "react";
+
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 
 import { useStore } from "better-auth/react";
@@ -26,7 +28,7 @@ type SessionGateProps = {
    */
   require: GateDirection;
   /** 不满足门向时 replace 的落点。 */
-  fallbackTo: string;
+  fallbackTo: Route;
   /** replace 落定前瞬间的占位（如访客组的「正在进入…」），默认不渲染。 */
   denied?: ReactNode;
   /** 满足门向时渲染的内容。 */

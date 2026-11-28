@@ -5,6 +5,7 @@
 import { z } from "zod";
 
 import { requestContractResult } from "@/api/contract";
+import { API_ROUTES, apiCalendarEntry } from "@/app/api/routes";
 import type { ApiErrorCode, ApiResult } from "@/common/error";
 import type { CalendarEntryInput } from "@/app/api/calendar/request";
 import {
@@ -18,7 +19,7 @@ export function fetchCalendarEntries(
   weekStart: string,
 ): Promise<ApiResult<CalendarEntryView[], ApiErrorCode>> {
   return requestContractResult<CalendarEntryView[]>(
-    `/api/calendar/entries?week=${encodeURIComponent(weekStart)}`,
+    `${API_ROUTES.calendarEntries}?week=${encodeURIComponent(weekStart)}`,
     undefined,
     z.array(calendarEntryViewSchema),
   );
@@ -28,7 +29,7 @@ export function fetchCalendarEntries(
 export function createCalendarEntry(
   input: CalendarEntryInput,
 ): Promise<ApiResult> {
-  return requestContractResult("/api/calendar/entries", {
+  return requestContractResult(API_ROUTES.calendarEntries, {
     method: "POST",
     body: JSON.stringify(input),
   });
@@ -39,16 +40,15 @@ export function updateCalendarEntry(
   entryId: string,
   input: CalendarEntryInput,
 ): Promise<ApiResult> {
-  return requestContractResult(
-    `/api/calendar/entries/${encodeURIComponent(entryId)}`,
-    { method: "PUT", body: JSON.stringify(input) },
-  );
+  return requestContractResult(apiCalendarEntry(entryId), {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
 }
 
 /** 写端点:删除指定条目。 */
 export function deleteCalendarEntry(entryId: string): Promise<ApiResult> {
-  return requestContractResult(
-    `/api/calendar/entries/${encodeURIComponent(entryId)}`,
-    { method: "DELETE" },
-  );
+  return requestContractResult(apiCalendarEntry(entryId), {
+    method: "DELETE",
+  });
 }
