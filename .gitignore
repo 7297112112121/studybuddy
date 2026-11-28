@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+# stryker 变异测试（ADR-0037）：报告目录与沙箱临时目录，均不归档
+/reports
+/.stryker-tmp
 
 # playwright（官方 CI 文档约定产物目录）
 /test-results/

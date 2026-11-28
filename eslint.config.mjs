@@ -14,8 +14,11 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "website/**",
     "studybuddyui/**",
-    // 开发服务器遗留空目录,不属于项目:
-    "my-website/**",
+    // 测试与变异测试产物目录(ADR-0036/0037):覆盖率报告、变异报告、
+    // stryker 沙箱临时副本,均为 gitignored 生成物,不参与 lint
+    "coverage/**",
+    "reports/**",
+    ".stryker-tmp/**",
   ]),
   // 测试寻址纪律(单元测试纪律):tests 内引用 src 一律 @/ 别名,禁相对路径跨入 src。
   {

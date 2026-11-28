@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "coverageAnalysis": "perTest",
+  "ignorePatterns": [
+    ".agents",
+    ".claude",
+    ".codegraph",
+    ".codex",
+    ".dsh",
+    ".env",
+    ".git",
+    ".github",
+    ".githooks",
+    ".next",
+    ".playwright-mcp",
+    ".stryker-tmp",
+    ".vscode",
+    "agent-service",
+    "blob-report",
+    "coverage",
+    "docs",
+    "e2e",
+    "playwright-report",
+    "reports",
+    "studybuddyui",
+    "test-results",
+    "website"
+  ],
+  "mutate": ["src/services/**"],
+  "reporters": ["clear-text", "json", "html"],
+  "thresholds": { "high": 80, "low": 60, "break": 70 }
+}
