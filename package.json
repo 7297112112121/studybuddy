@@ -41,7 +41,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "drizzle-orm": "^1.0.0-rc.5",
-    "ioredis": "^5.11.1",
+    "ioredis": "^6.1.0",
     "lucide-react": "^1.73.0",
     "next": "16.4.6",
     "next-intl": "^4.15.1",
